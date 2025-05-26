@@ -19,7 +19,7 @@ export default function AdminPage() {
         <Card className="w-full max-w-md p-6 bg-white shadow-lg">
           <h1 className="text-2xl font-bold text-center mb-6 text-[#5f161c]">Área Administrativa</h1>
           <div className="space-y-4">
-            <Input type="password" placeholder="Digite a senha" value={password} onChange={e => setPassword(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20" />
+            <Input type="password" placeholder="Digite a senha" value={password} onChange={e => setPassword(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
             <Button onClick={handleLogin} className="w-full bg-[#f5e6d3] hover:bg-[#5f161c] text-[#5f161c] hover:text-white transition-colors">
               Entrar
             </Button>
