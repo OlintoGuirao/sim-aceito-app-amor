@@ -136,7 +136,7 @@ export function AdminGuestManager() {
 
         <TabsContent value="list">
           <Card>
-            <CardHeader>
+            <CardHeader className="bg-wedding-primary">
               <CardTitle>Lista de Convidados</CardTitle>
             </CardHeader>
             <CardContent>
