@@ -65,9 +65,9 @@ const GiftList: React.FC = () => {
     } : gift));
   };
   return <div className="space-y-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-wedding-primary/20 to-wedding-secondary/20 bg-wedding-primary">
-        <h3 className="text-2xl font-elegant font-semibold mb-2">Lista de Presentes</h3>
-        <p className="text-muted-foreground">
+      <Card className="p-6 text-center bg-gradient-to-r from-wedding-primary/20 to-wedding-secondary/20 bg-wedding-primary rounded-none">
+        <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Lista de Presentes</h3>
+        <p className="text-slate-50">
           Escolha um presente especial para os noivos e ajude a construir o novo lar!
         </p>
       </Card>
@@ -83,7 +83,7 @@ const GiftList: React.FC = () => {
               <div className="text-lg font-bold text-wedding-rose mb-3 bg-transparent">{gift.price}</div>
               
               {gift.reserved ? <div className="space-y-2">
-                  <Badge className="bg-green-100 text-green-800 w-full justify-center">
+                  <Badge className="text-green-800 w-full justify-center bg-wedding-lightPalha">
                     Reservado por {gift.reservedBy}
                   </Badge>
                 </div> : <div className="space-y-2">
