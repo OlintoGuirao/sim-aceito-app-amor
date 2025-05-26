@@ -163,7 +163,7 @@ const AdminGuestManager: React.FC = () => {
           <Card className="p-6 bg-white">
             <h3 className="text-lg font-semibold mb-4 text-[#5f161c]">QR Codes dos Convidados</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {guests.map(guest => <Card key={guest.id} className="p-4 text-center bg-[#f5e6d3]/10">
+              {guests.map(guest => <Card key={guest.id} className="p-4 text-center bg-wedding-palha">
                   <QRCodeSVG value={generateQRCode(guest.id)} size={128} />
                   <div className="mt-2 text-sm font-medium text-[#5f161c]">{guest.name}</div>
                   <div className="text-xs text-[#5f161c]/80">{guest.email}</div>
