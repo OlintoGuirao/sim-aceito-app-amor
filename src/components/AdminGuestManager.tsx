@@ -99,7 +99,7 @@ const AdminGuestManager: React.FC = () => {
       </Card>
 
       <div className="grid md:grid-cols-3 gap-4">
-        <Card className="p-4 text-center bg-[#f5e6d3]/20">
+        <Card className="p-4 text-center bg-wedding-secondary">
           <div className="text-2xl font-bold text-[#5f161c]">{confirmedGuests.length}</div>
           <div className="text-sm text-[#5f161c]/80">Confirmados</div>
         </Card>
