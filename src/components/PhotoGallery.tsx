@@ -36,7 +36,7 @@ const PhotoGallery: React.FC = () => {
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {photos.map((photo, index) => <Card key={photo.id} onClick={() => setSelectedPhoto(index)} className="overflow-hidden cursor-pointer hover:shadow-lg transition-all transform hover:scale-105 bg-wedding-primary">
+        {photos.map((photo, index) => <Card key={photo.id} onClick={() => setSelectedPhoto(index)} className="overflow-hidden cursor-pointer hover:shadow-lg transition-all transform hover:scale-105 bg-wedding-secondary">
             <div className="aspect-square bg-gradient-to-br from-wedding-primary/20 to-wedding-secondary/20 flex items-center justify-center bg-wedding-primary">
               <span className="text-4xl">📸</span>
             </div>
