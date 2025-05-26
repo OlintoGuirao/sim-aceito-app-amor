@@ -106,7 +106,7 @@ export default function ConfirmPage() {
         </div>
 
         <div className="space-y-4 mb-6">
-          <div className="p-4 bg-[#f5e6d3]/20 rounded-lg">
+          <div className="p-4 rounded-lg bg-transparent">
             <h2 className="font-semibold text-[#5f161c] mb-2">Detalhes do Evento</h2>
             <div className="text-sm text-[#5f161c]/80 space-y-1">
               <p>📅 Data: 15 de Junho de 2024</p>
