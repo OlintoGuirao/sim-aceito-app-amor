@@ -1,131 +1,147 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useParams } from 'react-router-dom';
-interface Guest {
-  id: string;
-  name: string;
-  email: string;
-  status: 'pending' | 'confirmed' | 'declined';
-  group?: string;
-  table?: number;
-}
-export default function ConfirmPage() {
-  const {
-    id
-  } = useParams();
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Guest, getGuests, updateGuestStatus } from '@/lib/firestore';
+
+export function ConfirmPage() {
+  const { guestId } = useParams();
+  const navigate = useNavigate();
   const [guest, setGuest] = useState<Guest | null>(null);
   const [loading, setLoading] = useState(true);
-  const [confirmed, setConfirmed] = useState(false);
-  const [declined, setDeclined] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    // Aqui você implementará a busca do convidado no backend
-    // Por enquanto, vamos simular com dados mockados
-    const mockGuest: Guest = {
-      id: id || '',
-      name: 'Ana Silva',
-      email: 'ana@email.com',
-      status: 'pending',
-      group: 'Família',
-      table: 1
+    const loadGuest = async () => {
+      try {
+        const guests = await getGuests();
+        const foundGuest = guests.find(g => g.id === guestId);
+        
+        if (foundGuest) {
+          setGuest(foundGuest);
+        } else {
+          setError('Convidado não encontrado');
+        }
+      } catch (err) {
+        setError('Erro ao carregar dados do convidado');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
-    setGuest(mockGuest);
-    setLoading(false);
-  }, [id]);
-  const handleConfirm = () => {
-    // Aqui você implementará a confirmação no backend
-    setConfirmed(true);
-    if (guest) {
-      setGuest({
-        ...guest,
-        status: 'confirmed'
-      });
+
+    loadGuest();
+  }, [guestId]);
+
+  const handleConfirm = async () => {
+    if (!guest) return;
+
+    try {
+      await updateGuestStatus(guest.id!, 'confirmed');
+      setGuest({ ...guest, status: 'confirmed' });
+    } catch (err) {
+      setError('Erro ao confirmar presença');
+      console.error(err);
     }
   };
-  const handleDecline = () => {
-    // Aqui você implementará a recusa no backend
-    setDeclined(true);
-    if (guest) {
-      setGuest({
-        ...guest,
-        status: 'declined'
-      });
+
+  const handleDecline = async () => {
+    if (!guest) return;
+
+    try {
+      await updateGuestStatus(guest.id!, 'declined');
+      setGuest({ ...guest, status: 'declined' });
+    } catch (err) {
+      setError('Erro ao recusar convite');
+      console.error(err);
     }
   };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center p-4 bg-[#f5e6d3]/10">
-        <Card className="w-full max-w-md p-6 bg-white shadow-lg text-center">
-          <div className="animate-pulse">
-            <div className="h-4 bg-[#f5e6d3] rounded w-3/4 mx-auto mb-4"></div>
-            <div className="h-4 bg-[#f5e6d3] rounded w-1/2 mx-auto"></div>
-          </div>
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <div className="text-center">Carregando...</div>
+          </CardContent>
         </Card>
-      </div>;
+      </div>
+    );
   }
-  if (!guest) {
-    return <div className="min-h-screen flex items-center justify-center p-4 bg-[#f5e6d3]/10">
-        <Card className="w-full max-w-md p-6 bg-white shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-[#5f161c] mb-4">Convidado não encontrado</h1>
-          <p className="text-[#5f161c]/80">O QR code pode estar inválido ou expirado.</p>
-        </Card>
-      </div>;
-  }
-  if (confirmed) {
-    return <div className="min-h-screen flex items-center justify-center p-4 bg-[#f5e6d3]/10">
-        <Card className="w-full max-w-md p-6 bg-white shadow-lg text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-2xl font-bold text-[#5f161c] mb-4">Presença Confirmada!</h1>
-          <p className="text-[#5f161c]/80 mb-6">
-            Obrigado por confirmar sua presença. Estamos ansiosos para celebrar com você!
-          </p>
-          <div className="text-sm text-[#5f161c]/60">
-            <p>Mesa: {guest.table}</p>
-            <p>Grupo: {guest.group}</p>
-          </div>
-        </Card>
-      </div>;
-  }
-  if (declined) {
-    return <div className="min-h-screen flex items-center justify-center p-4 bg-[#f5e6d3]/10">
-        <Card className="w-full max-w-md p-6 bg-white shadow-lg text-center">
-          <div className="text-6xl mb-4">💝</div>
-          <h1 className="text-2xl font-bold text-[#5f161c] mb-4">Obrigado pelo retorno</h1>
-          <p className="text-[#5f161c]/80">
-            Lamentamos que você não poderá comparecer, mas agradecemos por nos avisar.
-          </p>
-        </Card>
-      </div>;
-  }
-  return <div className="min-h-screen flex items-center justify-center p-4 bg-wedding-primary">
-      <Card className="w-full max-w-md p-6 shadow-lg bg-wedding-secondary">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-[#5f161c] mb-2">Confirme sua Presença</h1>
-          <p className="text-[#5f161c]/80">
-            Olá, {guest.name}! Por favor, confirme se você poderá comparecer à nossa celebração.
-          </p>
-        </div>
 
-        <div className="space-y-4 mb-6">
-          <div className="p-4 rounded-lg bg-transparent">
-            <h2 className="font-semibold text-[#5f161c] mb-2">Detalhes do Evento</h2>
-            <div className="text-sm text-[#5f161c]/80 space-y-1">
-              <p>📅 Data: 15 de Junho de 2024</p>
-              <p>⏰ Horário: 19:00</p>
-              <p>📍 Local: Salão Crystal</p>
-              {guest.table && <p>🍽️ Mesa: {guest.table}</p>}
-              {guest.group && <p>👥 Grupo: {guest.group}</p>}
+  if (error || !guest) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6">
+            <div className="text-center text-red-500">{error || 'Convidado não encontrado'}</div>
+            <Button 
+              className="mt-4 w-full"
+              onClick={() => navigate('/')}
+            >
+              Voltar para a página inicial
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle className="text-center">Confirmação de Presença</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold mb-2">{guest.name}</h2>
+            {guest.email && <p className="text-gray-600">{guest.email}</p>}
+            {guest.phone && <p className="text-gray-600">{guest.phone}</p>}
+          </div>
+
+          {guest.status === 'pending' ? (
+            <div className="space-y-4">
+              <p className="text-center text-gray-600 mb-4">
+                Por favor, confirme sua presença no nosso casamento
+              </p>
+              <div className="flex gap-4">
+                <Button 
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={handleConfirm}
+                >
+                  Confirmar Presença
+                </Button>
+                <Button 
+                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  onClick={handleDecline}
+                >
+                  Não Poderei Ir
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <Button onClick={handleConfirm} className="w-full transition-colors bg-wedding-primary text-white">
-            Confirmar Presença
-          </Button>
-          <Button onClick={handleDecline} variant="outline" className="w-full border-[#5f161c]/20 text-slate-50 bg-red-700 hover:bg-red-600">
-            Não Poderei Comparecer
-          </Button>
-        </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-lg font-semibold mb-2">
+                {guest.status === 'confirmed' 
+                  ? 'Presença Confirmada!' 
+                  : 'Presença Declinada'}
+              </p>
+              <p className="text-gray-600 mb-4">
+                {guest.status === 'confirmed'
+                  ? 'Obrigado por confirmar sua presença! Estamos ansiosos para celebrar com você.'
+                  : 'Obrigado por nos informar. Sentiremos sua falta!'}
+              </p>
+              <Button 
+                className="w-full"
+                onClick={() => navigate('/')}
+              >
+                Voltar para a página inicial
+              </Button>
+            </div>
+          )}
+        </CardContent>
       </Card>
-    </div>;
+    </div>
+  );
 }

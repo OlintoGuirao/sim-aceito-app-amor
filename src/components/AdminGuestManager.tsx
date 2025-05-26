@@ -1,96 +1,73 @@
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QRCodeSVG } from 'qrcode.react';
-interface Guest {
-  id: string;
-  name: string;
-  email: string;
-  status: 'pending' | 'confirmed' | 'declined';
-  qrCode?: string;
-  group?: string;
-  table?: number;
-}
-const AdminGuestManager: React.FC = () => {
-  const [guests, setGuests] = useState<Guest[]>([{
-    id: '1',
-    name: 'Ana Silva',
-    email: 'ana@email.com',
-    status: 'confirmed',
-    group: 'Família',
-    table: 1
-  }, {
-    id: '2',
-    name: 'Carlos Santos',
-    email: 'carlos@email.com',
-    status: 'pending',
-    group: 'Amigos'
-  }, {
-    id: '3',
-    name: 'Mariana Costa',
-    email: 'mariana@email.com',
-    status: 'declined',
-    group: 'Trabalho'
-  }, {
-    id: '4',
-    name: 'Pedro Oliveira',
-    email: 'pedro@email.com',
-    status: 'pending',
-    group: 'Família'
-  }]);
-  const [newGuestName, setNewGuestName] = useState('');
-  const [newGuestEmail, setNewGuestEmail] = useState('');
-  const [newGuestGroup, setNewGuestGroup] = useState('');
-  const [newGuestTable, setNewGuestTable] = useState('');
-  const addGuest = () => {
-    if (newGuestName && newGuestEmail) {
-      const newGuest: Guest = {
-        id: Date.now().toString(),
-        name: newGuestName,
-        email: newGuestEmail,
-        status: 'pending',
-        group: newGuestGroup || undefined,
-        table: newGuestTable ? parseInt(newGuestTable) : undefined
-      };
-      setGuests([...guests, newGuest]);
-      setNewGuestName('');
-      setNewGuestEmail('');
-      setNewGuestGroup('');
-      setNewGuestTable('');
+import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
+
+export function AdminGuestManager() {
+  const [guests, setGuests] = useState<Guest[]>([]);
+  const [newGuest, setNewGuest] = useState({ name: '', email: '', phone: '' });
+  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+
+  // Carregar convidados do Firestore
+  useEffect(() => {
+    loadGuests();
+  }, []);
+
+  const loadGuests = async () => {
+    try {
+      const guestsData = await getGuests();
+      setGuests(guestsData);
+    } catch (error) {
+      console.error('Erro ao carregar convidados:', error);
     }
   };
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-800';
-      case 'declined':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-[#f5e6d3] text-[#5f161c]';
+
+  const handleAddGuest = async () => {
+    if (!newGuest.name) return;
+
+    try {
+      await addGuest({
+        name: newGuest.name,
+        email: newGuest.email,
+        phone: newGuest.phone,
+        status: 'pending'
+      });
+      
+      setNewGuest({ name: '', email: '', phone: '' });
+      loadGuests();
+    } catch (error) {
+      console.error('Erro ao adicionar convidado:', error);
     }
   };
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'confirmed':
-        return 'Confirmado';
-      case 'declined':
-        return 'Recusou';
-      default:
-        return 'Pendente';
+
+  const handleStatusChange = async (guestId: string, status: Guest['status']) => {
+    try {
+      await updateGuestStatus(guestId, status);
+      loadGuests();
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
     }
   };
-  const confirmedGuests = guests.filter(g => g.status === 'confirmed');
-  const pendingGuests = guests.filter(g => g.status === 'pending');
-  const declinedGuests = guests.filter(g => g.status === 'declined');
-  const generateQRCode = (guestId: string) => {
-    // Gera o link para a página de confirmação
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/confirm/${guestId}`;
+
+  const handleDeleteGuest = async (guestId: string) => {
+    try {
+      await deleteGuest(guestId);
+      loadGuests();
+    } catch (error) {
+      console.error('Erro ao deletar convidado:', error);
+    }
   };
-  return <div className="space-y-6">
+
+  const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
+  const pendingCount = guests.filter(g => g.status === 'pending').length;
+  const declinedCount = guests.filter(g => g.status === 'declined').length;
+
+  return (
+    <div className="space-y-6" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
       <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20 bg-wedding-secondary">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-[#5f161c]">Gerenciamento de Convidados</h3>
         <p className="text-[#5f161c]/80">
@@ -98,80 +75,147 @@ const AdminGuestManager: React.FC = () => {
         </p>
       </Card>
 
-      <div className="grid md:grid-cols-3 gap-4">
-        <Card className="p-4 text-center bg-wedding-secondary">
-          <div className="text-2xl font-bold text-[#5f161c]">{confirmedGuests.length}</div>
-          <div className="text-sm text-[#5f161c]/80">Confirmados</div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Confirmados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{confirmedCount}</div>
+          </CardContent>
         </Card>
-        <Card className="p-4 text-center bg-wedding-secondary">
-          <div className="text-2xl font-bold text-[#5f161c]">{pendingGuests.length}</div>
-          <div className="text-sm text-[#5f161c]/80">Pendentes</div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{pendingCount}</div>
+          </CardContent>
         </Card>
-        <Card className="p-4 text-center bg-wedding-secondary">
-          <div className="text-2xl font-bold text-[#5f161c]">{declinedGuests.length}</div>
-          <div className="text-sm text-[#5f161c]/80">Recusaram</div>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Declinados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{declinedCount}</div>
+          </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="add" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-[#f5e6d3]/20">
-          <TabsTrigger value="add" className="data-[state=active]:bg-[#5f161c] data-[state=active]:text-white">+ Convidado</TabsTrigger>
-          <TabsTrigger value="list" className="data-[state=active]:bg-[#5f161c] data-[state=active]:text-white">Convidados</TabsTrigger>
-          <TabsTrigger value="qrcodes" className="data-[state=active]:bg-[#5f161c] data-[state=active]:text-white">QR Codes</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="add">Adicionar Convidado</TabsTrigger>
+          <TabsTrigger value="list">Lista de Convidados</TabsTrigger>
+          <TabsTrigger value="qrcode">QR Code</TabsTrigger>
         </TabsList>
 
         <TabsContent value="add">
-          <Card className="p-6 bg-white">
-            <h3 className="text-lg font-semibold mb-4 text-[#5f161c]">Adicionar Convidado</h3>
-            <div className="space-y-4">
-              <Input placeholder="Nome do convidado" value={newGuestName} onChange={e => setNewGuestName(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
-              <Input placeholder="Email" type="email" value={newGuestEmail} onChange={e => setNewGuestEmail(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
-              <Input placeholder="Grupo (ex: Família, Amigos, Trabalho)" value={newGuestGroup} onChange={e => setNewGuestGroup(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
-              <Input placeholder="Número da Mesa" type="number" value={newGuestTable} onChange={e => setNewGuestTable(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
-              <Button onClick={addGuest} className="w-full bg-[#f5e6d3] hover:bg-[#5f161c] text-[#5f161c] hover:text-white transition-colors">
-                Adicionar Convidado
-              </Button>
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Adicionar Novo Convidado</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Input
+                  placeholder="Nome do convidado"
+                  value={newGuest.name}
+                  onChange={(e) => setNewGuest({ ...newGuest, name: e.target.value })}
+                />
+                <Input
+                  placeholder="Email (opcional)"
+                  value={newGuest.email}
+                  onChange={(e) => setNewGuest({ ...newGuest, email: e.target.value })}
+                />
+                <Input
+                  placeholder="Telefone (opcional)"
+                  value={newGuest.phone}
+                  onChange={(e) => setNewGuest({ ...newGuest, phone: e.target.value })}
+                />
+                <Button onClick={handleAddGuest}>Adicionar</Button>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="list">
-          <Card className="p-6 bg-white">
-            <h3 className="text-lg font-semibold mb-4 text-[#5f161c]">Lista de Convidados</h3>
-            <div className="space-y-3">
-              {guests.map(guest => <div key={guest.id} className="flex items-center justify-between p-3 bg-[#f5e6d3]/10 rounded-lg">
-                  <div>
-                    <div className="font-medium text-[#5f161c]">{guest.name}</div>
-                    <div className="text-sm text-[#5f161c]/80">{guest.email}</div>
-                    {guest.group && <div className="text-xs text-[#5f161c]/60">Grupo: {guest.group}</div>}
-                    {guest.table && <div className="text-xs text-[#5f161c]/60">Mesa: {guest.table}</div>}
+          <Card>
+            <CardHeader>
+              <CardTitle>Lista de Convidados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {guests.map((guest) => (
+                  <div key={guest.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-medium">{guest.name}</h3>
+                      {guest.email && <p className="text-sm text-gray-500">{guest.email}</p>}
+                      {guest.phone && <p className="text-sm text-gray-500">{guest.phone}</p>}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant={guest.status === 'confirmed' ? 'default' : 'outline'}
+                        onClick={() => handleStatusChange(guest.id!, 'confirmed')}
+                      >
+                        Confirmado
+                      </Button>
+                      <Button
+                        variant={guest.status === 'declined' ? 'destructive' : 'outline'}
+                        onClick={() => handleStatusChange(guest.id!, 'declined')}
+                      >
+                        Declinado
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleDeleteGuest(guest.id!)}
+                      >
+                        Excluir
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge className={getStatusColor(guest.status)}>
-                      {getStatusText(guest.status)}
-                    </Badge>
-                    <Button size="sm" variant="outline" className="border-[#5f161c]/20 hover:text-white bg-wedding-primary">
-                      Editar
-                    </Button>
-                  </div>
-                </div>)}
-            </div>
+                ))}
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="qrcodes">
-          <Card className="p-6 bg-white">
-            <h3 className="text-lg font-semibold mb-4 text-[#5f161c]">QR Codes dos Convidados</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {guests.map(guest => <Card key={guest.id} className="p-4 text-center bg-wedding-palha">
-                  <QRCodeSVG value={generateQRCode(guest.id)} size={128} />
-                  <div className="mt-2 text-sm font-medium text-[#5f161c]">{guest.name}</div>
-                  <div className="text-xs text-[#5f161c]/80">{guest.email}</div>
-                </Card>)}
-            </div>
+        <TabsContent value="qrcode">
+          <Card>
+            <CardHeader>
+              <CardTitle>Gerar QR Code</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <select
+                  className="w-full p-2 border rounded"
+                  onChange={(e) => {
+                    const guest = guests.find(g => g.id === e.target.value);
+                    setSelectedGuest(guest || null);
+                  }}
+                >
+                  <option value="">Selecione um convidado</option>
+                  {guests.map((guest) => (
+                    <option key={guest.id} value={guest.id}>
+                      {guest.name}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedGuest && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <QRCodeSVG
+                      value={`${window.location.origin}/confirm/${selectedGuest.id}`}
+                      size={200}
+                    />
+                    <p className="text-sm text-gray-500">
+                      QR Code para: {selectedGuest.name}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>;
-};
-export default AdminGuestManager;
+    </div>
+  );
+}

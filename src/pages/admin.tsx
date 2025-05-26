@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import AdminGuestManager from '@/components/AdminGuestManager';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AdminGuestManager } from '@/components/AdminGuestManager';
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+
   const handleLogin = () => {
     // Aqui você pode implementar uma verificação mais segura
     if (password === 'admin123') {
@@ -14,20 +16,31 @@ export default function AdminPage() {
       alert('Senha incorreta');
     }
   };
+
   if (!isAuthenticated) {
-    return <div className="min-h-screen flex items-center justify-center p-4 bg-wedding-primary">
-        <Card className="w-full max-w-md p-6 bg-white shadow-lg">
-          <h1 className="text-2xl font-bold text-center mb-6 text-[#5f161c]">Área Administrativa</h1>
-          <div className="space-y-4">
-            <Input type="password" placeholder="Digite a senha" value={password} onChange={e => setPassword(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
-            <Button onClick={handleLogin} className="w-full bg-[#f5e6d3] hover:bg-[#5f161c] text-[#5f161c] hover:text-white transition-colors">
-              Entrar
-            </Button>
-          </div>
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Área Administrativa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Input
+                type="password"
+                placeholder="Digite a senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button onClick={handleLogin} className="w-full">
+                Entrar
+              </Button>
+            </div>
+          </CardContent>
         </Card>
-      </div>;
+      </div>
+    );
   }
-  return <div className="container mx-auto min-h-screen bg-wedding-primary py-[32px]">
-      <AdminGuestManager />
-    </div>;
+
+  return <AdminGuestManager />;
 }
