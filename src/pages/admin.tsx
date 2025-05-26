@@ -24,7 +24,7 @@ export default function AdminPage() {
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
             <div className="space-y-4">
-              <Input type="password" placeholder="Digite a senha" value={password} onChange={e => setPassword(e.target.value)} className="bg-wedding-secondary" />
+              <Input type="password" placeholder="Digite a senha" value={password} onChange={e => setPassword(e.target.value)} className="bg-wedding-primary" />
               <Button onClick={handleLogin} className="w-full bg-wedding-primary text-white">
                 Entrar
               </Button>
