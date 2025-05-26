@@ -10,9 +10,18 @@ interface Gift {
   price: string;
   reserved: boolean;
   reservedBy?: string;
+  isPix?: boolean;
 }
 const GiftList: React.FC = () => {
   const [gifts, setGifts] = useState<Gift[]>([{
+    id: 'pix',
+    name: 'PIX - Presente em Dinheiro',
+    image: '/placeholder.svg',
+    link: 'https://nubank.com.br/pagar/1q2w3e4r5t6y7u8i9o0p',
+    price: 'Valor à escolha',
+    reserved: false,
+    isPix: true
+  }, {
     id: '1',
     name: 'Jogo de Panelas Inox',
     image: '/placeholder.svg',
@@ -75,24 +84,32 @@ const GiftList: React.FC = () => {
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {gifts.map(gift => <Card key={gift.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-wedding-primary">
             <div className="aspect-square bg-gray-100 flex items-center justify-center">
-              <span className="text-4xl">🎁</span>
+              <span className="text-4xl">{gift.isPix ? '💸' : '🎁'}</span>
             </div>
             
             <div className="p-4 bg-wedding-primary">
               <h4 className="font-semibold mb-2 text-gray-50">{gift.name}</h4>
-              <div className="text-lg font-bold text-white mb-3 bg-transparent\n">{gift.price}</div>
+              <div className="text-lg font-bold text-white mb-3 bg-transparent">{gift.price}</div>
               
               {gift.reserved ? <div className="space-y-2">
                   <Badge className="text-black w-full justify-center bg-wedding-lightPalha">
                     Reservado por {gift.reservedBy}
                   </Badge>
                 </div> : <div className="space-y-2">
-                  <Button onClick={() => reserveGift(gift.id)} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
-                    Reservar Presente
-                  </Button>
-                  <Button variant="outline" onClick={() => window.open(gift.link, '_blank')} className="w-full bg-wedding-secondary text-black">
-                    Ver na Loja
-                  </Button>
+                  {gift.isPix ? (
+                    <Button onClick={() => window.open(gift.link, '_blank')} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
+                      Fazer PIX
+                    </Button>
+                  ) : (
+                    <>
+                      <Button onClick={() => reserveGift(gift.id)} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
+                        Reservar Presente
+                      </Button>
+                      <Button variant="outline" onClick={() => window.open(gift.link, '_blank')} className="w-full bg-wedding-secondary text-black">
+                        Ver na Loja
+                      </Button>
+                    </>
+                  )}
                 </div>}
             </div>
           </Card>)}
