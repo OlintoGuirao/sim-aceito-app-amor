@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
+import { GuestImport } from './GuestImport';
+
 export function AdminGuestManager() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [newGuest, setNewGuest] = useState({
@@ -19,6 +21,7 @@ export function AdminGuestManager() {
   useEffect(() => {
     loadGuests();
   }, []);
+
   const loadGuests = async () => {
     try {
       const guestsData = await getGuests();
@@ -27,6 +30,7 @@ export function AdminGuestManager() {
       console.error('Erro ao carregar convidados:', error);
     }
   };
+
   const handleAddGuest = async () => {
     if (!newGuest.name) return;
     try {
@@ -46,6 +50,7 @@ export function AdminGuestManager() {
       console.error('Erro ao adicionar convidado:', error);
     }
   };
+
   const handleStatusChange = async (guestId: string, status: Guest['status']) => {
     try {
       await updateGuestStatus(guestId, status);
@@ -54,6 +59,7 @@ export function AdminGuestManager() {
       console.error('Erro ao atualizar status:', error);
     }
   };
+
   const handleDeleteGuest = async (guestId: string) => {
     try {
       await deleteGuest(guestId);
@@ -62,13 +68,14 @@ export function AdminGuestManager() {
       console.error('Erro ao deletar convidado:', error);
     }
   };
+
   const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
   const pendingCount = guests.filter(g => g.status === 'pending').length;
   const declinedCount = guests.filter(g => g.status === 'declined').length;
-  return <div className="space-y-6" style={{
-    backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))'
-  }}>
-      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20 bg-wedding-primary">
+
+  return (
+    <div className="space-y-6 p-6">
+      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-black">Gerenciamento de Convidados</h3>
         <p className="text-black">
           Área administrativa para gerenciar a lista de convidados
@@ -103,8 +110,9 @@ export function AdminGuestManager() {
       </div>
 
       <Tabs defaultValue="add" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-wedding-primary">
+        <TabsList className="grid w-full grid-cols-4 bg-wedding-primary">
           <TabsTrigger value="add" className="bg-wedding-secondary text-black">Adicionar Convidado</TabsTrigger>
+          <TabsTrigger value="import" className="bg-wedding-secondary text-black">Importar Lista</TabsTrigger>
           <TabsTrigger value="list" className="bg-wedding-secondary text-black">Lista de Convidados</TabsTrigger>
           <TabsTrigger value="qrcode" className="text-black bg-wedding-secondary">QR Code</TabsTrigger>
         </TabsList>
@@ -116,22 +124,43 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4 bg-wedding-secondary">
-                <Input placeholder="Nome do convidado" value={newGuest.name} onChange={e => setNewGuest({
-                ...newGuest,
-                name: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Input placeholder="Email (opcional)" value={newGuest.email} onChange={e => setNewGuest({
-                ...newGuest,
-                email: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Input placeholder="Telefone (opcional)" value={newGuest.phone} onChange={e => setNewGuest({
-                ...newGuest,
-                phone: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Button onClick={handleAddGuest} className="text-black bg-wedding-primary">Adicionar</Button>
+                <Input 
+                  placeholder="Nome do convidado" 
+                  value={newGuest.name} 
+                  onChange={e => setNewGuest({
+                    ...newGuest,
+                    name: e.target.value
+                  })} 
+                  className="bg-wedding-primary text-black" 
+                />
+                <Input 
+                  placeholder="Email (opcional)" 
+                  value={newGuest.email} 
+                  onChange={e => setNewGuest({
+                    ...newGuest,
+                    email: e.target.value
+                  })} 
+                  className="bg-wedding-primary text-black" 
+                />
+                <Input 
+                  placeholder="Telefone (opcional)" 
+                  value={newGuest.phone} 
+                  onChange={e => setNewGuest({
+                    ...newGuest,
+                    phone: e.target.value
+                  })} 
+                  className="bg-wedding-primary text-black" 
+                />
+                <Button onClick={handleAddGuest} className="text-black bg-wedding-primary">
+                  Adicionar
+                </Button>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="import">
+          <GuestImport onImport={loadGuests} />
         </TabsContent>
 
         <TabsContent value="list">
@@ -141,24 +170,35 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {guests.map(guest => <div key={guest.id} className="flex items-center justify-between p-4 border rounded-lg">
+                {guests.map(guest => (
+                  <div key={guest.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <h3 className="font-medium text-black">{guest.name}</h3>
                       {guest.email && <p className="text-sm text-black">{guest.email}</p>}
                       {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')}>
+                      <Button 
+                        variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'confirmed')}
+                      >
                         Confirmado
                       </Button>
-                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')}>
+                      <Button 
+                        variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'declined')}
+                      >
                         Declinado
                       </Button>
-                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)}>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleDeleteGuest(guest.id!)}
+                      >
                         Excluir
                       </Button>
                     </div>
-                  </div>)}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -171,26 +211,37 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
-                <select onChange={e => {
-                const guest = guests.find(g => g.id === e.target.value);
-                setSelectedGuest(guest || null);
-              }} className="w-full p-2 border rounded bg-wedding-secondary text-black">
+                <select 
+                  onChange={e => {
+                    const guest = guests.find(g => g.id === e.target.value);
+                    setSelectedGuest(guest || null);
+                  }} 
+                  className="w-full p-2 border rounded bg-wedding-secondary text-black"
+                >
                   <option value="">Selecione um convidado</option>
-                  {guests.map(guest => <option key={guest.id} value={guest.id}>
+                  {guests.map(guest => (
+                    <option key={guest.id} value={guest.id}>
                       {guest.name}
-                    </option>)}
+                    </option>
+                  ))}
                 </select>
 
-                {selectedGuest && <div className="flex flex-col items-center space-y-4">
-                    <QRCodeSVG value={`${window.location.origin}/confirm/${selectedGuest.id}`} size={200} />
+                {selectedGuest && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <QRCodeSVG 
+                      value={`${window.location.origin}/confirm/${selectedGuest.id}`} 
+                      size={200} 
+                    />
                     <p className="text-sm text-black">
                       QR Code para: {selectedGuest.name}
                     </p>
-                  </div>}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 }
