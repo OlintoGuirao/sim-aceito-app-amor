@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
 interface Message {
   id: string;
   name: string;
@@ -12,35 +10,28 @@ interface Message {
   date: string;
   approved: boolean;
 }
-
 const MessageBoard: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      name: 'Ana Silva',
-      message: 'Que alegria acompanhar essa jornada de vocês! Desejo muito amor e felicidade! 💕',
-      date: '2024-05-20',
-      approved: true
-    },
-    {
-      id: '2',
-      name: 'Carlos Santos',
-      message: 'Vocês são um casal lindo! Que Deus abençoe essa união! 🙏',
-      date: '2024-05-19',
-      approved: true
-    },
-    {
-      id: '3',
-      name: 'Mariana Costa',
-      message: 'Mal posso esperar para celebrar com vocês! Vai ser lindo! ✨',
-      date: '2024-05-18',
-      approved: true
-    }
-  ]);
-
+  const [messages, setMessages] = useState<Message[]>([{
+    id: '1',
+    name: 'Ana Silva',
+    message: 'Que alegria acompanhar essa jornada de vocês! Desejo muito amor e felicidade! 💕',
+    date: '2024-05-20',
+    approved: true
+  }, {
+    id: '2',
+    name: 'Carlos Santos',
+    message: 'Vocês são um casal lindo! Que Deus abençoe essa união! 🙏',
+    date: '2024-05-19',
+    approved: true
+  }, {
+    id: '3',
+    name: 'Mariana Costa',
+    message: 'Mal posso esperar para celebrar com vocês! Vai ser lindo! ✨',
+    date: '2024-05-18',
+    approved: true
+  }]);
   const [newName, setNewName] = useState('');
   const [newMessage, setNewMessage] = useState('');
-
   const addMessage = () => {
     if (newName && newMessage) {
       const message: Message = {
@@ -55,40 +46,24 @@ const MessageBoard: React.FC = () => {
       setNewMessage('');
     }
   };
-
   const approvedMessages = messages.filter(m => m.approved);
-
-  return (
-    <div className="space-y-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-blush/20">
-        <h3 className="text-2xl font-elegant font-semibold mb-2">Recados dos Convidados</h3>
-        <p className="text-muted-foreground">
+  return <div className="space-y-6">
+      <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-blush/20 bg-wedding-primary">
+        <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Recados dos Convidados</h3>
+        <p className="text-slate-50">
           Deixe uma mensagem carinhosa para os noivos
         </p>
       </Card>
 
-      <Card className="p-6">
-        <h4 className="text-lg font-semibold mb-4">Deixe seu Recado</h4>
+      <Card className="p-6 bg-wedding-primary">
+        <h4 className="text-lg font-semibold mb-4 text-slate-50">Deixe seu Recado</h4>
         <div className="space-y-4">
-          <Input
-            placeholder="Seu nome"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-          />
-          <Textarea
-            placeholder="Escreva uma mensagem carinhosa para os noivos..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            rows={4}
-          />
-          <Button 
-            onClick={addMessage}
-            className="w-full bg-wedding-primary hover:bg-wedding-rose"
-            disabled={!newName || !newMessage}
-          >
+          <Input placeholder="Seu nome" value={newName} onChange={e => setNewName(e.target.value)} className="bg-wedding-secondary" />
+          <Textarea placeholder="Escreva uma mensagem carinhosa para os noivos..." value={newMessage} onChange={e => setNewMessage(e.target.value)} rows={4} className="bg-wedding-secondary" />
+          <Button onClick={addMessage} disabled={!newName || !newMessage} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
             Enviar Mensagem
           </Button>
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-xs text-center text-slate-50">
             Sua mensagem será moderada antes de aparecer publicamente
           </p>
         </div>
@@ -96,8 +71,7 @@ const MessageBoard: React.FC = () => {
 
       <div className="space-y-4">
         <h4 className="text-lg font-semibold">Mensagens dos Convidados</h4>
-        {approvedMessages.map((message) => (
-          <Card key={message.id} className="p-4 bg-white/80">
+        {approvedMessages.map(message => <Card key={message.id} className="p-4 bg-white/80">
             <div className="flex items-start space-x-3">
               <div className="w-10 h-10 rounded-full bg-wedding-primary/20 flex items-center justify-center">
                 <span className="text-sm font-medium">
@@ -112,11 +86,8 @@ const MessageBoard: React.FC = () => {
                 <p className="text-sm text-muted-foreground">{message.message}</p>
               </div>
             </div>
-          </Card>
-        ))}
+          </Card>)}
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default MessageBoard;
