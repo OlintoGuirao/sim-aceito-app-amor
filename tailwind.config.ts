@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				wedding: {
+					primary: '#F8BBD9',
+					secondary: '#E4D5B7',
+					accent: '#F7E7CE',
+					rose: '#F5B2B2',
+					gold: '#D4AF37',
+					pearl: '#F8F6F0',
+					blush: '#FFE4E1'
 				}
 			},
 			borderRadius: {
@@ -84,11 +94,46 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'fade-in': {
+					'0%': {
+						opacity: '0',
+						transform: 'translateY(10px)'
+					},
+					'100%': {
+						opacity: '1',
+						transform: 'translateY(0)'
+					}
+				},
+				'float': {
+					'0%, 100%': {
+						transform: 'translateY(0px)'
+					},
+					'50%': {
+						transform: 'translateY(-10px)'
+					}
+				},
+				'sparkle': {
+					'0%, 100%': {
+						opacity: '0.4',
+						transform: 'scale(0.8)'
+					},
+					'50%': {
+						opacity: '1',
+						transform: 'scale(1.2)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.6s ease-out',
+				'float': 'float 3s ease-in-out infinite',
+				'sparkle': 'sparkle 2s ease-in-out infinite'
+			},
+			fontFamily: {
+				'script': ['Dancing Script', 'cursive'],
+				'elegant': ['Playfair Display', 'serif'],
 			}
 		}
 	},
