@@ -96,7 +96,7 @@ export default function ConfirmPage() {
         </Card>
       </div>;
   }
-  return <div className="min-h-screen flex items-center justify-center p-4 bg-wedding-secondary">
+  return <div className="min-h-screen flex items-center justify-center p-4 bg-wedding-primary">
       <Card className="w-full max-w-md p-6 bg-white shadow-lg">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-[#5f161c] mb-2">Confirme sua Presença</h1>
