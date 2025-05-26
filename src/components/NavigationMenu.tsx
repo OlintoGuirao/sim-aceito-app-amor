@@ -33,7 +33,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
         {menuItems.map(item => <button key={item.id} onClick={() => onSectionChange(item.id)} className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${activeSection === item.id ? 'bg-wedding-marsala text-wedding-cream shadow-lg' : 'bg-white/50 hover:bg-wedding-secondary/60'}`}>
             <div className="text-xl mb-1">{item.icon}</div>
-            <div className="text-xs font-medium bg-transparent">{item.label}</div>
+            <div className="text-black text-xs font-medium bg-transparent">{item.label}</div>
           </button>)}
       </div>
     </Card>;
