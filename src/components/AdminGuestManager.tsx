@@ -169,7 +169,7 @@ export function AdminGuestManager() {
             <CardHeader className="bg-wedding-secondary">
               <CardTitle className="text-black">Gerar QR Code</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
                 <select onChange={e => {
                 const guest = guests.find(g => g.id === e.target.value);
