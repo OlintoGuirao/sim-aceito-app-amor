@@ -74,13 +74,13 @@ const MessageBoard: React.FC = () => {
         {approvedMessages.map(message => <Card key={message.id} className="p-4 bg-white/80">
             <div className="flex items-start space-x-3">
               <div className="w-10 h-10 rounded-full bg-wedding-primary/20 flex items-center justify-center">
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium text-black">
                   {message.name.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <h5 className="font-medium">{message.name}</h5>
+                  <h5 className="font-medium text-black">{message.name}</h5>
                   <span className="text-xs text-muted-foreground">{message.date}</span>
                 </div>
                 <p className="text-sm text-black">{message.message}</p>
