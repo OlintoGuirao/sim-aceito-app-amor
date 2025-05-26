@@ -119,7 +119,7 @@ export default function ConfirmPage() {
         </div>
 
         <div className="space-y-3">
-          <Button onClick={handleConfirm} className="w-full bg-[#f5e6d3] hover:bg-[#5f161c] text-[#5f161c] hover:text-white transition-colors">
+          <Button onClick={handleConfirm} className="w-full transition-colors bg-wedding-primary text-white">
             Confirmar Presença
           </Button>
           <Button onClick={handleDecline} variant="outline" className="w-full border-[#5f161c]/20 hover:bg-[#5f161c] hover:text-white">
