@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import WeddingHeader from '@/components/WeddingHeader';
 import CountdownTimer from '@/components/CountdownTimer';
 import NavigationMenu from '@/components/NavigationMenu';
-import GuestManager from '@/components/GuestManager';
 import GiftList from '@/components/GiftList';
 import EventLocation from '@/components/EventLocation';
 import PhotoGallery from '@/components/PhotoGallery';
@@ -26,8 +24,6 @@ const Index = () => {
             <CountdownTimer targetDate={weddingDate} />
           </div>
         );
-      case 'guests':
-        return <GuestManager />;
       case 'gifts':
         return <GiftList />;
       case 'location':
