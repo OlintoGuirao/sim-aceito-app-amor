@@ -19,13 +19,13 @@ export default function AdminPage() {
       backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))'
     }} className="min-h-screen flex items-center justify-center bg-wedding-secondary">
         <Card className="w-full max-w-md">
-          <CardHeader className="bg-wedding-primary">
-            <CardTitle className="text-center text-wedding-secondary">Área Administrativa</CardTitle>
+          <CardHeader className="bg-wedding-secondary">
+            <CardTitle className="text-center text-black">Área Administrativa</CardTitle>
           </CardHeader>
-          <CardContent className="bg-wedding-primary">
+          <CardContent className="bg-wedding-secondary">
             <div className="space-y-4">
               <Input type="password" placeholder="Digite a senha" value={password} onChange={e => setPassword(e.target.value)} className="bg-wedding-secondary" />
-              <Button onClick={handleLogin} className="w-full bg-wedding-secondary text-black">
+              <Button onClick={handleLogin} className="w-full bg-wedding-primary text-white">
                 Entrar
               </Button>
             </div>
