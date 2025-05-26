@@ -157,7 +157,7 @@ export function AdminGuestManager() {
                       <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="text-white bg-wedding-primary">
                         Confirmado
                       </Button>
-                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')}>
+                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="text-white bg-wedding-primary">
                         Declinado
                       </Button>
                       <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)}>
