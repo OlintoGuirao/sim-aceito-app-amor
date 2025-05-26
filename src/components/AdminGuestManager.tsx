@@ -195,7 +195,7 @@ export function AdminGuestManager() {
                       {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
                     </div>
                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="flex-1 sm:flex-none">
+                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="flex-1 sm:flex-none text-black bg-wedding-primary">
                         Confirmado
                       </Button>
                       <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="flex-1 sm:flex-none">
