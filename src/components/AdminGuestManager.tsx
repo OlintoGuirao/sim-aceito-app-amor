@@ -190,7 +190,7 @@ export function AdminGuestManager() {
                       <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="text-black bg-wedding-secondary">
                         Confirmado
                       </Button>
-                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')}>
+                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="text-black bg-wedding-secondary">
                         Declinado
                       </Button>
                       {guest.email && <Button variant="outline" size="icon" onClick={() => handleSendQRCode(guest)} disabled={sendingEmail === guest.id} className="bg-wedding-primary text-black hover:bg-wedding-secondary">
