@@ -78,23 +78,23 @@ export function AdminGuestManager() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-wedding-secondary">
-            <CardTitle className="text-sm font-medium">Confirmados</CardTitle>
+            <CardTitle className="text-sm font-medium text-black">Confirmados</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold">{confirmedCount}</div>
+            <div className="text-2xl font-bold bg-transparent">{confirmedCount}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-wedding-secondary">
-            <CardTitle className="text-sm font-medium">Pendentes</CardTitle>
+            <CardTitle className="text-sm font-medium text-black">Pendentes</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold">{pendingCount}</div>
+            <div className="text-2xl font-bold bg-wedding-secondary">{pendingCount}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-wedding-secondary">
-            <CardTitle className="text-sm font-medium">Declinados</CardTitle>
+            <CardTitle className="text-sm font-medium text-black">Declinados</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
             <div className="text-2xl font-bold">{declinedCount}</div>
@@ -104,7 +104,7 @@ export function AdminGuestManager() {
 
       <Tabs defaultValue="add" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-wedding-primary">
-          <TabsTrigger value="add" className="text-gray-950 bg-wedding-secondary">Adicionar Convidado</TabsTrigger>
+          <TabsTrigger value="add" className="bg-wedding-secondary text-black">Adicionar Convidado</TabsTrigger>
           <TabsTrigger value="list" className="text-black bg-wedding-secondary">Lista de Convidados</TabsTrigger>
           <TabsTrigger value="qrcode" className="text-black bg-wedding-secondary">QR Code</TabsTrigger>
         </TabsList>
@@ -112,7 +112,7 @@ export function AdminGuestManager() {
         <TabsContent value="add">
           <Card className="bg-wedding-secondary">
             <CardHeader className="bg-wedding-secondary">
-              <CardTitle>Adicionar Novo Convidado</CardTitle>
+              <CardTitle className="text-black">Adicionar Novo Convidado</CardTitle>
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4 bg-wedding-secondary">
