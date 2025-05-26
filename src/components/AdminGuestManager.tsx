@@ -68,7 +68,7 @@ export function AdminGuestManager() {
   return <div className="space-y-6" style={{
     backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))'
   }}>
-      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20 bg-wedding-primary">
+      <Card className="bg-wedding-primary">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Gerenciamento de Convidados</h3>
         <p className="text-slate-50">
           Área administrativa para gerenciar a lista de convidados
