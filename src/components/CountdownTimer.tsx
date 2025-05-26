@@ -50,7 +50,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
           <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2\n">
             {timeLeft.hours}
           </div>
-          <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+          <div className="text-sm font-medium text-black uppercase tracking-wide bg-transparent\n">
             Horas
           </div>
         </div>
