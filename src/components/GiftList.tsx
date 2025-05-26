@@ -78,7 +78,7 @@ const GiftList: React.FC = () => {
               <span className="text-4xl">🎁</span>
             </div>
             
-            <div className="p-4">
+            <div className="p-4 bg-wedding-primary">
               <h4 className="font-semibold mb-2">{gift.name}</h4>
               <div className="text-lg font-bold text-wedding-rose mb-3">{gift.price}</div>
               
