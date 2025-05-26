@@ -80,7 +80,7 @@ const GiftList: React.FC = () => {
             
             <div className="p-4 bg-wedding-primary">
               <h4 className="font-semibold mb-2 text-gray-50">{gift.name}</h4>
-              <div className="text-lg font-bold text-wedding-rose mb-3 bg-transparent">{gift.price}</div>
+              <div className="text-lg font-bold text-white mb-3 bg-transparent\n">{gift.price}</div>
               
               {gift.reserved ? <div className="space-y-2">
                   <Badge className="text-green-800 w-full justify-center bg-wedding-lightPalha">
