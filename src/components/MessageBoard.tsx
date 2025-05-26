@@ -58,8 +58,8 @@ const MessageBoard: React.FC = () => {
       <Card className="p-6 bg-wedding-primary">
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Deixe seu Recado</h4>
         <div className="space-y-4">
-          <Input placeholder="Seu nome" value={newName} onChange={e => setNewName(e.target.value)} className="bg-wedding-secondary" />
-          <Textarea placeholder="Escreva uma mensagem carinhosa para os noivos..." value={newMessage} onChange={e => setNewMessage(e.target.value)} rows={4} className="bg-wedding-secondary" />
+          <Input placeholder="Seu nome" value={newName} onChange={e => setNewName(e.target.value)} className="bg-wedding-secondary text-black" />
+          <Textarea placeholder="Escreva uma mensagem carinhosa para os noivos..." value={newMessage} onChange={e => setNewMessage(e.target.value)} rows={4} className="bg-wedding-secondary text-black" />
           <Button onClick={addMessage} disabled={!newName || !newMessage} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
             Enviar Mensagem
           </Button>
@@ -70,7 +70,7 @@ const MessageBoard: React.FC = () => {
       </Card>
 
       <div className="space-y-4">
-        <h4 className="text-lg font-semibold">Mensagens dos Convidados</h4>
+        <h4 className="text-lg font-semibold text-zinc-950">Mensagens dos Convidados</h4>
         {approvedMessages.map(message => <Card key={message.id} className="p-4 bg-white/80">
             <div className="flex items-start space-x-3">
               <div className="w-10 h-10 rounded-full bg-wedding-primary/20 flex items-center justify-center">
@@ -83,7 +83,7 @@ const MessageBoard: React.FC = () => {
                   <h5 className="font-medium">{message.name}</h5>
                   <span className="text-xs text-muted-foreground">{message.date}</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{message.message}</p>
+                <p className="text-sm text-black">{message.message}</p>
               </div>
             </div>
           </Card>)}
