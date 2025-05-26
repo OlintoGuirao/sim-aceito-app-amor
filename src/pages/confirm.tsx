@@ -122,7 +122,7 @@ export default function ConfirmPage() {
           <Button onClick={handleConfirm} className="w-full transition-colors bg-wedding-primary text-white">
             Confirmar Presença
           </Button>
-          <Button onClick={handleDecline} variant="outline" className="w-full border-[#5f161c]/20 hover:bg-[#5f161c] hover:text-white">
+          <Button onClick={handleDecline} variant="outline" className="w-full border-[#5f161c]/20 text-slate-50 bg-red-700 hover:bg-red-600">
             Não Poderei Comparecer
           </Button>
         </div>
