@@ -73,7 +73,7 @@ const GiftList: React.FC = () => {
       </Card>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {gifts.map(gift => <Card key={gift.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+        {gifts.map(gift => <Card key={gift.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-wedding-primary">
             <div className="aspect-square bg-gray-100 flex items-center justify-center">
               <span className="text-4xl">🎁</span>
             </div>
