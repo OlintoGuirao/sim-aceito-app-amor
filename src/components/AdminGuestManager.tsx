@@ -135,11 +135,31 @@ export function AdminGuestManager() {
       </div>
 
       <Tabs defaultValue="add" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-wedding-primary">
-          <TabsTrigger value="add" className="bg-wedding-secondary text-black">Adicionar Convidado</TabsTrigger>
-          <TabsTrigger value="import" className="bg-wedding-secondary text-black">Importar Lista</TabsTrigger>
-          <TabsTrigger value="list" className="bg-wedding-secondary text-black">Lista de Convidados</TabsTrigger>
-          <TabsTrigger value="qrcode" className="text-black bg-wedding-secondary">QR Code</TabsTrigger>
+        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-10">
+          <TabsTrigger 
+            value="add" 
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+          >
+            Adicionar Convidado
+          </TabsTrigger>
+          <TabsTrigger 
+            value="import" 
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+          >
+            Importar Lista
+          </TabsTrigger>
+          <TabsTrigger 
+            value="list" 
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+          >
+            Lista de Convidados
+          </TabsTrigger>
+          <TabsTrigger 
+            value="qrcode" 
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+          >
+            QR Code
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="add">
@@ -173,34 +193,56 @@ export function AdminGuestManager() {
           <GuestImport onImport={loadGuests} />
         </TabsContent>
 
-        <TabsContent value="list">
-          <Card>
+        <TabsContent value="list" className="mt-0">
+          <Card className="mt-4">
             <CardHeader className="bg-wedding-secondary">
               <CardTitle className="text-black">Lista de Convidados</CardTitle>
             </CardHeader>
-            <CardContent className="bg-wedding-secondary">
+            <CardContent>
               <div className="space-y-4">
-                {guests.map(guest => <div key={guest.id} className="flex items-center justify-between p-4 border rounded-lg bg-wedding-primary">
-                    <div>
+                {guests.map(guest => (
+                  <div key={guest.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4">
+                    <div className="w-full sm:w-auto">
                       <h3 className="font-medium text-black">{guest.name}</h3>
                       {guest.email && <p className="text-sm text-black">{guest.email}</p>}
                       {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="text-black bg-wedding-secondary">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                      <Button 
+                        variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'confirmed')}
+                        className="flex-1 sm:flex-none"
+                      >
                         Confirmado
                       </Button>
-                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="text-black bg-wedding-secondary">
+                      <Button 
+                        variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'declined')}
+                        className="flex-1 sm:flex-none"
+                      >
                         Declinado
                       </Button>
-                      {guest.email && <Button variant="outline" size="icon" onClick={() => handleSendQRCode(guest)} disabled={sendingEmail === guest.id} className="bg-wedding-primary text-black hover:bg-wedding-secondary">
+                      {guest.email && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleSendQRCode(guest)}
+                          disabled={sendingEmail === guest.id}
+                          className="bg-wedding-primary text-black hover:bg-wedding-secondary"
+                        >
                           <Mail className="h-4 w-4" />
-                        </Button>}
-                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)} className="text-black bg-wedding-secondary">
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleDeleteGuest(guest.id!)}
+                        className="flex-1 sm:flex-none"
+                      >
                         Excluir
                       </Button>
                     </div>
-                  </div>)}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -213,26 +255,42 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
-                <select onChange={e => {
-                const guest = guests.find(g => g.id === e.target.value);
-                setSelectedGuest(guest || null);
-              }} className="w-full p-2 border rounded bg-wedding-secondary text-black">
+                <select 
+                  onChange={e => {
+                    const guest = guests.find(g => g.id === e.target.value);
+                    setSelectedGuest(guest || null);
+                  }} 
+                  className="w-full p-2 border rounded bg-wedding-secondary text-black"
+                >
                   <option value="">Selecione um convidado</option>
-                  {guests.map(guest => <option key={guest.id} value={guest.id}>
+                  {guests.map(guest => (
+                    <option key={guest.id} value={guest.id}>
                       {guest.name}
-                    </option>)}
+                    </option>
+                  ))}
                 </select>
 
-                {selectedGuest && <div className="flex flex-col items-center space-y-4">
-                    <QRCodeSVG value={`${window.location.origin}/confirm/${selectedGuest.id}`} size={200} />
-                    <p className="text-sm text-black">
+                {selectedGuest && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <QRCodeSVG 
+                      value={`${window.location.origin}/confirm/${selectedGuest.id}`} 
+                      size={200} 
+                    />
+                    <p className="text-sm text-black text-center">
                       QR Code para: {selectedGuest.name}
                     </p>
-                    {selectedGuest.email && <Button onClick={() => handleSendQRCode(selectedGuest)} disabled={sendingEmail === selectedGuest.id} className="bg-wedding-primary text-black hover:bg-wedding-secondary">
+                    {selectedGuest.email && (
+                      <Button
+                        onClick={() => handleSendQRCode(selectedGuest)}
+                        disabled={sendingEmail === selectedGuest.id}
+                        className="bg-wedding-primary text-black hover:bg-wedding-secondary w-full sm:w-auto"
+                      >
                         <Mail className="h-4 w-4 mr-2" />
                         Enviar por Email
-                      </Button>}
-                  </div>}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
