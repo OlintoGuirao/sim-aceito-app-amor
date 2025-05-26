@@ -27,7 +27,7 @@ export default function AdminPage() {
         </Card>
       </div>;
   }
-  return <div className="container mx-auto py-8 min-h-screen bg-wedding-primary">
+  return <div className="container mx-auto min-h-screen bg-wedding-primary py-[32px]">
       <AdminGuestManager />
     </div>;
 }
