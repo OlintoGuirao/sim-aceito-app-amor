@@ -76,7 +76,7 @@ const GuestManager: React.FC = () => {
           <div className="text-2xl font-bold text-green-600">{confirmedGuests.length}</div>
           <div className="text-sm text-green-700">Confirmados</div>
         </Card>
-        <Card className="p-4 text-center bg-yellow-50">
+        <Card className="p-4 text-center bg-slate-50">
           <div className="text-2xl font-bold text-yellow-600">{pendingGuests.length}</div>
           <div className="text-sm text-yellow-700">Pendentes</div>
         </Card>
