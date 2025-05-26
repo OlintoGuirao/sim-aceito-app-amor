@@ -89,7 +89,7 @@ const GuestManager: React.FC = () => {
       <Card className="p-6 bg-wedding-primary">
         <h3 className="text-lg font-semibold mb-4 text-slate-50">Adicionar Convidado</h3>
         <div className="flex gap-2 mb-4">
-          <Input placeholder="Nome do convidado" value={newGuestName} onChange={e => setNewGuestName(e.target.value)} className="bg-slate-50 text-black" />
+          <Input placeholder="Nome do convidado" value={newGuestName} onChange={e => setNewGuestName(e.target.value)} className="bg-slate-50 text-gray-600" />
           <Input placeholder="Email" type="email" value={newGuestEmail} onChange={e => setNewGuestEmail(e.target.value)} className="bg-slate-50" />
           <Button onClick={addGuest} className="hover:bg-wedding-rose bg-wedding-secondary text-black">
             Adicionar
