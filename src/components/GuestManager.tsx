@@ -97,7 +97,7 @@ const GuestManager: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="p-6">
+      <Card className="p-6 bg-wedding-darkMarsala">
         <h3 className="text-lg font-semibold mb-4">Lista de Convidados</h3>
         <div className="space-y-3">
           {guests.map(guest => <div key={guest.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
