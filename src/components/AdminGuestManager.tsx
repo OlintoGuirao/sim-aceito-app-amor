@@ -110,25 +110,25 @@ export function AdminGuestManager() {
         </TabsList>
 
         <TabsContent value="add">
-          <Card>
+          <Card className="bg-wedding-secondary">
             <CardHeader className="bg-wedding-secondary">
               <CardTitle>Adicionar Novo Convidado</CardTitle>
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
-              <div className="space-y-4">
+              <div className="space-y-4 bg-wedding-secondary">
                 <Input placeholder="Nome do convidado" value={newGuest.name} onChange={e => setNewGuest({
                 ...newGuest,
                 name: e.target.value
-              })} />
+              })} className="bg-wedding-primary" />
                 <Input placeholder="Email (opcional)" value={newGuest.email} onChange={e => setNewGuest({
                 ...newGuest,
                 email: e.target.value
-              })} />
+              })} className="bg-wedding-primary" />
                 <Input placeholder="Telefone (opcional)" value={newGuest.phone} onChange={e => setNewGuest({
                 ...newGuest,
                 phone: e.target.value
-              })} />
-                <Button onClick={handleAddGuest}>Adicionar</Button>
+              })} className="bg-wedding-primary" />
+                <Button onClick={handleAddGuest} className="text-white bg-wedding-primary">Adicionar</Button>
               </div>
             </CardContent>
           </Card>
