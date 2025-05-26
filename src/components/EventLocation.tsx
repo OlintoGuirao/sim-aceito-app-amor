@@ -1,18 +1,14 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
 const EventLocation: React.FC = () => {
   const openInMaps = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
     window.open(`https://www.google.com/maps/search/${encodedAddress}`, '_blank');
   };
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="p-6">
+        <Card className="p-6 bg-wedding-primary">
           <div className="text-center mb-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-wedding-primary/20 mb-4">
               <span className="text-2xl">⛪</span>
@@ -34,10 +30,7 @@ const EventLocation: React.FC = () => {
               <p className="text-sm text-muted-foreground">Chegada dos convidados: 15:30h</p>
             </div>
             
-            <Button 
-              onClick={() => openInMaps('Igreja São José, Rua das Flores, 123, Centro, São Paulo, SP')}
-              className="w-full bg-wedding-primary hover:bg-wedding-rose"
-            >
+            <Button onClick={() => openInMaps('Igreja São José, Rua das Flores, 123, Centro, São Paulo, SP')} className="w-full bg-wedding-primary hover:bg-wedding-rose">
               Ver no Mapa
             </Button>
           </div>
@@ -65,10 +58,7 @@ const EventLocation: React.FC = () => {
               <p className="text-sm text-muted-foreground">Jantar seguido de festa</p>
             </div>
             
-            <Button 
-              onClick={() => openInMaps('Salão Crystal, Av. dos Noivos, 456, Jardim das Rosas, São Paulo, SP')}
-              className="w-full bg-wedding-secondary hover:bg-wedding-gold"
-            >
+            <Button onClick={() => openInMaps('Salão Crystal, Av. dos Noivos, 456, Jardim das Rosas, São Paulo, SP')} className="w-full bg-wedding-secondary hover:bg-wedding-gold">
               Ver no Mapa
             </Button>
           </div>
@@ -105,8 +95,6 @@ const EventLocation: React.FC = () => {
           </div>
         </div>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 export default EventLocation;
