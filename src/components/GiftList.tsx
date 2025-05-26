@@ -1,119 +1,313 @@
 import React, { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-interface Gift {
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { QRCodeSVG } from 'qrcode.react';
+import { Gift, CreditCard, QrCode, Mail } from 'lucide-react';
+
+interface GiftItem {
   id: string;
   name: string;
-  image?: string;
+  category: string;
+  price: number;
+  image: string;
   link: string;
-  price: string;
-  reserved: boolean;
+  status: 'available' | 'reserved' | 'purchased';
   reservedBy?: string;
-  isPix?: boolean;
 }
+
+interface Experience {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  status: 'available' | 'reserved' | 'purchased';
+  reservedBy?: string;
+}
+
 const GiftList: React.FC = () => {
-  const [gifts, setGifts] = useState<Gift[]>([{
-    id: 'pix',
-    name: 'PIX - Presente em Dinheiro',
-    image: '/placeholder.svg',
-    link: 'https://nubank.com.br/pagar/1q2w3e4r5t6y7u8i9o0p',
-    price: 'Valor à escolha',
-    reserved: false,
-    isPix: true
-  }, {
-    id: '1',
-    name: 'Jogo de Panelas Inox',
-    image: '/placeholder.svg',
-    link: 'https://magazineluiza.com.br',
-    price: 'R$ 299,90',
-    reserved: false
-  }, {
-    id: '2',
-    name: 'Conjunto de Taças de Cristal',
-    image: '/placeholder.svg',
-    link: 'https://amazon.com.br',
-    price: 'R$ 189,90',
-    reserved: true,
-    reservedBy: 'Ana Silva'
-  }, {
-    id: '3',
-    name: 'Máquina de Café Expresso',
-    image: '/placeholder.svg',
-    link: 'https://casasbahia.com.br',
-    price: 'R$ 899,90',
-    reserved: false
-  }, {
-    id: '4',
-    name: 'Jogo de Cama King Size',
-    image: '/placeholder.svg',
-    link: 'https://magazineluiza.com.br',
-    price: 'R$ 459,90',
-    reserved: false
-  }, {
-    id: '5',
-    name: 'Liquidificador Premium',
-    image: '/placeholder.svg',
-    link: 'https://amazon.com.br',
-    price: 'R$ 199,90',
-    reserved: true,
-    reservedBy: 'Carlos Santos'
-  }, {
-    id: '6',
-    name: 'Aspirador de Pó Robot',
-    image: '/placeholder.svg',
-    link: 'https://casasbahia.com.br',
-    price: 'R$ 1.299,90',
-    reserved: false
-  }]);
-  const reserveGift = (giftId: string) => {
-    setGifts(gifts.map(gift => gift.id === giftId ? {
-      ...gift,
-      reserved: true,
-      reservedBy: 'Você'
-    } : gift));
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [reservationName, setReservationName] = useState('');
+  const [reservationEmail, setReservationEmail] = useState('');
+  const [selectedGift, setSelectedGift] = useState<GiftItem | null>(null);
+
+  const categories = [
+    { id: 'all', name: 'Todos' },
+    { id: 'casa', name: 'Casa' },
+    { id: 'cozinha', name: 'Cozinha' },
+    { id: 'decoracao', name: 'Decoração' },
+    { id: 'experiencias', name: 'Experiências' },
+  ];
+
+  const gifts: GiftItem[] = [
+    {
+      id: '1',
+      name: 'Jogo de Panelas Tramontina',
+      category: 'cozinha',
+      price: 899.90,
+      image: '/images/gifts/panelas.jpg',
+      link: 'https://exemplo.com/panelas',
+      status: 'available'
+    },
+    {
+      id: '2',
+      name: 'Liquidificador Oster',
+      category: 'cozinha',
+      price: 299.90,
+      image: '/images/gifts/liquidificador.jpg',
+      link: 'https://exemplo.com/liquidificador',
+      status: 'available'
+    },
+    {
+      id: '3',
+      name: 'Jogo de Cama Queen',
+      category: 'casa',
+      price: 199.90,
+      image: '/images/gifts/cama.jpg',
+      link: 'https://exemplo.com/cama',
+      status: 'available'
+    },
+    // Adicione mais presentes aqui
+  ];
+
+  const experiences: Experience[] = [
+    {
+      id: 'exp1',
+      name: 'Jantar Romântico',
+      description: 'Um jantar especial em um restaurante exclusivo',
+      price: 500,
+      image: '/images/experiences/jantar.jpg',
+      status: 'available'
+    },
+    {
+      id: 'exp2',
+      name: 'Passeio de Helicóptero',
+      description: 'Um passeio inesquecível sobre a cidade',
+      price: 1500,
+      image: '/images/experiences/helicoptero.jpg',
+      status: 'available'
+    },
+    // Adicione mais experiências aqui
+  ];
+
+  const handleReserveGift = async (gift: GiftItem) => {
+    if (!reservationName || !reservationEmail) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
+    try {
+      // Aqui você implementaria a lógica de reserva no backend
+      toast.success('Presente reservado com sucesso!');
+      // Atualizar o status do presente
+      gift.status = 'reserved';
+      gift.reservedBy = reservationName;
+    } catch (error) {
+      toast.error('Erro ao reservar presente');
+    }
   };
-  return <div className="space-y-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-wedding-primary/20 to-wedding-secondary/20 bg-wedding-primary rounded-none">
-        <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Lista de Presentes</h3>
-        <p className="text-slate-50">
-          Escolha um presente especial para os noivos e ajude a construir o novo lar!
+
+  const pixData = {
+    key: '123.456.789-00',
+    name: 'Fabii e Xuniim',
+    bank: 'Nubank',
+    agency: '1234',
+    account: '56789-0'
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
+        <h3 className="text-2xl font-elegant font-semibold mb-2 text-black">Lista de Presentes</h3>
+        <p className="text-black">
+          Sua presença é nosso maior presente, mas se desejar nos presentear, aqui estão algumas sugestões
         </p>
       </Card>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {gifts.map(gift => <Card key={gift.id} className="overflow-hidden hover:shadow-lg transition-shadow bg-wedding-primary">
-            <div className="aspect-square bg-gray-100 flex items-center justify-center">
-              <span className="text-4xl">{gift.isPix ? '💸' : '🎁'}</span>
+      <Tabs defaultValue="gifts" className="w-full">
+        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-10">
+          <TabsTrigger 
+            value="gifts" 
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+          >
+            <Gift className="w-4 h-4 mr-2" />
+            Presentes
+          </TabsTrigger>
+          <TabsTrigger 
+            value="pix" 
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+          >
+            <QrCode className="w-4 h-4 mr-2" />
+            Pix
+          </TabsTrigger>
+          <TabsTrigger 
+            value="transfer" 
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            Transferência
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="gifts">
+          <div className="space-y-6">
+            <div className="flex flex-wrap gap-2">
+              {categories.map(category => (
+                <Button
+                  key={category.id}
+                  variant={selectedCategory === category.id ? 'default' : 'outline'}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className="bg-wedding-secondary text-black hover:bg-wedding-primary hover:text-white"
+                >
+                  {category.name}
+                </Button>
+              ))}
             </div>
-            
-            <div className="p-4 bg-wedding-primary">
-              <h4 className="font-semibold mb-2 text-gray-50">{gift.name}</h4>
-              <div className="text-lg font-bold text-white mb-3 bg-transparent">{gift.price}</div>
-              
-              {gift.reserved ? <div className="space-y-2">
-                  <Badge className="text-black w-full justify-center bg-wedding-lightPalha">
-                    Reservado por {gift.reservedBy}
-                  </Badge>
-                </div> : <div className="space-y-2">
-                  {gift.isPix ? (
-                    <Button onClick={() => window.open(gift.link, '_blank')} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
-                      Fazer PIX
-                    </Button>
-                  ) : (
-                    <>
-                      <Button onClick={() => reserveGift(gift.id)} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
-                        Reservar Presente
-                      </Button>
-                      <Button variant="outline" onClick={() => window.open(gift.link, '_blank')} className="w-full bg-wedding-secondary text-black">
-                        Ver na Loja
-                      </Button>
-                    </>
-                  )}
-                </div>}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {gifts
+                .filter(gift => selectedCategory === 'all' || gift.category === selectedCategory)
+                .map(gift => (
+                  <Card key={gift.id} className="bg-wedding-secondary">
+                    <CardHeader>
+                      <CardTitle className="text-black">{gift.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        <img 
+                          src={gift.image} 
+                          alt={gift.name}
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <p className="text-black font-semibold">
+                          R$ {gift.price.toFixed(2)}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="flex-1 bg-wedding-primary text-white hover:bg-wedding-primary/90"
+                            onClick={() => window.open(gift.link, '_blank')}
+                          >
+                            Ver na Loja
+                          </Button>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className="flex-1 bg-wedding-primary text-white hover:bg-wedding-primary/90"
+                                disabled={gift.status !== 'available'}
+                              >
+                                Reservar
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Reservar Presente</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4 py-4">
+                                <Input
+                                  placeholder="Seu nome"
+                                  value={reservationName}
+                                  onChange={(e) => setReservationName(e.target.value)}
+                                />
+                                <Input
+                                  placeholder="Seu email"
+                                  type="email"
+                                  value={reservationEmail}
+                                  onChange={(e) => setReservationEmail(e.target.value)}
+                                />
+                                <Button
+                                  className="w-full bg-wedding-primary text-white"
+                                  onClick={() => handleReserveGift(gift)}
+                                >
+                                  Confirmar Reserva
+                                </Button>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
-          </Card>)}
-      </div>
-    </div>;
+          </div>
+        </TabsContent>
+
+        <TabsContent value="pix">
+          <Card className="bg-wedding-secondary">
+            <CardHeader>
+              <CardTitle className="text-black">Pix</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center space-y-6">
+                <QRCodeSVG 
+                  value={`PIX: ${pixData.key}`}
+                  size={200}
+                />
+                <div className="text-center space-y-2">
+                  <p className="text-black font-semibold">Chave PIX: {pixData.key}</p>
+                  <p className="text-black">Titular: {pixData.name}</p>
+                </div>
+                <Button
+                  className="bg-wedding-primary text-white"
+                  onClick={() => {
+                    navigator.clipboard.writeText(pixData.key);
+                    toast.success('Chave PIX copiada!');
+                  }}
+                >
+                  Copiar Chave PIX
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="transfer">
+          <Card className="bg-wedding-secondary">
+            <CardHeader>
+              <CardTitle className="text-black">Transferência Bancária</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-black font-semibold">Banco</p>
+                    <p className="text-black">{pixData.bank}</p>
+                  </div>
+                  <div>
+                    <p className="text-black font-semibold">Agência</p>
+                    <p className="text-black">{pixData.agency}</p>
+                  </div>
+                  <div>
+                    <p className="text-black font-semibold">Conta</p>
+                    <p className="text-black">{pixData.account}</p>
+                  </div>
+                  <div>
+                    <p className="text-black font-semibold">Titular</p>
+                    <p className="text-black">{pixData.name}</p>
+                  </div>
+                </div>
+                <Button
+                  className="w-full bg-wedding-primary text-white"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${pixData.bank}\nAgência: ${pixData.agency}\nConta: ${pixData.account}\nTitular: ${pixData.name}`);
+                    toast.success('Dados bancários copiados!');
+                  }}
+                >
+                  Copiar Dados Bancários
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
 };
+
 export default GiftList;
