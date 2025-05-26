@@ -7,6 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
+import { toast } from "sonner";
+import { Mail, QrCode } from "lucide-react";
+
 export function AdminGuestManager() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [newGuest, setNewGuest] = useState({
@@ -15,11 +18,13 @@ export function AdminGuestManager() {
     phone: ''
   });
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
 
   // Carregar convidados do Firestore
   useEffect(() => {
     loadGuests();
   }, []);
+
   const loadGuests = async () => {
     try {
       const guestsData = await getGuests();
@@ -28,6 +33,7 @@ export function AdminGuestManager() {
       console.error('Erro ao carregar convidados:', error);
     }
   };
+
   const handleAddGuest = async () => {
     if (!newGuest.name) return;
     try {
@@ -47,6 +53,7 @@ export function AdminGuestManager() {
       console.error('Erro ao adicionar convidado:', error);
     }
   };
+
   const handleStatusChange = async (guestId: string, status: Guest['status']) => {
     try {
       await updateGuestStatus(guestId, status);
@@ -55,6 +62,7 @@ export function AdminGuestManager() {
       console.error('Erro ao atualizar status:', error);
     }
   };
+
   const handleDeleteGuest = async (guestId: string) => {
     try {
       await deleteGuest(guestId);
@@ -63,10 +71,47 @@ export function AdminGuestManager() {
       console.error('Erro ao deletar convidado:', error);
     }
   };
+
+  const handleSendQRCode = async (guest: Guest) => {
+    if (!guest.email) {
+      toast.error('Este convidado não possui email cadastrado');
+      return;
+    }
+
+    setSendingEmail(guest.id);
+    try {
+      const qrCodeUrl = `${window.location.origin}/confirm/${guest.id}`;
+      const response = await fetch('/api/send-qrcode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: guest.email,
+          name: guest.name,
+          qrCodeUrl
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao enviar email');
+      }
+
+      toast.success(`QR Code enviado com sucesso para ${guest.name}`);
+    } catch (error) {
+      console.error('Erro ao enviar QR Code:', error);
+      toast.error('Erro ao enviar QR Code');
+    } finally {
+      setSendingEmail(null);
+    }
+  };
+
   const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
   const pendingCount = guests.filter(g => g.status === 'pending').length;
   const declinedCount = guests.filter(g => g.status === 'declined').length;
-  return <div className="space-y-6 p-6">
+
+  return (
+    <div className="space-y-6 p-6">
       <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-black">Gerenciamento de Convidados</h3>
         <p className="text-black">
@@ -116,18 +161,33 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4 bg-wedding-secondary">
-                <Input placeholder="Nome do convidado" value={newGuest.name} onChange={e => setNewGuest({
-                ...newGuest,
-                name: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Input placeholder="Email (opcional)" value={newGuest.email} onChange={e => setNewGuest({
-                ...newGuest,
-                email: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Input placeholder="Telefone (opcional)" value={newGuest.phone} onChange={e => setNewGuest({
-                ...newGuest,
-                phone: e.target.value
-              })} className="bg-wedding-primary text-black" />
+                <Input 
+                  placeholder="Nome do convidado" 
+                  value={newGuest.name} 
+                  onChange={e => setNewGuest({
+                    ...newGuest,
+                    name: e.target.value
+                  })} 
+                  className="bg-wedding-primary text-black" 
+                />
+                <Input 
+                  placeholder="Email (opcional)" 
+                  value={newGuest.email} 
+                  onChange={e => setNewGuest({
+                    ...newGuest,
+                    email: e.target.value
+                  })} 
+                  className="bg-wedding-primary text-black" 
+                />
+                <Input 
+                  placeholder="Telefone (opcional)" 
+                  value={newGuest.phone} 
+                  onChange={e => setNewGuest({
+                    ...newGuest,
+                    phone: e.target.value
+                  })} 
+                  className="bg-wedding-primary text-black" 
+                />
                 <Button onClick={handleAddGuest} className="text-black bg-wedding-primary">
                   Adicionar
                 </Button>
@@ -147,24 +207,46 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {guests.map(guest => <div key={guest.id} className="flex items-center justify-between p-4 border rounded-lg bg-wedding-lightPalha">
+                {guests.map(guest => (
+                  <div key={guest.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
                       <h3 className="font-medium text-black">{guest.name}</h3>
                       {guest.email && <p className="text-sm text-black">{guest.email}</p>}
                       {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="text-white bg-wedding-primary">
+                      <Button 
+                        variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'confirmed')}
+                      >
                         Confirmado
                       </Button>
-                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="text-white bg-wedding-primary">
+                      <Button 
+                        variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'declined')}
+                      >
                         Declinado
                       </Button>
-                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)} className="text-white bg-wedding-primary">
+                      {guest.email && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleSendQRCode(guest)}
+                          disabled={sendingEmail === guest.id}
+                          className="bg-wedding-primary text-black hover:bg-wedding-secondary"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleDeleteGuest(guest.id!)}
+                      >
                         Excluir
                       </Button>
                     </div>
-                  </div>)}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -177,26 +259,47 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
-                <select onChange={e => {
-                const guest = guests.find(g => g.id === e.target.value);
-                setSelectedGuest(guest || null);
-              }} className="w-full p-2 border rounded bg-wedding-secondary text-black">
+                <select 
+                  onChange={e => {
+                    const guest = guests.find(g => g.id === e.target.value);
+                    setSelectedGuest(guest || null);
+                  }} 
+                  className="w-full p-2 border rounded bg-wedding-secondary text-black"
+                >
                   <option value="">Selecione um convidado</option>
-                  {guests.map(guest => <option key={guest.id} value={guest.id}>
+                  {guests.map(guest => (
+                    <option key={guest.id} value={guest.id}>
                       {guest.name}
-                    </option>)}
+                    </option>
+                  ))}
                 </select>
 
-                {selectedGuest && <div className="flex flex-col items-center space-y-4">
-                    <QRCodeSVG value={`${window.location.origin}/confirm/${selectedGuest.id}`} size={200} />
+                {selectedGuest && (
+                  <div className="flex flex-col items-center space-y-4">
+                    <QRCodeSVG 
+                      value={`${window.location.origin}/confirm/${selectedGuest.id}`} 
+                      size={200} 
+                    />
                     <p className="text-sm text-black">
                       QR Code para: {selectedGuest.name}
                     </p>
-                  </div>}
+                    {selectedGuest.email && (
+                      <Button
+                        onClick={() => handleSendQRCode(selectedGuest)}
+                        disabled={sendingEmail === selectedGuest.id}
+                        className="bg-wedding-primary text-black hover:bg-wedding-secondary"
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Enviar por Email
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 }
