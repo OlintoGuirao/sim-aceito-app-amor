@@ -154,7 +154,7 @@ export function AdminGuestManager() {
                       {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="text-black">
+                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="text-white bg-wedding-primary">
                         Confirmado
                       </Button>
                       <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')}>
