@@ -60,7 +60,7 @@ const MessageBoard: React.FC = () => {
         <div className="space-y-4">
           <Input placeholder="Seu nome" value={newName} onChange={e => setNewName(e.target.value)} className="bg-wedding-secondary text-black" />
           <Textarea placeholder="Escreva uma mensagem carinhosa para os noivos..." value={newMessage} onChange={e => setNewMessage(e.target.value)} rows={4} className="bg-wedding-secondary text-black" />
-          <Button onClick={addMessage} disabled={!newName || !newMessage} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
+          <Button onClick={addMessage} disabled={!newName || !newMessage} className="text-black bg-wedding-secondary">
             Enviar Mensagem
           </Button>
           <p className="text-xs text-center text-slate-50">
