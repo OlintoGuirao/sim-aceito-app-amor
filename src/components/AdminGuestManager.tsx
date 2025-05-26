@@ -196,7 +196,7 @@ export function AdminGuestManager() {
                       {guest.email && <Button variant="outline" size="icon" onClick={() => handleSendQRCode(guest)} disabled={sendingEmail === guest.id} className="bg-wedding-primary text-black hover:bg-wedding-secondary">
                           <Mail className="h-4 w-4" />
                         </Button>}
-                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)}>
+                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)} className="text-black bg-wedding-secondary">
                         Excluir
                       </Button>
                     </div>
