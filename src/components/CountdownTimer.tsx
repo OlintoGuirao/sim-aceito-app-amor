@@ -39,7 +39,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
           <div className="text-3xl md:text-4xl font-bold text-wedding-rose mb-2">
             {timeLeft.days}
           </div>
-          <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide bg-wedding-primary">
+          <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide bg-transparent">
             Dias
           </div>
         </div>
