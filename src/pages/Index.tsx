@@ -6,6 +6,8 @@ import GiftList from '@/components/GiftList';
 import EventLocation from '@/components/EventLocation';
 import PhotoGallery from '@/components/PhotoGallery';
 import MessageBoard from '@/components/MessageBoard';
+import Raffle from '@/components/Raffle';
+import { Toaster } from 'sonner';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('countdown');
@@ -32,24 +34,22 @@ const Index = () => {
         return <PhotoGallery />;
       case 'messages':
         return <MessageBoard />;
+      case 'raffle':
+        return <Raffle />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen wedding-gradient">
+    <div className="min-h-screen bg-gradient-to-b from-wedding-primary to-wedding-secondary">
+      <Toaster position="top-center" richColors />
       <div className="container mx-auto px-4 py-8">
         <WeddingHeader />
-        
-        <NavigationMenu 
-          activeSection={activeSection} 
-          onSectionChange={setActiveSection} 
-        />
-        
-        <div className="animate-fade-in">
+        <NavigationMenu activeSection={activeSection} onSectionChange={setActiveSection} />
+        <main className="mt-8">
           {renderSection()}
-        </div>
+        </main>
       </div>
       
       {/* Floating decorative elements */}
