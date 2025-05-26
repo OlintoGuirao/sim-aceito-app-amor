@@ -57,10 +57,10 @@ const Index = () => {
       </div>
       
       {/* Floating decorative elements */}
-      <div className="fixed top-20 left-10 w-4 h-4 bg-wedding-gold/30 rounded-full animate-float" style={{ animationDelay: '0s' }}></div>
-      <div className="fixed top-32 right-16 w-3 h-3 bg-wedding-rose/30 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
-      <div className="fixed bottom-40 left-20 w-5 h-5 bg-wedding-secondary/30 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
-      <div className="fixed bottom-60 right-8 w-2 h-2 bg-wedding-primary/30 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
+      <div className="fixed top-20 left-10 w-4 h-4 bg-wedding-marsala/30 rounded-full animate-float" style={{ animationDelay: '0s' }}></div>
+      <div className="fixed top-32 right-16 w-3 h-3 bg-wedding-palha/30 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
+      <div className="fixed bottom-40 left-20 w-5 h-5 bg-wedding-accent/30 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
+      <div className="fixed bottom-60 right-8 w-2 h-2 bg-wedding-marsala/20 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
     </div>
   );
 };

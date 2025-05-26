@@ -64,13 +64,13 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				wedding: {
-					primary: '#80461B',
+					primary: '#5f161c',
 					secondary: '#EEDCB0',
-					accent: '#9E5933',
-					marsala: '#80461B',
+					accent: '#80461B',
+					marsala: '#5f161c',
 					palha: '#EEDCB0',
 					cream: '#FAF7F0',
-					darkMarsala: '#5D3113',
+					darkMarsala: '#4a1115',
 					lightPalha: '#F5EDD7'
 				}
 			},
