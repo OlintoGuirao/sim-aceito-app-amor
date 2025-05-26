@@ -26,8 +26,8 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({ activeSection, onSectio
             onClick={() => onSectionChange(item.id)}
             className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${
               activeSection === item.id
-                ? 'bg-wedding-primary text-white shadow-lg'
-                : 'bg-white/50 hover:bg-wedding-primary/20'
+                ? 'bg-wedding-marsala text-wedding-cream shadow-lg'
+                : 'bg-white/50 hover:bg-wedding-palha/40'
             }`}
           >
             <div className="text-xl mb-1">{item.icon}</div>

@@ -64,13 +64,14 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				wedding: {
-					primary: '#F8BBD9',
-					secondary: '#E4D5B7',
-					accent: '#F7E7CE',
-					rose: '#F5B2B2',
-					gold: '#D4AF37',
-					pearl: '#F8F6F0',
-					blush: '#FFE4E1'
+					primary: '#80461B',
+					secondary: '#EEDCB0',
+					accent: '#9E5933',
+					marsala: '#80461B',
+					palha: '#EEDCB0',
+					cream: '#FAF7F0',
+					darkMarsala: '#5D3113',
+					lightPalha: '#F5EDD7'
 				}
 			},
 			borderRadius: {

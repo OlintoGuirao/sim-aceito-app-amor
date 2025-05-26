@@ -6,44 +6,44 @@
 
 @layer base {
   :root {
-    --background: 248 246 240;
-    --foreground: 69 39 160;
+    --background: 250 247 240;
+    --foreground: 128 70 27;
 
     --card: 255 255 255;
-    --card-foreground: 69 39 160;
+    --card-foreground: 128 70 27;
 
     --popover: 255 255 255;
-    --popover-foreground: 69 39 160;
+    --popover-foreground: 128 70 27;
 
-    --primary: 245 178 178;
-    --primary-foreground: 69 39 160;
+    --primary: 128 70 27;
+    --primary-foreground: 250 247 240;
 
-    --secondary: 228 213 183;
-    --secondary-foreground: 69 39 160;
+    --secondary: 238 220 176;
+    --secondary-foreground: 128 70 27;
 
-    --muted: 247 231 206;
-    --muted-foreground: 120 113 108;
+    --muted: 245 237 215;
+    --muted-foreground: 139 115 85;
 
-    --accent: 248 187 217;
-    --accent-foreground: 69 39 160;
+    --accent: 158 89 51;
+    --accent-foreground: 250 247 240;
 
     --destructive: 239 68 68;
     --destructive-foreground: 248 250 252;
 
-    --border: 228 213 183;
-    --input: 228 213 183;
-    --ring: 245 178 178;
+    --border: 238 220 176;
+    --input: 238 220 176;
+    --ring: 128 70 27;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 248 246 240;
-    --sidebar-foreground: 69 39 160;
-    --sidebar-primary: 245 178 178;
-    --sidebar-primary-foreground: 69 39 160;
-    --sidebar-accent: 247 231 206;
-    --sidebar-accent-foreground: 69 39 160;
-    --sidebar-border: 228 213 183;
-    --sidebar-ring: 245 178 178;
+    --sidebar-background: 250 247 240;
+    --sidebar-foreground: 128 70 27;
+    --sidebar-primary: 128 70 27;
+    --sidebar-primary-foreground: 250 247 240;
+    --sidebar-accent: 245 237 215;
+    --sidebar-accent-foreground: 128 70 27;
+    --sidebar-border: 238 220 176;
+    --sidebar-ring: 128 70 27;
   }
 }
 
@@ -59,7 +59,7 @@
 
 @layer components {
   .wedding-gradient {
-    background: linear-gradient(135deg, #F8BBD9 0%, #E4D5B7 50%, #F7E7CE 100%);
+    background: linear-gradient(135deg, #80461B 0%, #EEDCB0 50%, #FAF7F0 100%);
   }
   
   .glass-effect {
