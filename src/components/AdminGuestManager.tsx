@@ -166,7 +166,7 @@ export function AdminGuestManager() {
 
         <TabsContent value="qrcode">
           <Card>
-            <CardHeader>
+            <CardHeader className="bg-wedding-secondary">
               <CardTitle className="text-black">Gerar QR Code</CardTitle>
             </CardHeader>
             <CardContent>
