@@ -90,7 +90,7 @@ const GiftList: React.FC = () => {
                   <Button onClick={() => reserveGift(gift.id)} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
                     Reservar Presente
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={() => window.open(gift.link, '_blank')}>
+                  <Button variant="outline" onClick={() => window.open(gift.link, '_blank')} className="w-full bg-wedding-secondary text-black">
                     Ver na Loja
                   </Button>
                 </div>}
