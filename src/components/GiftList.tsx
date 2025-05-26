@@ -87,7 +87,7 @@ const GiftList: React.FC = () => {
                     Reservado por {gift.reservedBy}
                   </Badge>
                 </div> : <div className="space-y-2">
-                  <Button onClick={() => reserveGift(gift.id)} className="w-full bg-wedding-primary hover:bg-wedding-rose">
+                  <Button onClick={() => reserveGift(gift.id)} className="w-full hover:bg-wedding-rose bg-wedding-secondary text-gray-950">
                     Reservar Presente
                   </Button>
                   <Button variant="outline" className="w-full" onClick={() => window.open(gift.link, '_blank')}>
