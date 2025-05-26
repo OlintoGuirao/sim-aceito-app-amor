@@ -69,7 +69,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
         <div className="glass-effect rounded-2xl p-6 text-center animate-fade-in" style={{
         animationDelay: '0.3s'
       }}>
-          <div className="text-3xl md:text-4xl font-bold text-wedding-rose mb-2">
+          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2\n">
             {timeLeft.seconds}
           </div>
           <div className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
