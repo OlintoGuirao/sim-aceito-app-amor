@@ -105,7 +105,7 @@ export function AdminGuestManager() {
       <Tabs defaultValue="add" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-wedding-primary">
           <TabsTrigger value="add" className="bg-wedding-secondary text-black">Adicionar Convidado</TabsTrigger>
-          <TabsTrigger value="list" className="text-black bg-wedding-secondary">Lista de Convidados</TabsTrigger>
+          <TabsTrigger value="list" className="bg-wedding-secondary text-black">Lista de Convidados</TabsTrigger>
           <TabsTrigger value="qrcode" className="text-black bg-wedding-secondary">QR Code</TabsTrigger>
         </TabsList>
 
@@ -137,7 +137,7 @@ export function AdminGuestManager() {
         <TabsContent value="list">
           <Card>
             <CardHeader className="bg-wedding-primary">
-              <CardTitle>Lista de Convidados</CardTitle>
+              <CardTitle className="text-black">Lista de Convidados</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -167,14 +167,14 @@ export function AdminGuestManager() {
         <TabsContent value="qrcode">
           <Card>
             <CardHeader>
-              <CardTitle>Gerar QR Code</CardTitle>
+              <CardTitle className="text-black">Gerar QR Code</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <select className="w-full p-2 border rounded" onChange={e => {
+                <select onChange={e => {
                 const guest = guests.find(g => g.id === e.target.value);
                 setSelectedGuest(guest || null);
-              }}>
+              }} className="w-full p-2 border rounded bg-wedding-secondary">
                   <option value="">Selecione um convidado</option>
                   {guests.map(guest => <option key={guest.id} value={guest.id}>
                       {guest.name}
