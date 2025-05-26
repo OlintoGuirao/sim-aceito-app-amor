@@ -111,10 +111,10 @@ export function AdminGuestManager() {
 
         <TabsContent value="add">
           <Card>
-            <CardHeader>
+            <CardHeader className="bg-wedding-secondary">
               <CardTitle>Adicionar Novo Convidado</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
                 <Input placeholder="Nome do convidado" value={newGuest.name} onChange={e => setNewGuest({
                 ...newGuest,
