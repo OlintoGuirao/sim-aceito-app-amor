@@ -54,7 +54,7 @@ const GuestManager: React.FC = () => {
       case 'declined':
         return 'bg-red-100 text-red-800';
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-wedding-secondary/20 text-wedding-secondary';
     }
   };
   const getStatusText = (status: string) => {
@@ -77,8 +77,8 @@ const GuestManager: React.FC = () => {
           <div className="text-sm text-green-700">Confirmados</div>
         </Card>
         <Card className="p-4 text-center bg-slate-50">
-          <div className="text-2xl font-bold text-yellow-600">{pendingGuests.length}</div>
-          <div className="text-sm text-yellow-700">Pendentes</div>
+          <div className="text-2xl font-bold text-wedding-secondary">{pendingGuests.length}</div>
+          <div className="text-sm text-wedding-secondary">Pendentes</div>
         </Card>
         <Card className="p-4 text-center bg-red-50">
           <div className="text-2xl font-bold text-red-600">{declinedGuests.length}</div>

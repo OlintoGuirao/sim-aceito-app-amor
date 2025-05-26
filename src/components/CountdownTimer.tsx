@@ -36,10 +36,10 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
   return <div className="flex flex-col items-center space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl">
         <div className="glass-effect rounded-2xl p-6 text-center animate-fade-in">
-          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2\n">
+          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2">
             {timeLeft.days}
           </div>
-          <div className="text-sm font-medium text-black uppercase tracking-wide bg-transparent\n">
+          <div className="text-sm font-medium text-wedding-secondary uppercase tracking-wide bg-transparent">
             Dias
           </div>
         </div>
@@ -47,10 +47,10 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
         <div className="glass-effect rounded-2xl p-6 text-center animate-fade-in" style={{
         animationDelay: '0.1s'
       }}>
-          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2\n">
+          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2">
             {timeLeft.hours}
           </div>
-          <div className="text-sm font-medium text-black uppercase tracking-wide bg-transparent\n">
+          <div className="text-sm font-medium text-wedding-secondary uppercase tracking-wide bg-transparent">
             Horas
           </div>
         </div>
@@ -58,10 +58,10 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
         <div className="glass-effect rounded-2xl p-6 text-center animate-fade-in" style={{
         animationDelay: '0.2s'
       }}>
-          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2\n">
+          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2">
             {timeLeft.minutes}
           </div>
-          <div className="text-sm font-medium text-black uppercase tracking-wide bg-transparent\n">
+          <div className="text-sm font-medium text-wedding-secondary uppercase tracking-wide bg-transparent">
             Minutos
           </div>
         </div>
@@ -69,10 +69,10 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
         <div className="glass-effect rounded-2xl p-6 text-center animate-fade-in" style={{
         animationDelay: '0.3s'
       }}>
-          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2\n">
+          <div className="text-3xl md:text-4xl font-bold text-wedding-marsala mb-2">
             {timeLeft.seconds}
           </div>
-          <div className="text-sm font-medium text-black uppercase tracking-wide bg-transparent\n">
+          <div className="text-sm font-medium text-wedding-secondary uppercase tracking-wide bg-transparent">
             Segundos
           </div>
         </div>
