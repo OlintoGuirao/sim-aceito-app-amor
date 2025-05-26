@@ -17,14 +17,14 @@
     --primary: 95 22 28;
     --primary-foreground: 250 247 240;
 
-    --secondary: 128 70 27;
-    --secondary-foreground: 250 247 240;
+    --secondary: 245 237 215;
+    --secondary-foreground: 95 22 28;
 
     --muted: 245 237 215;
     --muted-foreground: 139 115 85;
 
-    --accent: 128 70 27;
-    --accent-foreground: 250 247 240;
+    --accent: 245 237 215;
+    --accent-foreground: 95 22 28;
 
     --destructive: 239 68 68;
     --destructive-foreground: 248 250 252;
@@ -58,7 +58,7 @@
 
 @layer components {
   .wedding-gradient {
-    background: linear-gradient(135deg, #5f161c 0%, #80461B 50%, #FAF7F0 100%);
+    background: linear-gradient(135deg, #5f161c 0%, #F5EDD7 50%, #FAF7F0 100%);
   }
   
   .glass-effect {

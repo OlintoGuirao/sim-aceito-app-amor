@@ -64,10 +64,10 @@ export default {
 				},
 				wedding: {
 					primary: '#5f161c',
-					secondary: '#80461B',
-					accent: '#80461B',
+					secondary: '#F5EDD7',
+					accent: '#F5EDD7',
 					marsala: '#5f161c',
-					palha: '#80461B',
+					palha: '#F5EDD7',
 					cream: '#FAF7F0',
 					darkMarsala: '#4a1115',
 					lightPalha: '#F5EDD7'
