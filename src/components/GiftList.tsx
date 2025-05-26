@@ -83,7 +83,7 @@ const GiftList: React.FC = () => {
               <div className="text-lg font-bold text-white mb-3 bg-transparent\n">{gift.price}</div>
               
               {gift.reserved ? <div className="space-y-2">
-                  <Badge className="text-green-800 w-full justify-center bg-wedding-lightPalha">
+                  <Badge className="text-black w-full justify-center bg-wedding-lightPalha\n">
                     Reservado por {gift.reservedBy}
                   </Badge>
                 </div> : <div className="space-y-2">
