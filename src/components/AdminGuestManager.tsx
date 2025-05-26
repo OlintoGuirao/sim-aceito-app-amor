@@ -116,7 +116,7 @@ const AdminGuestManager: React.FC = () => {
       <Tabs defaultValue="add" className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-[#f5e6d3]/20">
           <TabsTrigger value="add" className="data-[state=active]:bg-[#5f161c] data-[state=active]:text-white">+ Convidado</TabsTrigger>
-          <TabsTrigger value="list" className="data-[state=active]:bg-[#5f161c] data-[state=active]:text-white">Lista de Convidados</TabsTrigger>
+          <TabsTrigger value="list" className="data-[state=active]:bg-[#5f161c] data-[state=active]:text-white">Convidados</TabsTrigger>
           <TabsTrigger value="qrcodes" className="data-[state=active]:bg-[#5f161c] data-[state=active]:text-white">QR Codes</TabsTrigger>
         </TabsList>
 
