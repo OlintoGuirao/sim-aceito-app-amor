@@ -126,7 +126,7 @@ const AdminGuestManager: React.FC = () => {
             <div className="space-y-4">
               <Input placeholder="Nome do convidado" value={newGuestName} onChange={e => setNewGuestName(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
               <Input placeholder="Email" type="email" value={newGuestEmail} onChange={e => setNewGuestEmail(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
-              <Input placeholder="Grupo (ex: Família, Amigos, Trabalho)" value={newGuestGroup} onChange={e => setNewGuestGroup(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20" />
+              <Input placeholder="Grupo (ex: Família, Amigos, Trabalho)" value={newGuestGroup} onChange={e => setNewGuestGroup(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20 bg-wedding-primary" />
               <Input placeholder="Número da Mesa" type="number" value={newGuestTable} onChange={e => setNewGuestTable(e.target.value)} className="border-[#5f161c]/20 focus:border-[#5f161c] focus:ring-[#5f161c]/20" />
               <Button onClick={addGuest} className="w-full bg-[#f5e6d3] hover:bg-[#5f161c] text-[#5f161c] hover:text-white transition-colors">
                 Adicionar Convidado
