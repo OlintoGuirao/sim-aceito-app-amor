@@ -195,16 +195,16 @@ export function AdminGuestManager() {
                       {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
                     </div>
                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="flex-1 sm:flex-none text-black bg-wedding-primary">
+                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="flex-1 sm:flex-none bg-wedding-primary text-white">
                         Confirmado
                       </Button>
-                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="flex-1 sm:flex-none">
+                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="flex-1 sm:flex-none text-white">
                         Declinado
                       </Button>
-                      {guest.email && <Button variant="outline" size="icon" onClick={() => handleSendQRCode(guest)} disabled={sendingEmail === guest.id} className="bg-wedding-primary text-black hover:bg-wedding-secondary">
+                      {guest.email && <Button variant="outline" size="icon" onClick={() => handleSendQRCode(guest)} disabled={sendingEmail === guest.id} className="bg-wedding-primary text-white">
                           <Mail className="h-4 w-4" />
                         </Button>}
-                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)} className="flex-1 sm:flex-none">
+                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)} className="flex-1 sm:flex-none text-white">
                         Excluir
                       </Button>
                     </div>
