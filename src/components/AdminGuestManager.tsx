@@ -81,7 +81,7 @@ export function AdminGuestManager() {
             <CardTitle className="text-sm font-medium text-black">Confirmados</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold bg-transparent">{confirmedCount}</div>
+            <div className="text-2xl font-bold bg-transparent text-black ">{confirmedCount}</div>
           </CardContent>
         </Card>
         <Card>
