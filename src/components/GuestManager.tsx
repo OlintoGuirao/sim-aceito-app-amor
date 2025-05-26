@@ -91,7 +91,7 @@ const GuestManager: React.FC = () => {
         <div className="flex gap-2 mb-4">
           <Input placeholder="Nome do convidado" value={newGuestName} onChange={e => setNewGuestName(e.target.value)} className="bg-slate-50" />
           <Input placeholder="Email" type="email" value={newGuestEmail} onChange={e => setNewGuestEmail(e.target.value)} className="bg-slate-50" />
-          <Button onClick={addGuest} className="bg-wedding-primary hover:bg-wedding-rose">
+          <Button onClick={addGuest} className="bg-wedding-primary hover:bg-wedding-rose text-slate-50">
             Adicionar
           </Button>
         </div>
