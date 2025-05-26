@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
@@ -6,20 +5,20 @@
 
 @layer base {
   :root {
-    --background: 250 247 240;
-    --foreground: 95 22 28;
+    --background: 95 22 28;
+    --foreground: 250 247 240;
 
-    --card: 255 255 255;
-    --card-foreground: 95 22 28;
+    --card: 95 22 28;
+    --card-foreground: 250 247 240;
 
-    --popover: 255 255 255;
-    --popover-foreground: 95 22 28;
+    --popover: 95 22 28;
+    --popover-foreground: 250 247 240;
 
     --primary: 95 22 28;
     --primary-foreground: 250 247 240;
 
-    --secondary: 238 220 176;
-    --secondary-foreground: 95 22 28;
+    --secondary: 128 70 27;
+    --secondary-foreground: 250 247 240;
 
     --muted: 245 237 215;
     --muted-foreground: 139 115 85;
@@ -30,19 +29,19 @@
     --destructive: 239 68 68;
     --destructive-foreground: 248 250 252;
 
-    --border: 238 220 176;
-    --input: 238 220 176;
+    --border: 95 22 28;
+    --input: 95 22 28;
     --ring: 95 22 28;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 250 247 240;
-    --sidebar-foreground: 95 22 28;
+    --sidebar-background: 95 22 28;
+    --sidebar-foreground: 250 247 240;
     --sidebar-primary: 95 22 28;
     --sidebar-primary-foreground: 250 247 240;
     --sidebar-accent: 245 237 215;
     --sidebar-accent-foreground: 95 22 28;
-    --sidebar-border: 238 220 176;
+    --sidebar-border: 95 22 28;
     --sidebar-ring: 95 22 28;
   }
 }
@@ -59,12 +58,12 @@
 
 @layer components {
   .wedding-gradient {
-    background: linear-gradient(135deg, #5f161c 0%, #EEDCB0 50%, #FAF7F0 100%);
+    background: linear-gradient(135deg, #5f161c 0%, #80461B 50%, #FAF7F0 100%);
   }
   
   .glass-effect {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(95, 22, 28, 0.25);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(95, 22, 28, 0.18);
   }
 }

@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,10 +19,10 @@ export default {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
+				border: 'rgb(95 22 28 / var(--tw-border-opacity, 1))',
+				input: 'rgb(95 22 28 / var(--tw-border-opacity, 1))',
+				ring: 'rgb(95 22 28 / var(--tw-ring-opacity, 1))',
+				background: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
@@ -46,29 +45,29 @@ export default {
 					foreground: 'hsl(var(--accent-foreground))'
 				},
 				popover: {
-					DEFAULT: 'hsl(var(--popover))',
+					DEFAULT: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
 					foreground: 'hsl(var(--popover-foreground))'
 				},
 				card: {
-					DEFAULT: 'hsl(var(--card))',
+					DEFAULT: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				sidebar: {
-					DEFAULT: 'hsl(var(--sidebar-background))',
+					DEFAULT: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
 					foreground: 'hsl(var(--sidebar-foreground))',
 					primary: 'hsl(var(--sidebar-primary))',
 					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
 					accent: 'hsl(var(--sidebar-accent))',
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'hsl(var(--sidebar-border))',
-					ring: 'hsl(var(--sidebar-ring))'
+					border: 'rgb(95 22 28 / var(--tw-border-opacity, 1))',
+					ring: 'rgb(95 22 28 / var(--tw-ring-opacity, 1))'
 				},
 				wedding: {
 					primary: '#5f161c',
-					secondary: '#EEDCB0',
+					secondary: '#80461B',
 					accent: '#80461B',
 					marsala: '#5f161c',
-					palha: '#EEDCB0',
+					palha: '#80461B',
 					cream: '#FAF7F0',
 					darkMarsala: '#4a1115',
 					lightPalha: '#F5EDD7'
