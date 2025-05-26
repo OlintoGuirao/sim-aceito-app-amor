@@ -109,7 +109,7 @@ const GuestManager: React.FC = () => {
                 <Badge className={getStatusColor(guest.status)}>
                   {getStatusText(guest.status)}
                 </Badge>
-                <Button size="sm" variant="outline" className="bg-wedding-primary">
+                <Button size="sm" variant="outline" className="bg-wedding-primary text-slate-50 font-medium rounded-lg">
                   QR Code
                 </Button>
               </div>
