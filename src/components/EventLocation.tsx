@@ -1,5 +1,5 @@
-import React from 'react';
-import { Card } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -14,9 +14,23 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 
 const EventLocation: React.FC = () => {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  React.useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    api.on("select", () => {
+      setCurrent(api.selectedScrollSnap());
+    });
+  }, [api]);
+
   const openInMaps = (address: string) => {
     const encodedAddress = encodeURIComponent(address);
     window.open(`https://www.google.com/maps/search/${encodedAddress}`, '_blank');
@@ -94,6 +108,7 @@ const EventLocation: React.FC = () => {
           align: "start",
           loop: true,
         }}
+        setApi={setApi}
         className="w-full"
       >
         <CarouselContent>
@@ -179,6 +194,16 @@ const EventLocation: React.FC = () => {
         </CarouselContent>
         <div className="flex items-center justify-center mt-4 gap-2">
           <CarouselPrevious className="bg-wedding-secondary hover:bg-wedding-gold text-zinc-950" />
+          <div className="flex items-center gap-2 mx-4">
+            {locations.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                  current === index ? 'bg-wedding-secondary' : 'bg-wedding-secondary/30'
+                }`}
+              />
+            ))}
+          </div>
           <CarouselNext className="bg-wedding-secondary hover:bg-wedding-gold text-zinc-950" />
         </div>
       </Carousel>
