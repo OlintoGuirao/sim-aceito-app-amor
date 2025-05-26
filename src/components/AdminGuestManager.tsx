@@ -150,7 +150,7 @@ const AdminGuestManager: React.FC = () => {
                     <Badge className={getStatusColor(guest.status)}>
                       {getStatusText(guest.status)}
                     </Badge>
-                    <Button size="sm" variant="outline" className="border-[#5f161c]/20 hover:bg-[#5f161c] hover:text-white">
+                    <Button size="sm" variant="outline" className="border-[#5f161c]/20 hover:text-white bg-wedding-primary">
                       Editar
                     </Button>
                   </div>
