@@ -27,6 +27,10 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     label: 'Galeria',
     icon: '📸'
   }, {
+    id: 'party',
+    label: 'Hora da Festa',
+    icon: '🎉'
+  }, {
     id: 'messages',
     label: 'Recados',
     icon: '💌'

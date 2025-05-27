@@ -5,6 +5,7 @@ import NavigationMenu from '@/components/NavigationMenu';
 import GiftList from '@/components/GiftList';
 import EventLocation from '@/components/EventLocation';
 import PhotoGallery from '@/components/PhotoGallery';
+import PartyGallery from '@/components/PartyGallery';
 import MessageBoard from '@/components/MessageBoard';
 import Raffle from '@/components/Raffle';
 import { Toaster } from 'sonner';
@@ -32,6 +33,8 @@ const Index = () => {
         return <EventLocation />;
       case 'gallery':
         return <PhotoGallery />;
+      case 'party':
+        return <PartyGallery />;
       case 'messages':
         return <MessageBoard />;
       case 'raffle':
