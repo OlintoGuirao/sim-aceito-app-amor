@@ -404,21 +404,26 @@ const PartyGallery: React.FC = () => {
           onClick={() => setSelectedPhoto(null)}
         >
           <div 
-            className="max-w-2xl max-h-full"
+            className="max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-white rounded-lg p-4">
-              <img
-                src={photos[selectedPhoto].url}
-                alt={photos[selectedPhoto].caption}
-                className="w-full h-auto rounded mb-4"
-              />
-              <p className="text-center font-medium">{photos[selectedPhoto].caption}</p>
-              <p className="text-center text-sm text-gray-600 mt-1">
-                Por: {photos[selectedPhoto].uploadedBy}
-              </p>
+            <div className="p-4">
+              <div className="relative aspect-[4/3] mb-4">
+                <img
+                  src={photos[selectedPhoto].url}
+                  alt={photos[selectedPhoto].caption}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <p className="text-center font-medium text-lg">{photos[selectedPhoto].caption}</p>
+                  <p className="text-center text-sm text-gray-600 mt-1">
+                    Por: {photos[selectedPhoto].uploadedBy}
+                  </p>
+                </div>
 
-              <div className="mt-4 space-y-4">
                 <div className="flex items-center justify-center gap-4">
                   <Button
                     variant="ghost"

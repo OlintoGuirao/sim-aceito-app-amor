@@ -1,0 +1,1 @@
+          <h1 className="font-script text-6xl md:text-7xl !text-black mb-4 animate-fade-in" style={{ color: '#000' }}>Sim, Aceito!</h1> 
