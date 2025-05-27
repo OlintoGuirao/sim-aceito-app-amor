@@ -59,12 +59,12 @@ const PhotoGallery: React.FC = () => {
             <div className="aspect-square relative">
               <img
                 src={photo.src}
-                alt={photo.caption}
+                
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="p-3 bg-wedding-palha">
-              <p className="text-sm font-medium text-center text-gray-950">{photo.caption}</p>
+              <p className="text-sm font-medium text-center text-gray-950"></p>
             </div>
           </Card>
         ))}
@@ -91,11 +91,11 @@ const PhotoGallery: React.FC = () => {
               <div className="relative aspect-square w-full max-w-2xl mx-auto mb-4">
                 <img
                   src={photos[selectedPhoto].src}
-                  alt={photos[selectedPhoto].caption}
+                  
                   className="w-full h-full object-contain rounded"
                 />
               </div>
-              <p className="text-center font-medium">{photos[selectedPhoto].caption}</p>
+              <p className="text-center font-medium"></p>
             </div>
           </div>
         </div>

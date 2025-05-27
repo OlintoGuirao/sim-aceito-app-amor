@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Trophy, Crown, Users, DollarSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import toast from 'react-hot-toast';
+import { Check, X, Eye, Trash2 } from 'lucide-react';
 
 interface RaffleTicket {
   id: string;
@@ -15,46 +15,40 @@ interface RaffleTicket {
   guestEmail: string;
   purchasedAt: Date;
   isWinner: boolean;
-  paymentStatus: 'pending' | 'confirmed';
+  paymentStatus: 'pending' | 'confirmed' | 'under_review';
+  paymentProof?: string;
+  expiresAt: Date;
 }
 
 const AdminRaffle: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<RaffleTicket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [winner, setWinner] = useState<RaffleTicket | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [drawingNumber, setDrawingNumber] = useState<number | null>(null);
-  const [showWinnerDialog, setShowWinnerDialog] = useState(false);
-  const { user, isAdmin, isMainAdmin } = useAuth();
+  const [selectedTicket, setSelectedTicket] = useState<RaffleTicket | null>(null);
 
-  const pricePerTicket = 10; // Preço por número
-
-  useEffect(() => {
-    if (!isAdmin) {
-      toast.error('Acesso restrito a administradores');
-      return;
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
     }
-    fetchTickets();
-  }, [isAdmin]);
+  };
 
   const fetchTickets = async () => {
     try {
+      setLoading(true);
       const ticketsRef = collection(db, 'raffle_tickets');
-      const querySnapshot = await getDocs(ticketsRef);
-      
+      const q = query(ticketsRef, orderBy('purchasedAt', 'desc'));
+      const querySnapshot = await getDocs(q);
       const fetchedTickets = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        purchasedAt: doc.data().purchasedAt.toDate()
+        purchasedAt: doc.data().purchasedAt.toDate(),
+        expiresAt: doc.data().expiresAt.toDate()
       })) as RaffleTicket[];
-      
       setTickets(fetchedTickets);
-
-      // Buscar o ganhador
-      const winnerTicket = fetchedTickets.find(ticket => ticket.isWinner);
-      if (winnerTicket) {
-        setWinner(winnerTicket);
-      }
     } catch (error) {
       console.error('Erro ao buscar tickets:', error);
       toast.error('Erro ao carregar tickets');
@@ -63,234 +57,140 @@ const AdminRaffle: React.FC = () => {
     }
   };
 
-  const drawWinner = async () => {
-    if (!isAdmin) {
-      toast.error('Apenas administradores podem realizar o sorteio');
-      return;
-    }
-
-    const confirmedTickets = tickets.filter(ticket => ticket.paymentStatus === 'confirmed');
-    if (confirmedTickets.length === 0) {
-      toast.error('Não há tickets confirmados para realizar o sorteio');
-      return;
-    }
-
+  const approvePayment = async (ticketId: string) => {
     try {
-      setIsDrawing(true);
-      setDrawingNumber(null);
-
-      // Animação do sorteio
-      const animationDuration = 3000; // 3 segundos
-      const interval = 100; // Atualiza a cada 100ms
-      const steps = animationDuration / interval;
-      let currentStep = 0;
-
-      const animationInterval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * confirmedTickets.length);
-        setDrawingNumber(confirmedTickets[randomIndex].number);
-        currentStep++;
-
-        if (currentStep >= steps) {
-          clearInterval(animationInterval);
-          finishDrawing(confirmedTickets);
-        }
-      }, interval);
-    } catch (error) {
-      console.error('Erro ao realizar sorteio:', error);
-      toast.error('Erro ao realizar sorteio');
-      setIsDrawing(false);
-    }
-  };
-
-  const finishDrawing = async (confirmedTickets: RaffleTicket[]) => {
-    try {
-      const randomIndex = Math.floor(Math.random() * confirmedTickets.length);
-      const winnerTicket = confirmedTickets[randomIndex];
-
-      const ticketRef = doc(db, 'raffle_tickets', winnerTicket.id);
-      await updateDoc(ticketRef, { isWinner: true });
-
-      setWinner(winnerTicket);
-      setIsDrawing(false);
-      setShowWinnerDialog(true);
-      toast.success('Sorteio realizado com sucesso!');
+      const ticketRef = doc(db, 'raffle_tickets', ticketId);
+      await updateDoc(ticketRef, { 
+        paymentStatus: 'confirmed'
+      });
+      toast.success('Pagamento aprovado com sucesso!');
       fetchTickets();
     } catch (error) {
-      console.error('Erro ao finalizar sorteio:', error);
-      toast.error('Erro ao finalizar sorteio');
-      setIsDrawing(false);
+      console.error('Erro ao aprovar pagamento:', error);
+      toast.error('Erro ao aprovar pagamento');
     }
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Card className="p-6 bg-wedding-primary text-center">
-          <h2 className="text-xl font-semibold text-slate-50 mb-2">Acesso Restrito</h2>
-          <p className="text-slate-50">Esta área é exclusiva para administradores.</p>
-        </Card>
-      </div>
-    );
-  }
+  const rejectPayment = async (ticketId: string) => {
+    try {
+      const ticketRef = doc(db, 'raffle_tickets', ticketId);
+      await updateDoc(ticketRef, { 
+        paymentStatus: 'pending',
+        paymentProof: null
+      });
+      toast.success('Pagamento rejeitado');
+      fetchTickets();
+    } catch (error) {
+      console.error('Erro ao rejeitar pagamento:', error);
+      toast.error('Erro ao rejeitar pagamento');
+    }
+  };
 
-  const confirmedTickets = tickets.filter(t => t.paymentStatus === 'confirmed');
-  const pendingTickets = tickets.filter(t => t.paymentStatus === 'pending');
-  const totalRevenue = confirmedTickets.length * pricePerTicket;
+  const viewPaymentProof = (proof: string) => {
+    window.open(proof, '_blank');
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  const pendingCount = tickets.filter(t => t.paymentStatus === 'pending').length;
+  const underReviewCount = tickets.filter(t => t.paymentStatus === 'under_review').length;
+  const confirmedCount = tickets.filter(t => t.paymentStatus === 'confirmed').length;
 
   return (
     <div className="container mx-auto p-4 space-y-6">
       <Card className="p-6 bg-wedding-primary">
-        <div className="flex items-center gap-2 mb-4">
-          <Crown className="w-6 h-6 text-wedding-gold" />
-          <h1 className="text-2xl font-elegant font-semibold text-slate-50">Administração da Rifa</h1>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="p-4 bg-wedding-secondary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-wedding-gold" />
-              <h3 className="text-lg font-semibold text-slate-50">Números Vendidos</h3>
-            </div>
-            <p className="text-2xl font-bold text-wedding-gold">{confirmedTickets.length}</p>
-            <p className="text-sm text-slate-50/70">
-              {pendingTickets.length} pendentes de confirmação
-            </p>
-          </Card>
-
-          {isMainAdmin && (
-            <Card className="p-4 bg-wedding-secondary/20">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-5 h-5 text-wedding-gold" />
-                <h3 className="text-lg font-semibold text-slate-50">Total Arrecadado</h3>
-              </div>
-              <p className="text-2xl font-bold text-wedding-gold">
-                R$ {totalRevenue.toFixed(2)}
-              </p>
-              <p className="text-sm text-slate-50/70">
-                R$ {pricePerTicket.toFixed(2)} por número
-              </p>
-            </Card>
-          )}
-
-          <Card className="p-4 bg-wedding-secondary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Trophy className="w-5 h-5 text-wedding-gold" />
-              <h3 className="text-lg font-semibold text-slate-50">Status do Sorteio</h3>
-            </div>
-            <p className="text-2xl font-bold text-wedding-gold">
-              {winner ? 'Realizado' : 'Pendente'}
-            </p>
-            <p className="text-sm text-slate-50/70">
-              {winner ? 'Ganhador definido' : 'Aguardando sorteio'}
-            </p>
-          </Card>
-        </div>
-
-        {!winner && (
-          <div className="space-y-4">
-            {isDrawing ? (
-              <div className="text-center py-8">
-                <div className="animate-bounce mb-4">
-                  <Trophy className="w-12 h-12 text-wedding-gold mx-auto" />
-                </div>
-                <p className="text-4xl font-bold text-wedding-gold mb-2">
-                  {drawingNumber || '...'}
-                </p>
-                <p className="text-slate-50">Sorteando...</p>
-              </div>
-            ) : (
-              <Button 
-                onClick={drawWinner} 
-                disabled={confirmedTickets.length === 0} 
-                className="w-full text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
-              >
-                Realizar Sorteio
-              </Button>
-            )}
-          </div>
-        )}
-
-        {winner && (
-          <Card className="p-4 bg-wedding-secondary/20">
-            <h3 className="text-lg font-semibold text-slate-50 mb-2">Ganhador</h3>
-            <div className="space-y-2">
-              <p className="text-slate-50">
-                <span className="font-medium">Número:</span> {winner.number}
-              </p>
-              <p className="text-slate-50">
-                <span className="font-medium">Nome:</span> {winner.guestName}
-              </p>
-              <p className="text-slate-50">
-                <span className="font-medium">Email:</span> {winner.guestEmail}
-              </p>
-            </div>
-          </Card>
-        )}
-      </Card>
-
-      <Card className="p-6 bg-wedding-primary">
-        <h2 className="text-xl font-semibold text-slate-50 mb-4">Lista de Números Vendidos</h2>
-        {loading ? (
-          <div className="text-center text-slate-50">Carregando...</div>
-        ) : tickets.length === 0 ? (
-          <div className="text-center text-slate-50">Nenhum número vendido ainda.</div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {tickets.map(ticket => (
-              <Card key={ticket.id} className="p-4 bg-wedding-secondary/20">
-                <p className="text-lg font-bold text-wedding-gold mb-2">
-                  Número {ticket.number}
-                </p>
-                <p className="text-sm text-slate-50">{ticket.guestName}</p>
-                <p className="text-xs text-slate-50/70">{ticket.guestEmail}</p>
-                <p className="text-xs mt-2">
-                  <span className={`px-2 py-1 rounded-full ${
-                    ticket.paymentStatus === 'confirmed' 
-                      ? 'bg-green-500/20 text-green-500' 
-                      : 'bg-yellow-500/20 text-yellow-500'
-                  }`}>
-                    {ticket.paymentStatus === 'confirmed' ? '✅ Confirmado' : '⏳ Pendente'}
-                  </span>
-                </p>
-              </Card>
-            ))}
-          </div>
-        )}
-      </Card>
-
-      <Dialog open={showWinnerDialog} onOpenChange={setShowWinnerDialog}>
-        <DialogContent className="bg-wedding-primary text-slate-50">
-          <DialogHeader>
-            <DialogTitle className="text-center text-2xl font-elegant">
-              🎉 Ganhador da Rifa! 🎉
-            </DialogTitle>
-          </DialogHeader>
-          
-          {winner && (
-            <div className="text-center space-y-4 py-4">
-              <div className="animate-bounce mb-4">
-                <Trophy className="w-16 h-16 text-wedding-gold mx-auto" />
-              </div>
-              <p className="text-3xl font-bold text-wedding-gold">
-                Número {winner.number}
-              </p>
-              <p className="text-xl text-slate-50">
-                {winner.guestName}
-              </p>
-              <p className="text-sm text-slate-50/70">
-                {winner.guestEmail}
-              </p>
-            </div>
-          )}
-
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-elegant font-semibold text-slate-50">
+            Gerenciamento da Rifa
+          </h1>
           <Button 
-            onClick={() => setShowWinnerDialog(false)}
-            className="w-full text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
+            onClick={handleLogout}
+            variant="outline"
+            className="text-white hover:bg-wedding-secondary"
           >
-            Fechar
+            Sair
           </Button>
-        </DialogContent>
-      </Dialog>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <Card className="p-4 bg-wedding-secondary/20">
+            <div className="text-2xl font-bold text-slate-50">{pendingCount}</div>
+            <div className="text-sm text-slate-50/70">Pendentes</div>
+          </Card>
+          <Card className="p-4 bg-wedding-secondary/20">
+            <div className="text-2xl font-bold text-slate-50">{underReviewCount}</div>
+            <div className="text-sm text-slate-50/70">Em Análise</div>
+          </Card>
+          <Card className="p-4 bg-wedding-secondary/20">
+            <div className="text-2xl font-bold text-slate-50">{confirmedCount}</div>
+            <div className="text-sm text-slate-50/70">Confirmados</div>
+          </Card>
+        </div>
+
+        <Card className="p-6 bg-wedding-primary">
+          <h2 className="text-xl font-semibold text-slate-50 mb-4">Lista de Números Vendidos</h2>
+          {loading ? (
+            <div className="text-center text-slate-50">Carregando...</div>
+          ) : tickets.length === 0 ? (
+            <div className="text-center text-slate-50">Nenhum número vendido ainda.</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {tickets.map(ticket => (
+                <Card key={ticket.id} className="p-4 bg-wedding-secondary/20">
+                  <p className="text-lg font-bold text-wedding-gold mb-2">
+                    Número {ticket.number}
+                  </p>
+                  <p className="text-sm text-slate-50">{ticket.guestName}</p>
+                  <p className="text-xs text-slate-50/70">{ticket.guestEmail}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className={`px-2 py-1 rounded-full ${
+                      ticket.paymentStatus === 'confirmed' 
+                        ? 'bg-green-500/20 text-green-500' 
+                        : ticket.paymentStatus === 'under_review'
+                          ? 'bg-yellow-500/20 text-yellow-500'
+                          : 'bg-red-500/20 text-red-500'
+                    }`}>
+                      {ticket.paymentStatus === 'confirmed' ? '✅ Confirmado' : 
+                       ticket.paymentStatus === 'under_review' ? '⏳ Em Análise' : 
+                       '❌ Pendente'}
+                    </span>
+                    {ticket.paymentProof && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => viewPaymentProof(ticket.paymentProof!)}
+                        className="text-slate-50 hover:text-slate-50 hover:bg-wedding-secondary/30"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {ticket.paymentStatus === 'under_review' && (
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        onClick={() => approvePayment(ticket.id)}
+                        className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                      >
+                        Aprovar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => rejectPayment(ticket.id)}
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                      >
+                        Rejeitar
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </Card>
+      </Card>
     </div>
   );
 };

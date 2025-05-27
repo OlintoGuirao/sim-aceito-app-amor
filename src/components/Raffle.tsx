@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { collection, addDoc, getDocs, query, where, updateDoc, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query, where, updateDoc, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { QrCode, X, Lock, Trophy, Crown } from 'lucide-react';
+import { QrCode, X, Lock, Trophy, Crown, Upload, Clock } from 'lucide-react';
 
 interface RaffleTicket {
   id: string;
@@ -16,7 +17,9 @@ interface RaffleTicket {
   guestEmail: string;
   purchasedAt: Date;
   isWinner: boolean;
-  paymentStatus: 'pending' | 'confirmed';
+  paymentStatus: 'pending' | 'confirmed' | 'under_review';
+  paymentProof?: string;
+  expiresAt: Date;
 }
 
 const Raffle: React.FC = () => {
@@ -32,6 +35,9 @@ const Raffle: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingNumber, setDrawingNumber] = useState<number | null>(null);
   const [showWinnerDialog, setShowWinnerDialog] = useState(false);
+  const [paymentProof, setPaymentProof] = useState<File | null>(null);
+  const [uploadingProof, setUploadingProof] = useState(false);
+  const PAYMENT_TIMEOUT = 30 * 60 * 1000; // 30 minutos em milissegundos
 
   const totalNumbers = 100; // Total de números disponíveis
   const pricePerTicket = 10; // Preço por número
@@ -81,11 +87,10 @@ const Raffle: React.FC = () => {
     }
 
     setSelectedNumbers(prev => {
-      if (prev.includes(number)) {
-        return prev.filter(n => n !== number);
-      } else {
-        return [...prev, number].sort((a, b) => a - b);
-      }
+      const newNumbers = prev.includes(number)
+        ? prev.filter(n => n !== number)
+        : [...prev, number];
+      return newNumbers.sort((a, b) => a - b);
     });
   };
 
@@ -106,6 +111,7 @@ const Raffle: React.FC = () => {
     try {
       const ticketsRef = collection(db, 'raffle_tickets');
       const newTickets: RaffleTicket[] = [];
+      const expiresAt = new Date(Date.now() + PAYMENT_TIMEOUT);
 
       for (const number of selectedNumbers) {
         const ticketData = {
@@ -114,7 +120,8 @@ const Raffle: React.FC = () => {
           guestEmail,
           purchasedAt: new Date(),
           isWinner: false,
-          paymentStatus: 'pending' as const
+          paymentStatus: 'pending' as const,
+          expiresAt
         };
 
         const docRef = await addDoc(ticketsRef, ticketData);
@@ -130,6 +137,20 @@ const Raffle: React.FC = () => {
       setGuestEmail('');
       
       fetchTickets();
+
+      // Iniciar timer para cancelamento automático
+      setTimeout(async () => {
+        for (const ticket of newTickets) {
+          const ticketRef = doc(db, 'raffle_tickets', ticket.id);
+          const ticketDoc = await getDoc(ticketRef);
+          
+          if (ticketDoc.exists() && ticketDoc.data().paymentStatus === 'pending') {
+            await deleteDoc(ticketRef);
+            toast.error(`Número ${ticket.number} cancelado por falta de pagamento`);
+          }
+        }
+        fetchTickets();
+      }, PAYMENT_TIMEOUT);
     } catch (error) {
       console.error('Erro ao comprar tickets:', error);
       toast.error('Erro ao comprar números');
@@ -141,22 +162,93 @@ const Raffle: React.FC = () => {
     toast.success('Chave PIX copiada!');
   };
 
+  const validateImage = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        // Verifica se é uma imagem válida
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (!validTypes.includes(file.type)) {
+          toast.error('Por favor, envie apenas imagens nos formatos JPG, JPEG ou PNG');
+          resolve(false);
+          return;
+        }
+
+        // Verifica o tamanho máximo (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+          toast.error('A imagem deve ter no máximo 2MB');
+          resolve(false);
+          return;
+        }
+
+        // Verifica dimensões mínimas
+        if (img.width < 300 || img.height < 300) {
+          toast.error('A imagem deve ter no mínimo 300x300 pixels');
+          resolve(false);
+          return;
+        }
+
+        resolve(true);
+      };
+
+      img.onerror = () => {
+        toast.error('Arquivo inválido. Por favor, envie uma imagem válida');
+        resolve(false);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handlePaymentProof = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const isValid = await validateImage(file);
+      if (isValid) {
+        setPaymentProof(file);
+      } else {
+        e.target.value = ''; // Limpa o input
+        setPaymentProof(null);
+      }
+    }
+  };
+
   const confirmPayment = async () => {
     if (currentTickets.length === 0) return;
+    if (!paymentProof) {
+      toast.error('Por favor, anexe o comprovante de pagamento');
+      return;
+    }
 
     try {
-      for (const ticket of currentTickets) {
-        const ticketRef = doc(db, 'raffle_tickets', ticket.id);
-        await updateDoc(ticketRef, { paymentStatus: 'confirmed' });
-      }
+      setUploadingProof(true);
       
-      toast.success('Pagamento confirmado! Seus números estão garantidos.');
-      setShowPixDialog(false);
-      setCurrentTickets([]);
-      fetchTickets();
+      // Converter o arquivo para base64
+      const reader = new FileReader();
+      reader.readAsDataURL(paymentProof);
+      
+      reader.onload = async () => {
+        const base64Proof = reader.result as string;
+        
+        for (const ticket of currentTickets) {
+          const ticketRef = doc(db, 'raffle_tickets', ticket.id);
+          await updateDoc(ticketRef, { 
+            paymentStatus: 'under_review',
+            paymentProof: base64Proof
+          });
+        }
+        
+        toast.success('Comprovante enviado! Aguarde a confirmação do administrador.');
+        setShowPixDialog(false);
+        setCurrentTickets([]);
+        setPaymentProof(null);
+        fetchTickets();
+      };
     } catch (error) {
       console.error('Erro ao confirmar pagamento:', error);
-      toast.error('Erro ao confirmar pagamento');
+      toast.error('Erro ao enviar comprovante');
+    } finally {
+      setUploadingProof(false);
     }
   };
 
@@ -237,14 +329,15 @@ const Raffle: React.FC = () => {
           <div className="grid grid-cols-5 gap-2">
             {Array.from({ length: totalNumbers }, (_, i) => i + 1).map(num => {
               const isTaken = isNumberTaken(num);
+              const isSelected = selectedNumbers.includes(num);
               return (
                 <Button
                   key={num}
-                  variant={selectedNumbers.includes(num) ? "default" : "outline"}
+                  variant={isSelected ? "default" : "outline"}
                   onClick={() => toggleNumber(num)}
                   disabled={isTaken}
                   className={`w-full relative ${
-                    selectedNumbers.includes(num)
+                    isSelected
                       ? 'bg-wedding-secondary text-black' 
                       : isTaken
                         ? 'bg-wedding-primary/30 text-slate-50/30 cursor-not-allowed'
@@ -260,26 +353,28 @@ const Raffle: React.FC = () => {
             })}
           </div>
 
-          <Input 
-            placeholder="Seu nome" 
-            value={guestName} 
-            onChange={e => setGuestName(e.target.value)} 
-            className="bg-wedding-secondary text-black placeholder:text-black/60" 
-          />
-          <Input 
-            placeholder="Seu email" 
-            type="email"
-            value={guestEmail} 
-            onChange={e => setGuestEmail(e.target.value)} 
-            className="bg-wedding-secondary text-black placeholder:text-black/60" 
-          />
-          <Button 
-            onClick={purchaseTickets} 
-            disabled={selectedNumbers.length === 0 || !guestName || !guestEmail} 
-            className="w-full text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
-          >
-            Comprar {selectedNumbers.length} Número{selectedNumbers.length !== 1 ? 's' : ''}
-          </Button>
+          <div className="space-y-4">
+            <Input 
+              placeholder="Seu nome" 
+              value={guestName} 
+              onChange={e => setGuestName(e.target.value)} 
+              className="bg-wedding-secondary text-black placeholder:text-black/60" 
+            />
+            <Input 
+              placeholder="Seu email" 
+              type="email"
+              value={guestEmail} 
+              onChange={e => setGuestEmail(e.target.value)} 
+              className="bg-wedding-secondary text-black placeholder:text-black/60" 
+            />
+            <Button 
+              onClick={purchaseTickets} 
+              disabled={selectedNumbers.length === 0 || !guestName || !guestEmail} 
+              className="w-full text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
+            >
+              Comprar {selectedNumbers.length} Número{selectedNumbers.length !== 1 ? 's' : ''}
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -296,7 +391,9 @@ const Raffle: React.FC = () => {
                 <p className="text-sm font-medium text-slate-50">{ticket.number}</p>
                 <p className="text-xs text-slate-50/70">{ticket.guestName}</p>
                 <p className="text-xs text-slate-50/50">
-                  {ticket.paymentStatus === 'confirmed' ? '✅ Confirmado' : '⏳ Pendente'}
+                  {ticket.paymentStatus === 'confirmed' ? '✅ Confirmado' : 
+                   ticket.paymentStatus === 'under_review' ? '⏳ Em Análise' : 
+                   '❌ Pendente'}
                 </p>
               </Card>
             ))}
@@ -309,7 +406,7 @@ const Raffle: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Pagamento via PIX</DialogTitle>
             <DialogDescription className="text-slate-50/70">
-              Para confirmar sua compra, faça o pagamento via PIX
+              Para confirmar sua compra, faça o pagamento via PIX e anexe o comprovante
             </DialogDescription>
           </DialogHeader>
           
@@ -347,15 +444,40 @@ const Raffle: React.FC = () => {
               </div>
             </div>
 
+            <div className="p-4 bg-wedding-secondary/20 rounded-lg">
+              <p className="text-sm font-medium mb-2">Comprovante de Pagamento:</p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handlePaymentProof}
+                  className="bg-wedding-secondary/30 text-slate-50"
+                />
+                {paymentProof && (
+                  <span className="text-sm text-slate-50/70">
+                    {paymentProof.name}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="p-4 bg-yellow-500/20 rounded-lg flex items-center gap-2">
+              <Clock className="w-4 h-4 text-yellow-500" />
+              <p className="text-sm text-yellow-500">
+                Você tem 30 minutos para fazer o pagamento e anexar o comprovante
+              </p>
+            </div>
+
             <Button 
               onClick={confirmPayment}
+              disabled={!paymentProof || uploadingProof}
               className="w-full text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
             >
-              Confirmar Pagamento
+              {uploadingProof ? 'Enviando...' : 'Confirmar Pagamento'}
             </Button>
 
             <p className="text-xs text-center text-slate-50/70">
-              Após fazer o pagamento, clique em "Confirmar Pagamento" para garantir seus números
+              Após fazer o pagamento, anexe o comprovante e clique em "Confirmar Pagamento"
             </p>
           </div>
         </DialogContent>

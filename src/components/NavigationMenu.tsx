@@ -1,5 +1,9 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/lib/auth';
+import { useNavigate } from 'react-router-dom';
+import { MessageCircle, Ticket } from 'lucide-react';
 
 interface NavigationMenuProps {
   activeSection: string;
@@ -10,6 +14,9 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
   activeSection,
   onSectionChange
 }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const menuItems = [{
     id: 'countdown',
     label: 'Contagem Regressiva',
@@ -58,6 +65,29 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
           </button>
         ))}
       </div>
+
+      {user && (
+        <div className="flex gap-2 mt-4 justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/admin/messages')}
+            className="text-black bg-wedding-secondary hover:bg-wedding-gold"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Gerenciar Recados
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/admin/raffle')}
+            className="text-black bg-wedding-secondary hover:bg-wedding-gold"
+          >
+            <Ticket className="w-4 h-4 mr-2" />
+            Gerenciar Rifa
+          </Button>
+        </div>
+      )}
     </Card>
   );
 };

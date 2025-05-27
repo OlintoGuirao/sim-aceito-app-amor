@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import Index from './pages/Index';
 import AdminPage from './pages/admin';
 import { ConfirmPage } from './pages/confirm';
-import AdminRaffle from './pages/AdminRaffle';
+import AdminRaffle from '@/pages/AdminRaffle';
 import AdminLogin from './pages/AdminLogin';
 import PadrinhoPage from './pages/PadrinhoPage';
 import { useAuth } from './lib/auth';
@@ -70,9 +71,10 @@ function App() {
 
   return (
     <Router>
-        <Routes>
+      <Toaster position="top-right" />
+      <Routes>
         {/* ===== ROTAS PÚBLICAS ===== */}
-          <Route path="/" element={<Index />} />
+        <Route path="/" element={<Index />} />
         <Route path="/confirm/:guestId" element={<ConfirmPage />} />
 
         {/* ===== ROTAS DA RIFA ===== */}
@@ -95,9 +97,10 @@ function App() {
 
         {/* ===== ROTA 404 ===== */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <Route path="/admin/raffle" element={<AdminRaffle />} />
+      </Routes>
     </Router>
-);
+  );
 }
 
 export default App;

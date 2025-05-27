@@ -8,9 +8,10 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket } from "lucide-react";
 import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useNavigate } from 'react-router-dom';
 
 interface Message {
   id: string;
@@ -31,6 +32,7 @@ export function AdminGuestManager() {
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // Carregar convidados do Firestore
   useEffect(() => {
@@ -246,6 +248,10 @@ export function AdminGuestManager() {
           <TabsTrigger value="messages" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
             <MessageCircle className="w-4 h-4 mr-2" />
             Recados
+          </TabsTrigger>
+          <TabsTrigger value="raffle" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+            <Ticket className="w-4 h-4 mr-2" />
+            Rifa
           </TabsTrigger>
         </TabsList>
 
@@ -515,6 +521,25 @@ export function AdminGuestManager() {
                     ))}
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="raffle">
+          <Card className="bg-wedding-secondary">
+            <CardHeader className="bg-wedding-secondary">
+              <CardTitle className="text-black">Gerenciar Rifa</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Button
+                  onClick={() => navigate('/admin/raffle')}
+                  className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90"
+                >
+                  <Ticket className="w-4 h-4 mr-2" />
+                  Acessar Gerenciamento da Rifa
+                </Button>
               </div>
             </CardContent>
           </Card>
