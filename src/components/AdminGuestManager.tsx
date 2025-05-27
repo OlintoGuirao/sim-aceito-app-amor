@@ -297,14 +297,22 @@ export function AdminGuestManager() {
                         <Button 
                           variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
                           onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
-                          className="flex-1 sm:flex-none bg-wedding-primary text-white"
+                          className={`flex-1 sm:flex-none ${
+                            guest.status === 'confirmed'
+                              ? 'bg-green-500 hover:bg-green-600 text-white'
+                              : 'bg-wedding-primary text-white'
+                          }`}
                         >
                           Confirmado
                         </Button>
                         <Button 
                           variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
                           onClick={() => handleStatusChange(guest.id!, 'declined')} 
-                          className="flex-1 sm:flex-none text-white"
+                          className={`flex-1 sm:flex-none ${
+                            guest.status === 'declined'
+                              ? 'bg-red-500 hover:bg-red-600 text-white'
+                              : 'text-white'
+                          }`}
                         >
                           Declinado
                         </Button>
