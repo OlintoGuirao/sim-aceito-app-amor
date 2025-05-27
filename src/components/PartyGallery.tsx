@@ -359,7 +359,7 @@ const PartyGallery: React.FC = () => {
 
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {photos[selectedPhoto].comments.map(comment => <div key={comment.id} className="bg-gray-100 p-2 rounded">
-                      <p className="text-sm font-medium">{comment.author}</p>
+                      <p className="text-sm font-medium text-black">{comment.author}</p>
                       <p className="text-sm text-gray-600">{comment.text}</p>
                     </div>)}
                 </div>
