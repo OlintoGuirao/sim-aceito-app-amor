@@ -1,33 +1,47 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
+
 const PhotoGallery: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
   const photos = [{
     id: 1,
-    src: '/placeholder.svg',
-    caption: 'Nosso primeiro encontro'
+    src: '/Foto1.jpg',
+    
   }, {
     id: 2,
-    src: '/placeholder.svg',
-    caption: 'Pedido de casamento'
+    src: '/Foto2.jpg',
+    
   }, {
     id: 3,
-    src: '/placeholder.svg',
-    caption: 'Ensaio pré-wedding'
+    src: '/Foto3.jpg',
+    
   }, {
     id: 4,
-    src: '/placeholder.svg',
-    caption: 'Escolhendo as alianças'
+    src: '/Foto4.jpg',
+   
   }, {
     id: 5,
-    src: '/placeholder.svg',
-    caption: 'Prova do vestido'
+    src: '/foto5.jpg',
+    
   }, {
     id: 6,
-    src: '/placeholder.svg',
-    caption: 'Despedida de solteiro(a)'
+    src: '/Foto6.jpg',
+   
+  }, {
+    id: 7,
+    src: '/Foto7.jpg',
+   
+  }, {
+    id: 8,
+    src: '/Foto8.jpg',
+   
+  }, {
+    id: 9,
+    src: '/Foto9.jpg',
   }];
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Nossa História</h3>
         <p className="text-slate-50">
@@ -36,14 +50,24 @@ const PhotoGallery: React.FC = () => {
       </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {photos.map((photo, index) => <Card key={photo.id} onClick={() => setSelectedPhoto(index)} className="overflow-hidden cursor-pointer hover:shadow-lg transition-all transform hover:scale-105 bg-wedding-secondary">
-            <div className="aspect-square bg-gradient-to-br from-wedding-primary/20 to-wedding-secondary/20 flex items-center justify-center bg-wedding-primary">
-              <span className="text-4xl">📸</span>
+        {photos.map((photo, index) => (
+          <Card 
+            key={photo.id} 
+            onClick={() => setSelectedPhoto(index)} 
+            className="overflow-hidden cursor-pointer hover:shadow-lg transition-all transform hover:scale-105 bg-wedding-secondary"
+          >
+            <div className="aspect-square relative">
+              <img
+                src={photo.src}
+                alt={photo.caption}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="p-3 bg-wedding-palha">
               <p className="text-sm font-medium text-center text-gray-950">{photo.caption}</p>
             </div>
-          </Card>)}
+          </Card>
+        ))}
       </div>
 
       <Card className="p-6 text-center bg-wedding-blush/20 bg-wedding-primary">
@@ -57,16 +81,27 @@ const PhotoGallery: React.FC = () => {
         </div>
       </Card>
 
-      {selectedPhoto !== null && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedPhoto(null)}>
+      {selectedPhoto !== null && (
+        <div 
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" 
+          onClick={() => setSelectedPhoto(null)}
+        >
           <div className="max-w-2xl max-h-full">
             <div className="bg-white rounded-lg p-4">
-              <div className="aspect-square bg-gradient-to-br from-wedding-primary/20 to-wedding-secondary/20 flex items-center justify-center rounded mb-4">
-                <span className="text-6xl">📸</span>
+              <div className="relative aspect-square w-full max-w-2xl mx-auto mb-4">
+                <img
+                  src={photos[selectedPhoto].src}
+                  alt={photos[selectedPhoto].caption}
+                  className="w-full h-full object-contain rounded"
+                />
               </div>
               <p className="text-center font-medium">{photos[selectedPhoto].caption}</p>
             </div>
           </div>
-        </div>}
-    </div>;
+        </div>
+      )}
+    </div>
+  );
 };
+
 export default PhotoGallery;

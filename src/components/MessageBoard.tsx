@@ -54,13 +54,13 @@ const MessageBoard: React.FC = () => {
           author: newName,
           text: newMessage,
           createdAt: Timestamp.now(),
-          approved: false
-        };
+        approved: false
+      };
 
         await addDoc(messagesRef, messageData);
         toast.success('Mensagem enviada com sucesso!');
-        setNewName('');
-        setNewMessage('');
+      setNewName('');
+      setNewMessage('');
         fetchMessages();
       } catch (error) {
         console.error('Erro ao enviar mensagem:', error);
@@ -81,22 +81,22 @@ const MessageBoard: React.FC = () => {
       <Card className="p-6 bg-wedding-primary">
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Deixe seu Recado</h4>
         <div className="space-y-4">
-          <Input 
-            placeholder="Seu nome" 
-            value={newName} 
+          <Input
+            placeholder="Seu nome"
+            value={newName}
             onChange={e => setNewName(e.target.value)} 
             className="bg-wedding-secondary text-black placeholder:text-black/60" 
           />
-          <Textarea 
-            placeholder="Escreva uma mensagem carinhosa para os noivos..." 
-            value={newMessage} 
+          <Textarea
+            placeholder="Escreva uma mensagem carinhosa para os noivos..."
+            value={newMessage}
             onChange={e => setNewMessage(e.target.value)} 
-            rows={4} 
+            rows={4}
             className="bg-wedding-secondary text-black placeholder:text-black/60" 
           />
           <Button 
-            onClick={addMessage} 
-            disabled={!newName || !newMessage} 
+            onClick={addMessage}
+            disabled={!newName || !newMessage}
             className="w-full text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
           >
             Enviar Mensagem
@@ -116,23 +116,23 @@ const MessageBoard: React.FC = () => {
         ) : (
           messages.filter(m => m.approved).map(message => (
             <Card key={message.id} className="p-4 bg-wedding-primary/50 backdrop-blur-sm">
-              <div className="flex items-start space-x-3">
+            <div className="flex items-start space-x-3">
                 <div className="w-10 h-10 rounded-full bg-wedding-secondary/20 flex items-center justify-center">
                   <span className="text-sm font-medium text-slate-50">
                     {message.author.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
+                </span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
                     <h5 className="font-medium text-slate-50">{message.author}</h5>
                     <span className="text-xs text-slate-50/70">
                       {new Date(message.createdAt).toLocaleDateString('pt-BR')}
                     </span>
-                  </div>
-                  <p className="text-sm text-slate-50">{message.text}</p>
                 </div>
+                  <p className="text-sm text-slate-50">{message.text}</p>
               </div>
-            </Card>
+            </div>
+          </Card>
           ))
         )}
       </div>
