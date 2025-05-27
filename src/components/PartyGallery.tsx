@@ -94,13 +94,11 @@ const PartyGallery: React.FC = () => {
       toast.error('Adicione uma legenda para a foto');
       return;
     }
-
     if (!uploaderName) {
       setTempCaption(newCaption);
       setShowUploaderNameModal(true);
       return;
     }
-
     try {
       setUploading(true);
 
@@ -321,39 +319,20 @@ const PartyGallery: React.FC = () => {
         </div>
       </Card>
 
-      {showUploaderNameModal && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
-          onClick={() => setShowUploaderNameModal(false)}
-        >
-          <div 
-            className="bg-white rounded-lg p-6 max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold mb-4">Como devemos te chamar?</h3>
-            <Input
-              placeholder="Digite seu nome"
-              value={uploaderName}
-              onChange={(e) => setUploaderName(e.target.value)}
-              className="mb-4"
-            />
+      {showUploaderNameModal && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={() => setShowUploaderNameModal(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold mb-4 text-black">Qual o seu nome?</h3>
+            <Input placeholder="Digite seu nome" value={uploaderName} onChange={e => setUploaderName(e.target.value)} className="mb-4" />
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowUploaderNameModal(false)}
-              >
+              <Button variant="outline" onClick={() => setShowUploaderNameModal(false)} className="text-white bg-wedding-primary">
                 Cancelar
               </Button>
-              <Button
-                onClick={handleUploaderNameSubmit}
-                disabled={!uploaderName.trim()}
-              >
+              <Button onClick={handleUploaderNameSubmit} disabled={!uploaderName.trim()}>
                 Confirmar
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
       {showNameModal && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={() => setShowNameModal(false)}>
           <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
