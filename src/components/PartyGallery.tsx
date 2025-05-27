@@ -327,7 +327,7 @@ const PartyGallery: React.FC = () => {
               <Button variant="outline" onClick={() => setShowUploaderNameModal(false)} className="text-white bg-wedding-primary">
                 Cancelar
               </Button>
-              <Button onClick={handleUploaderNameSubmit} disabled={!uploaderName.trim()}>
+              <Button onClick={handleUploaderNameSubmit} disabled={!uploaderName.trim()} className="text-black bg-wedding-secondary">
                 Confirmar
               </Button>
             </div>
