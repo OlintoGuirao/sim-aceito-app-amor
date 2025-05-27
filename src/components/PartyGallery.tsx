@@ -243,11 +243,11 @@ const PartyGallery: React.FC = () => {
                         <p className="text-white font-medium">{photo.caption}</p>
                         <p className="text-white/80 text-sm">Por: {photo.uploadedBy}</p>
                         <div className="flex items-center gap-4 mt-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleLike(photo.id)} className="text-white hover:text-red-500">
+                          <Button variant="ghost" size="sm" onClick={() => handleLike(photo.id)} className="text-white hover:text-red-500 bg-transparent">
                             <Heart className="w-4 h-4 mr-1" />
                             {photo.likes}
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedPhoto(index)} className="text-white hover:text-blue-500">
+                          <Button variant="ghost" size="sm" onClick={() => setSelectedPhoto(index)} className="text-white hover:text-blue-500 bg-transparent">
                             <MessageCircle className="w-4 h-4 mr-1" />
                             {photo.comments.length}
                           </Button>
