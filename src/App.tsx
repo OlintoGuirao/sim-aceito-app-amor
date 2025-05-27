@@ -70,9 +70,9 @@ function App() {
 
   return (
     <Router>
-      <Routes>
+        <Routes>
         {/* ===== ROTAS PÚBLICAS ===== */}
-        <Route path="/" element={<Index />} />
+          <Route path="/" element={<Index />} />
         <Route path="/confirm/:guestId" element={<ConfirmPage />} />
 
         {/* ===== ROTAS DA RIFA ===== */}
@@ -95,9 +95,9 @@ function App() {
 
         {/* ===== ROTA 404 ===== */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
     </Router>
-  );
+);
 }
 
 export default App;
