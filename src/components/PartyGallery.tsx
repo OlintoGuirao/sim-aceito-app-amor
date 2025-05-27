@@ -194,17 +194,20 @@ const PartyGallery: React.FC = () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment'
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
         }
       });
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        await videoRef.current.play();
       }
       setShowCamera(true);
     } catch (error) {
       console.error('Erro ao acessar câmera:', error);
-      toast.error('Não foi possível acessar a câmera');
+      toast.error('Não foi possível acessar a câmera. Verifique se você deu permissão de acesso.');
     }
   };
   const stopCamera = () => {
@@ -212,25 +215,30 @@ const PartyGallery: React.FC = () => {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     setShowCamera(false);
   };
   const takePhoto = () => {
     if (!videoRef.current) return;
+    
     const canvas = document.createElement('canvas');
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
+    
     if (ctx) {
       ctx.drawImage(videoRef.current, 0, 0);
       canvas.toBlob(blob => {
         if (blob) {
-          const file = new File([blob], 'foto-camera.jpg', {
+          const file = new File([blob], `foto-${Date.now()}.jpg`, {
             type: 'image/jpeg'
           });
           setSelectedFile(file);
           stopCamera();
         }
-      }, 'image/jpeg');
+      }, 'image/jpeg', 0.95);
     }
   };
   useEffect(() => {
@@ -283,32 +291,70 @@ const PartyGallery: React.FC = () => {
       <Card className="p-6 bg-wedding-secondary/20">
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Compartilhe Suas Fotos</h4>
         <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" className="bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={() => document.getElementById('photo-upload')?.click()} disabled={uploading}>
+          <div className="flex items-center gap-4 flex-wrap">
+            <Button
+              variant="outline"
+              className="bg-wedding-primary text-white hover:bg-wedding-primary/90"
+              onClick={() => document.getElementById('photo-upload')?.click()}
+              disabled={uploading}
+            >
               <Camera className="w-4 h-4 mr-2" />
               {uploading ? 'Enviando...' : 'Escolher Foto'}
             </Button>
-            <Button variant="outline" className="bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={startCamera} disabled={uploading}>
+            <Button
+              variant="outline"
+              className="bg-wedding-primary text-white hover:bg-wedding-primary/90"
+              onClick={startCamera}
+              disabled={uploading}
+            >
               <Camera className="w-4 h-4 mr-2" />
               {uploading ? 'Enviando...' : 'Tirar Foto'}
             </Button>
-            <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} disabled={uploading} />
-            {selectedFile && <span className="text-slate-50">{selectedFile.name}</span>}
+            <input
+              id="photo-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileSelect}
+              disabled={uploading}
+            />
+            {selectedFile && (
+              <div className="flex-1 min-w-0">
+                <span className="text-slate-50 truncate block">
+                  {selectedFile.name}
+                </span>
+              </div>
+            )}
           </div>
 
-          {showCamera && <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-4">
+          {showCamera && (
+            <div className="fixed inset-0 bg-black z-[70] flex flex-col items-center justify-center p-4">
               <div className="relative w-full max-w-lg">
-                <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg" />
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full rounded-lg"
+                  style={{ transform: 'scaleX(-1)' }}
+                />
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                  <Button variant="destructive" onClick={stopCamera} className="bg-red-500 hover:bg-red-600">
+                  <Button
+                    variant="destructive"
+                    onClick={stopCamera}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
                     Cancelar
                   </Button>
-                  <Button onClick={takePhoto} className="bg-wedding-primary hover:bg-wedding-primary/90">
+                  <Button
+                    onClick={takePhoto}
+                    className="bg-wedding-primary hover:bg-wedding-primary/90"
+                  >
                     Capturar
                   </Button>
                 </div>
               </div>
-            </div>}
+            </div>
+          )}
 
           <Input placeholder="Adicione uma legenda para sua foto" value={newCaption} onChange={e => setNewCaption(e.target.value)} className="bg-wedding-primary text-slate-50" disabled={uploading} />
 
@@ -334,20 +380,43 @@ const PartyGallery: React.FC = () => {
           </div>
         </div>}
 
-      {showNameModal && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={() => setShowNameModal(false)}>
-          <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4 text-black">Como devemos te chamar?</h3>
-            <Input placeholder="Digite seu nome" value={guestName} onChange={e => setGuestName(e.target.value)} className="mb-4" />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNameModal(false)} className="text-white bg-wedding-primary">
+      {showNameModal && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
+          onClick={() => setShowNameModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 w-[90%] max-w-md mx-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl md:text-2xl font-semibold mb-6 text-center text-black">
+              Como devemos te chamar?
+            </h3>
+            <Input
+              placeholder="Digite seu nome"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              className="mb-6 text-base md:text-lg h-12 bg-gray-50 border-gray-200 focus:border-wedding-primary focus:ring-wedding-primary"
+            />
+            <div className="flex flex-col sm:flex-row justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowNameModal(false)}
+                className="w-full sm:w-auto text-base h-12 border-wedding-primary text-wedding-primary hover:bg-wedding-primary/10"
+              >
                 Cancelar
               </Button>
-              <Button onClick={handleNameSubmit} disabled={!guestName.trim()} className="bg-wedding-secondary text-black">
+              <Button
+                onClick={handleNameSubmit}
+                disabled={!guestName.trim()}
+                className="w-full sm:w-auto text-base h-12 bg-wedding-primary text-white hover:bg-wedding-primary/90 disabled:opacity-50"
+              >
                 Confirmar
               </Button>
             </div>
           </div>
-        </div>}
+        </div>
+      )}
 
       {selectedPhoto !== null && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedPhoto(null)}>
           <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-lg" onClick={e => e.stopPropagation()}>
