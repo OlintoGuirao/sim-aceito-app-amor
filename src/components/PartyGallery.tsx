@@ -36,6 +36,7 @@ const PartyGallery: React.FC = () => {
     loop: true
   });
   const [showCamera, setShowCamera] = useState(false);
+  const [cameraMode, setCameraMode] = useState<'front' | 'back'>('back');
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
@@ -194,7 +195,7 @@ const PartyGallery: React.FC = () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'environment',
+          facingMode: cameraMode === 'front' ? 'user' : 'environment',
           width: { ideal: 1920 },
           height: { ideal: 1080 }
         }
@@ -209,6 +210,13 @@ const PartyGallery: React.FC = () => {
       console.error('Erro ao acessar câmera:', error);
       toast.error('Não foi possível acessar a câmera. Verifique se você deu permissão de acesso.');
     }
+  };
+  const toggleCamera = async () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+    }
+    setCameraMode(prev => prev === 'front' ? 'back' : 'front');
+    await startCamera();
   };
   const stopCamera = () => {
     if (stream) {
@@ -304,7 +312,7 @@ const PartyGallery: React.FC = () => {
             <Button
               variant="outline"
               className="bg-wedding-primary text-white hover:bg-wedding-primary/90"
-              onClick={startCamera}
+              onClick={() => document.getElementById('camera-capture')?.click()}
               disabled={uploading}
             >
               <Camera className="w-4 h-4 mr-2" />
@@ -318,6 +326,15 @@ const PartyGallery: React.FC = () => {
               onChange={handleFileSelect}
               disabled={uploading}
             />
+            <input
+              id="camera-capture"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleFileSelect}
+              disabled={uploading}
+            />
             {selectedFile && (
               <div className="flex-1 min-w-0">
                 <span className="text-slate-50 truncate block">
@@ -327,38 +344,19 @@ const PartyGallery: React.FC = () => {
             )}
           </div>
 
-          {showCamera && (
-            <div className="fixed inset-0 bg-black z-[70] flex flex-col items-center justify-center p-4">
-              <div className="relative w-full max-w-lg">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-lg"
-                  style={{ transform: 'scaleX(-1)' }}
-                />
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                  <Button
-                    variant="destructive"
-                    onClick={stopCamera}
-                    className="bg-red-500 hover:bg-red-600"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={takePhoto}
-                    className="bg-wedding-primary hover:bg-wedding-primary/90"
-                  >
-                    Capturar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
+          <Input
+            placeholder="Adicione uma legenda para sua foto"
+            value={newCaption}
+            onChange={(e) => setNewCaption(e.target.value)}
+            className="bg-wedding-primary text-slate-50"
+            disabled={uploading}
+          />
 
-          <Input placeholder="Adicione uma legenda para sua foto" value={newCaption} onChange={e => setNewCaption(e.target.value)} className="bg-wedding-primary text-slate-50" disabled={uploading} />
-
-          <Button className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={handleUpload} disabled={!selectedFile || !newCaption || uploading}>
+          <Button
+            className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90"
+            onClick={handleUpload}
+            disabled={!selectedFile || !newCaption || uploading}
+          >
             <Upload className="w-4 h-4 mr-2" />
             {uploading ? 'Enviando...' : 'Enviar Foto'}
           </Button>
