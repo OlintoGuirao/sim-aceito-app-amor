@@ -26,7 +26,7 @@ function App() {
           path="/admin" 
           element={
             isAdmin ? (
-              <AdminPage />
+              <Navigate to="/admin/raffle" replace />
             ) : (
               <Navigate to="/admin/login" replace />
             )
