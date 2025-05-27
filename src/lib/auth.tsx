@@ -1,71 +1,101 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged, User, signInWithEmailAndPassword } from 'firebase/auth';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getAuth, onAuthStateChanged, User, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
+
+type UserRole = 'admin' | 'padrinho';
+
+interface User {
+  email: string;
+  isAdmin: boolean;
+  isMainAdmin: boolean;
+  role: UserRole;
+  name: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  isAdmin: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  isAdmin: boolean;
+  isMainAdmin: boolean;
+  isPadrinho: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAdmin: false,
-  loading: true,
-  login: async () => {},
-  logout: async () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => useContext(AuthContext);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const auth = getAuth();
-
-  // Lista de emails de administradores
-  const adminEmails = [
-    'olinto.guirao@gmail.com',
-    // Adicione outros emails de admin aqui
-  ];
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Auth state changed:', user?.email);
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setUser({ ...user, ...userDoc.data() });
+        } else {
+          setUser(user);
+        }
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login successful:', userCredential.user.email);
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      
+      if (userDoc.exists()) {
+        setUser({ ...userCredential.user, ...userDoc.data() });
+      } else {
+        setUser(userCredential.user);
+      }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Erro no login:', error);
       throw error;
     }
   };
 
   const logout = async () => {
     try {
-      await auth.signOut();
-      console.log('Logout successful');
+      await signOut(auth);
+      setUser(null);
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Erro no logout:', error);
       throw error;
     }
   };
 
-  const isAdmin = user ? adminEmails.includes(user.email || '') : false;
-  console.log('Is admin:', isAdmin, 'for user:', user?.email);
+  const isAdmin = user?.isAdmin === true || user?.isMainAdmin === true;
+  const isMainAdmin = user?.isMainAdmin === true;
+  const isPadrinho = user?.role === 'padrinho';
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, loading, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      logout, 
+      isAdmin, 
+      isMainAdmin,
+      isPadrinho
+    }}>
       {children}
     </AuthContext.Provider>
   );
-}; 
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+  }
+  return context;
+} 

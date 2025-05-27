@@ -25,7 +25,7 @@ const AdminRaffle: React.FC = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingNumber, setDrawingNumber] = useState<number | null>(null);
   const [showWinnerDialog, setShowWinnerDialog] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, isMainAdmin } = useAuth();
 
   const pricePerTicket = 10; // Preço por número
 
@@ -157,18 +157,20 @@ const AdminRaffle: React.FC = () => {
             </p>
           </Card>
 
-          <Card className="p-4 bg-wedding-secondary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="w-5 h-5 text-wedding-gold" />
-              <h3 className="text-lg font-semibold text-slate-50">Total Arrecadado</h3>
-            </div>
-            <p className="text-2xl font-bold text-wedding-gold">
-              R$ {totalRevenue.toFixed(2)}
-            </p>
-            <p className="text-sm text-slate-50/70">
-              R$ {pricePerTicket.toFixed(2)} por número
-            </p>
-          </Card>
+          {isMainAdmin && (
+            <Card className="p-4 bg-wedding-secondary/20">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-5 h-5 text-wedding-gold" />
+                <h3 className="text-lg font-semibold text-slate-50">Total Arrecadado</h3>
+              </div>
+              <p className="text-2xl font-bold text-wedding-gold">
+                R$ {totalRevenue.toFixed(2)}
+              </p>
+              <p className="text-sm text-slate-50/70">
+                R$ {pricePerTicket.toFixed(2)} por número
+              </p>
+            </Card>
+          )}
 
           <Card className="p-4 bg-wedding-secondary/20">
             <div className="flex items-center gap-2 mb-2">

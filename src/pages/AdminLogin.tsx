@@ -11,8 +11,17 @@ const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +30,9 @@ const AdminLogin: React.FC = () => {
     try {
       await login(email, password);
       toast.success('Login realizado com sucesso!');
-      navigate('/admin/raffle');
+      
+      // Após login, vai direto para a rifa
+      navigate('/raffle');
     } catch (error: any) {
       console.error('Erro no login:', error);
       if (error.code === 'auth/invalid-credential') {
