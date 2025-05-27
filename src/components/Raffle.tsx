@@ -160,67 +160,6 @@ const Raffle: React.FC = () => {
     }
   };
 
-  const drawWinner = async () => {
-    if (!user?.isAdmin) {
-      toast.error('Apenas administradores podem realizar o sorteio');
-      return;
-    }
-
-    const confirmedTickets = tickets.filter(ticket => ticket.paymentStatus === 'confirmed');
-    if (confirmedTickets.length === 0) {
-      toast.error('Não há tickets confirmados para realizar o sorteio');
-      return;
-    }
-
-    try {
-      setIsDrawing(true);
-      setDrawingNumber(null);
-
-      // Animação do sorteio
-      const animationDuration = 3000; // 3 segundos
-      const interval = 100; // Atualiza a cada 100ms
-      const steps = animationDuration / interval;
-      let currentStep = 0;
-
-      const animationInterval = setInterval(() => {
-        const randomIndex = Math.floor(Math.random() * confirmedTickets.length);
-        setDrawingNumber(confirmedTickets[randomIndex].number);
-        currentStep++;
-
-        if (currentStep >= steps) {
-          clearInterval(animationInterval);
-          finishDrawing(confirmedTickets);
-        }
-      }, interval);
-    } catch (error) {
-      console.error('Erro ao realizar sorteio:', error);
-      toast.error('Erro ao realizar sorteio');
-      setIsDrawing(false);
-    }
-  };
-
-  const finishDrawing = async (confirmedTickets: RaffleTicket[]) => {
-    try {
-      // Selecionar um ticket aleatório entre os confirmados
-      const randomIndex = Math.floor(Math.random() * confirmedTickets.length);
-      const winnerTicket = confirmedTickets[randomIndex];
-
-      // Atualizar o ticket como vencedor
-      const ticketRef = doc(db, 'raffle_tickets', winnerTicket.id);
-      await updateDoc(ticketRef, { isWinner: true });
-
-      setWinner(winnerTicket);
-      setIsDrawing(false);
-      setShowWinnerDialog(true);
-      toast.success('Sorteio realizado com sucesso!');
-      fetchTickets();
-    } catch (error) {
-      console.error('Erro ao finalizar sorteio:', error);
-      toast.error('Erro ao finalizar sorteio');
-      setIsDrawing(false);
-    }
-  };
-
   const availableNumbers = Array.from({ length: totalNumbers }, (_, i) => i + 1)
     .filter(num => !isNumberTaken(num));
 
@@ -344,47 +283,7 @@ const Raffle: React.FC = () => {
         </div>
       </Card>
 
-      {user?.isAdmin && !winner && (
-        <Card className="p-6 bg-wedding-primary">
-          <h4 className="text-lg font-semibold mb-4 text-slate-50 flex items-center gap-2">
-            <Crown className="w-5 h-5 text-wedding-gold" />
-            Área do Administrador
-          </h4>
-          
-          <div className="space-y-4">
-            <div className="p-4 bg-wedding-secondary/20 rounded-lg">
-              <p className="text-sm text-slate-50">
-                Total de números confirmados: {tickets.filter(t => t.paymentStatus === 'confirmed').length}
-              </p>
-              <p className="text-sm text-slate-50">
-                Total arrecadado: R$ {(tickets.filter(t => t.paymentStatus === 'confirmed').length * pricePerTicket).toFixed(2)}
-              </p>
-            </div>
-
-            {isDrawing ? (
-              <div className="text-center py-8">
-                <div className="animate-bounce mb-4">
-                  <Trophy className="w-12 h-12 text-wedding-gold mx-auto" />
-                </div>
-                <p className="text-4xl font-bold text-wedding-gold mb-2">
-                  {drawingNumber || '...'}
-                </p>
-                <p className="text-slate-50">Sorteando...</p>
-              </div>
-            ) : (
-              <Button 
-                onClick={drawWinner} 
-                disabled={tickets.filter(t => t.paymentStatus === 'confirmed').length === 0} 
-                className="w-full text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
-              >
-                Realizar Sorteio
-              </Button>
-            )}
-          </div>
-        </Card>
-      )}
-
-      <div className="space-y-4">
+      <Card className="p-6 bg-wedding-primary">
         <h4 className="text-lg font-semibold text-slate-50">Números Vendidos</h4>
         {loading ? (
           <div className="text-center text-slate-50">Carregando...</div>
@@ -403,7 +302,7 @@ const Raffle: React.FC = () => {
             ))}
           </div>
         )}
-      </div>
+      </Card>
 
       <Dialog open={showPixDialog} onOpenChange={setShowPixDialog}>
         <DialogContent className="bg-wedding-primary text-slate-50">
