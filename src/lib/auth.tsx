@@ -1,11 +1,13 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAuth, onAuthStateChanged, User, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 type UserRole = 'admin' | 'padrinho';
 
 interface User {
+  uid: string;
   email: string;
   isAdmin: boolean;
   isMainAdmin: boolean;
@@ -30,13 +32,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
-          setUser({ ...user, ...userDoc.data() });
+          const userData = userDoc.data();
+          setUser({ 
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            ...userData 
+          } as User);
         } else {
-          setUser(user);
+          setUser({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email || '',
+            isAdmin: false,
+            isMainAdmin: false,
+            role: 'padrinho',
+            name: firebaseUser.displayName || ''
+          });
         }
       } else {
         setUser(null);
@@ -53,9 +67,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       
       if (userDoc.exists()) {
-        setUser({ ...userCredential.user, ...userDoc.data() });
+        const userData = userDoc.data();
+        setUser({ 
+          uid: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          ...userData 
+        } as User);
       } else {
-        setUser(userCredential.user);
+        setUser({
+          uid: userCredential.user.uid,
+          email: userCredential.user.email || '',
+          isAdmin: false,
+          isMainAdmin: false,
+          role: 'padrinho',
+          name: userCredential.user.displayName || ''
+        });
       }
     } catch (error) {
       console.error('Erro no login:', error);

@@ -19,6 +19,10 @@ export interface Guest {
   phone?: string;
   status: 'pending' | 'confirmed' | 'declined';
   qrCode?: string;
+  companions?: number;
+  message?: string;
+  confirmedAt?: string;
+  declinedAt?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -80,4 +84,4 @@ export const updateGuestQRCode = async (guestId: string, qrCode: string) => {
 export const deleteGuest = async (guestId: string) => {
   const guestRef = doc(db, 'guests', guestId);
   await deleteDoc(guestRef);
-}; 
+};

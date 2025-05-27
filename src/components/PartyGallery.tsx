@@ -33,11 +33,7 @@ const PartyGallery: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: true,
-    autoplay: {
-      delay: 3000,
-      stopOnInteraction: false
-    }
+    loop: true
   });
   const [showCamera, setShowCamera] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
