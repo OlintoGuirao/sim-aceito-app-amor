@@ -8,7 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode } from "lucide-react";
+import { Mail, QrCode, Share2 } from "lucide-react";
 export function AdminGuestManager() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [newGuest, setNewGuest] = useState({
@@ -95,6 +95,25 @@ export function AdminGuestManager() {
     } finally {
       setSendingEmail(null);
     }
+  };
+  const handleSendInvite = (guest: Guest) => {
+    if (!guest.phone) {
+      toast.error('Este convidado não possui telefone cadastrado');
+      return;
+    }
+
+    const baseUrl = window.location.origin;
+    const message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n` +
+      `📅 Data: 15 de Dezembro de 2024\n` +
+      `⏰ Horário: 19:00\n` +
+      `📍 Local: Espaço de Eventos\n\n` +
+      `Para confirmar sua presença, acesse:\n` +
+      `${baseUrl}/confirm/${guest.id}\n\n` +
+      `Contamos com sua presença! 💑\n` +
+      `Fabii e Xuniim`;
+
+    const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
   const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
   const pendingCount = guests.filter(g => g.status === 'pending').length;
@@ -190,23 +209,134 @@ export function AdminGuestManager() {
               <div className="space-y-4">
                 {guests.map(guest => <div key={guest.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4 bg-wedding-secondary">
                     <div className="w-full sm:w-auto">
-                      <h3 className="font-medium text-black">{guest.name}</h3>
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-medium text-black">{guest.name}</h3>
+                        <Badge 
+                          className={`${
+                            guest.status === 'confirmed' 
+                              ? 'bg-green-500 hover:bg-green-600' 
+                              : guest.status === 'declined'
+                              ? 'bg-red-500 hover:bg-red-600'
+                              : 'bg-yellow-500 hover:bg-yellow-600'
+                          }`}
+                        >
+                          {guest.status === 'confirmed' 
+                            ? 'Confirmado' 
+                            : guest.status === 'declined'
+                            ? 'Não Confirmado'
+                            : 'Pendente'}
+                        </Badge>
+                      </div>
                       {guest.email && <p className="text-sm text-black">{guest.email}</p>}
                       {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
+                      {guest.companions > 0 && (
+                        <p className="text-sm text-black">
+                          Acompanhantes: {guest.companions}
+                        </p>
+                      )}
+                      {guest.message && (
+                        <p className="text-sm text-black italic mt-1">
+                          "{guest.message}"
+                        </p>
+                      )}
+                      {guest.confirmedAt && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
+                      {guest.declinedAt && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                      <Button variant={guest.status === 'confirmed' ? 'default' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'confirmed')} className="flex-1 sm:flex-none bg-wedding-primary text-white">
-                        Confirmado
-                      </Button>
-                      <Button variant={guest.status === 'declined' ? 'destructive' : 'outline'} onClick={() => handleStatusChange(guest.id!, 'declined')} className="flex-1 sm:flex-none text-white">
-                        Declinado
-                      </Button>
-                      {guest.email && <Button variant="outline" size="icon" onClick={() => handleSendQRCode(guest)} disabled={sendingEmail === guest.id} className="bg-wedding-primary text-white">
-                          <Mail className="h-4 w-4" />
-                        </Button>}
-                      <Button variant="outline" onClick={() => handleDeleteGuest(guest.id!)} className="flex-1 sm:flex-none text-white">
-                        Excluir
-                      </Button>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4 bg-wedding-secondary">
+                      <div className="w-full sm:w-auto">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-medium text-black">{guest.name}</h3>
+                          <Badge 
+                            className={`${
+                              guest.status === 'confirmed' 
+                                ? 'bg-green-500 hover:bg-green-600' 
+                                : guest.status === 'declined'
+                                ? 'bg-red-500 hover:bg-red-600'
+                                : 'bg-yellow-500 hover:bg-yellow-600'
+                            }`}
+                          >
+                            {guest.status === 'confirmed' 
+                              ? 'Confirmado' 
+                              : guest.status === 'declined'
+                              ? 'Não Confirmado'
+                              : 'Pendente'}
+                          </Badge>
+                        </div>
+                        {guest.email && <p className="text-sm text-black">{guest.email}</p>}
+                        {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
+                        {guest.companions > 0 && (
+                          <p className="text-sm text-black">
+                            Acompanhantes: {guest.companions}
+                          </p>
+                        )}
+                        {guest.message && (
+                          <p className="text-sm text-black italic mt-1">
+                            "{guest.message}"
+                          </p>
+                        )}
+                        {guest.confirmedAt && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                        {guest.declinedAt && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                          onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
+                          className="flex-1 sm:flex-none bg-wedding-primary text-white"
+                        >
+                          Confirmado
+                        </Button>
+                        <Button 
+                          variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                          onClick={() => handleStatusChange(guest.id!, 'declined')} 
+                          className="flex-1 sm:flex-none text-white"
+                        >
+                          Declinado
+                        </Button>
+                        {guest.phone && (
+                          <Button 
+                            variant="outline" 
+                            onClick={() => handleSendInvite(guest)} 
+                            className="flex-1 sm:flex-none bg-wedding-primary text-white"
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            Enviar Convite
+                          </Button>
+                        )}
+                        {guest.email && (
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            onClick={() => handleSendQRCode(guest)} 
+                            disabled={sendingEmail === guest.id} 
+                            className="bg-wedding-primary text-white"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handleDeleteGuest(guest.id!)} 
+                          className="flex-1 sm:flex-none text-white"
+                        >
+                          Excluir
+                        </Button>
+                      </div>
                     </div>
                   </div>)}
               </div>

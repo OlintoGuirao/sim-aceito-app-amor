@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Search } from "lucide-react";
+import { MoreHorizontal, Search, Share2 } from "lucide-react";
 
 interface Guest {
   id: string;
@@ -30,6 +30,7 @@ interface Guest {
   group: string;
   status: 'pending' | 'confirmed' | 'declined';
   createdAt: string;
+  companions: number;
 }
 
 export function GuestList() {
@@ -74,6 +75,20 @@ export function GuestList() {
       console.error('Erro ao excluir convidado:', error);
       toast.error('Erro ao excluir convidado');
     }
+  };
+
+  const handleSendInvite = (guest: Guest) => {
+    const message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n` +
+      `📅 Data: 15 de Dezembro de 2024\n` +
+      `⏰ Horário: 19:00\n` +
+      `📍 Local: Espaço de Eventos\n\n` +
+      `Para confirmar sua presença, acesse:\n` +
+      `https://sim-aceito.com.br/confirmar/${guest.id}\n\n` +
+      `Contamos com sua presença! 💑\n` +
+      `Fabii e Xuniim`;
+
+    const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   const filteredGuests = guests.filter(guest => 
@@ -164,6 +179,12 @@ export function GuestList() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
+                              onClick={() => handleSendInvite(guest)}
+                            >
+                              <Share2 className="w-4 h-4 mr-2" />
+                              Enviar Convite
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               className="text-red-600"
                               onClick={() => handleDelete(guest.id)}
                             >
@@ -180,6 +201,51 @@ export function GuestList() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
+        <h3 className="text-2xl font-elegant font-semibold mb-2 text-black">Lista de Convidados</h3>
+        <p className="text-black">
+          Gerencie seus convidados e envie convites
+        </p>
+      </Card>
+
+      <div className="grid gap-4">
+        {filteredGuests.map(guest => (
+          <Card key={guest.id} className="bg-wedding-secondary">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-semibold text-black">{guest.name}</h4>
+                  <p className="text-sm text-gray-600">{guest.email}</p>
+                  <p className="text-sm text-gray-600">{guest.phone}</p>
+                  <p className="text-sm text-gray-600">
+                    Acompanhantes: {guest.companions}
+                  </p>
+                  <p className="text-sm">
+                    Status: 
+                    <span className={`ml-2 ${
+                      guest.status === 'confirmed' ? 'text-green-600' :
+                      guest.status === 'declined' ? 'text-red-600' :
+                      'text-yellow-600'
+                    }`}>
+                      {guest.status === 'confirmed' ? 'Confirmado' :
+                       guest.status === 'declined' ? 'Não Confirmado' :
+                       'Pendente'}
+                    </span>
+                  </p>
+                </div>
+                <Button
+                  className="bg-wedding-primary text-white"
+                  onClick={() => handleSendInvite(guest)}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Enviar Convite
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 } 
