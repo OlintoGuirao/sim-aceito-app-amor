@@ -42,8 +42,11 @@ const PartyGallery: React.FC = () => {
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showNameModal, setShowNameModal] = useState(false);
+  const [showUploaderNameModal, setShowUploaderNameModal] = useState(false);
   const [guestName, setGuestName] = useState('');
+  const [uploaderName, setUploaderName] = useState('');
   const [tempComment, setTempComment] = useState('');
+  const [tempCaption, setTempCaption] = useState('');
   useEffect(() => {
     fetchPhotos();
   }, []);
@@ -91,6 +94,13 @@ const PartyGallery: React.FC = () => {
       toast.error('Adicione uma legenda para a foto');
       return;
     }
+
+    if (!uploaderName) {
+      setTempCaption(newCaption);
+      setShowUploaderNameModal(true);
+      return;
+    }
+
     try {
       setUploading(true);
 
@@ -101,7 +111,7 @@ const PartyGallery: React.FC = () => {
       const photoData = {
         url: imageUrl,
         caption: newCaption,
-        uploadedBy: 'Convidado',
+        uploadedBy: uploaderName,
         uploadedAt: new Date(),
         likes: 0,
         comments: []
@@ -173,6 +183,14 @@ const PartyGallery: React.FC = () => {
     }
     setShowNameModal(false);
     handleComment(selectedPhoto !== null ? photos[selectedPhoto].id : '');
+  };
+  const handleUploaderNameSubmit = () => {
+    if (!uploaderName.trim()) {
+      toast.error('Por favor, digite seu nome');
+      return;
+    }
+    setShowUploaderNameModal(false);
+    handleUpload();
   };
   const startCamera = async () => {
     try {
@@ -302,6 +320,40 @@ const PartyGallery: React.FC = () => {
           </Button>
         </div>
       </Card>
+
+      {showUploaderNameModal && (
+        <div
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
+          onClick={() => setShowUploaderNameModal(false)}
+        >
+          <div 
+            className="bg-white rounded-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-4">Como devemos te chamar?</h3>
+            <Input
+              placeholder="Digite seu nome"
+              value={uploaderName}
+              onChange={(e) => setUploaderName(e.target.value)}
+              className="mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowUploaderNameModal(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleUploaderNameSubmit}
+                disabled={!uploaderName.trim()}
+              >
+                Confirmar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showNameModal && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={() => setShowNameModal(false)}>
           <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
