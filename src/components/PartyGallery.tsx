@@ -135,13 +135,11 @@ const PartyGallery: React.FC = () => {
   };
   const handleComment = async (photoId: string) => {
     if (!newComment) return;
-
     if (!guestName) {
       setTempComment(newComment);
       setShowNameModal(true);
       return;
     }
-
     try {
       const photoRef = doc(db, 'party_photos', photoId);
       const comment = {
@@ -157,15 +155,10 @@ const PartyGallery: React.FC = () => {
       });
 
       // Atualiza o estado local
-      setPhotos(prev => prev.map(photo => 
-        photo.id === photoId 
-          ? { 
-              ...photo, 
-              comments: [...photo.comments, comment]
-            }
-          : photo
-      ));
-
+      setPhotos(prev => prev.map(photo => photo.id === photoId ? {
+        ...photo,
+        comments: [...photo.comments, comment]
+      } : photo));
       setNewComment('');
       toast.success('Comentário adicionado!');
     } catch (error) {
@@ -275,199 +268,105 @@ const PartyGallery: React.FC = () => {
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Compartilhe Suas Fotos</h4>
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              className="bg-wedding-primary text-white hover:bg-wedding-primary/90"
-              onClick={() => document.getElementById('photo-upload')?.click()}
-              disabled={uploading}
-            >
+            <Button variant="outline" className="bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={() => document.getElementById('photo-upload')?.click()} disabled={uploading}>
               <Camera className="w-4 h-4 mr-2" />
               {uploading ? 'Enviando...' : 'Escolher Foto'}
             </Button>
-            <Button
-              variant="outline"
-              className="bg-wedding-primary text-white hover:bg-wedding-primary/90"
-              onClick={startCamera}
-              disabled={uploading}
-            >
+            <Button variant="outline" className="bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={startCamera} disabled={uploading}>
               <Camera className="w-4 h-4 mr-2" />
               {uploading ? 'Enviando...' : 'Tirar Foto'}
             </Button>
-            <input
-              id="photo-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileSelect}
-              disabled={uploading}
-            />
-            {selectedFile && (
-              <span className="text-slate-50">{selectedFile.name}</span>
-            )}
+            <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+            {selectedFile && <span className="text-slate-50">{selectedFile.name}</span>}
           </div>
 
-          {showCamera && (
-            <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-4">
+          {showCamera && <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center p-4">
               <div className="relative w-full max-w-lg">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full rounded-lg"
-                />
+                <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg" />
                 <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                  <Button
-                    variant="destructive"
-                    onClick={stopCamera}
-                    className="bg-red-500 hover:bg-red-600"
-                  >
+                  <Button variant="destructive" onClick={stopCamera} className="bg-red-500 hover:bg-red-600">
                     Cancelar
                   </Button>
-                  <Button
-                    onClick={takePhoto}
-                    className="bg-wedding-primary hover:bg-wedding-primary/90"
-                  >
+                  <Button onClick={takePhoto} className="bg-wedding-primary hover:bg-wedding-primary/90">
                     Capturar
                   </Button>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
-          <Input
-            placeholder="Adicione uma legenda para sua foto"
-            value={newCaption}
-            onChange={(e) => setNewCaption(e.target.value)}
-            className="bg-wedding-primary text-slate-50"
-            disabled={uploading}
-          />
+          <Input placeholder="Adicione uma legenda para sua foto" value={newCaption} onChange={e => setNewCaption(e.target.value)} className="bg-wedding-primary text-slate-50" disabled={uploading} />
 
-          <Button
-            className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90"
-            onClick={handleUpload}
-            disabled={!selectedFile || !newCaption || uploading}
-          >
+          <Button className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={handleUpload} disabled={!selectedFile || !newCaption || uploading}>
             <Upload className="w-4 h-4 mr-2" />
             {uploading ? 'Enviando...' : 'Enviar Foto'}
           </Button>
         </div>
       </Card>
 
-      {showNameModal && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4"
-          onClick={() => setShowNameModal(false)}
-        >
-          <div 
-            className="bg-white rounded-lg p-6 max-w-md w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
+      {showNameModal && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={() => setShowNameModal(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-semibold mb-4">Como devemos te chamar?</h3>
-            <Input
-              placeholder="Digite seu nome"
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              className="mb-4"
-            />
+            <Input placeholder="Digite seu nome" value={guestName} onChange={e => setGuestName(e.target.value)} className="mb-4" />
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowNameModal(false)}
-              >
+              <Button variant="outline" onClick={() => setShowNameModal(false)}>
                 Cancelar
               </Button>
-              <Button
-                onClick={handleNameSubmit}
-                disabled={!guestName.trim()}
-              >
+              <Button onClick={handleNameSubmit} disabled={!guestName.trim()}>
                 Confirmar
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
-      {selectedPhoto !== null && (
-        <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedPhoto(null)}
-        >
-          <div 
-            className="max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
+      {selectedPhoto !== null && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedPhoto(null)}>
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-lg" onClick={e => e.stopPropagation()}>
             <div className="p-4">
               <div className="relative aspect-[4/3] mb-4">
-                <img
-                  src={photos[selectedPhoto].url}
-                  alt={photos[selectedPhoto].caption}
-                  className="w-full h-full object-cover rounded-lg"
-                />
+                <img src={photos[selectedPhoto].url} alt={photos[selectedPhoto].caption} className="w-full h-full object-cover rounded-lg" />
               </div>
               
               <div className="space-y-4">
                 <div>
-                  <p className="text-center font-medium text-lg">{photos[selectedPhoto].caption}</p>
+                  <p className="text-center font-medium text-lg text-black">{photos[selectedPhoto].caption}</p>
                   <p className="text-center text-sm text-gray-600 mt-1">
                     Por: {photos[selectedPhoto].uploadedBy}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLike(photos[selectedPhoto].id);
-                    }}
-                    className="text-gray-600 hover:text-red-500"
-                  >
+                  <Button variant="ghost" size="sm" onClick={e => {
+                e.stopPropagation();
+                handleLike(photos[selectedPhoto].id);
+              }} className="text-gray-600 hover:text-red-500">
                     <Heart className="w-4 h-4 mr-1" />
                     {photos[selectedPhoto].likes}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-600 hover:text-blue-500"
-                  >
+                  <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-500">
                     <MessageCircle className="w-4 h-4 mr-1" />
                     {photos[selectedPhoto].comments.length}
                   </Button>
                 </div>
 
                 <div className="flex gap-2">
-                  <Input
-                    placeholder="Adicione um comentário..."
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    className="flex-1"
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleComment(photos[selectedPhoto].id);
-                    }}
-                    disabled={!newComment}
-                  >
+                  <Input placeholder="Adicione um comentário..." value={newComment} onChange={e => setNewComment(e.target.value)} onClick={e => e.stopPropagation()} className="flex-1 text-white bg-wedding-primary" />
+                  <Button onClick={e => {
+                e.stopPropagation();
+                handleComment(photos[selectedPhoto].id);
+              }} disabled={!newComment} className="text-black bg-wedding-secondary">
                     Comentar
                   </Button>
                 </div>
 
                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {photos[selectedPhoto].comments.map(comment => (
-                    <div key={comment.id} className="bg-gray-100 p-2 rounded">
+                  {photos[selectedPhoto].comments.map(comment => <div key={comment.id} className="bg-gray-100 p-2 rounded">
                       <p className="text-sm font-medium">{comment.author}</p>
                       <p className="text-sm text-gray-600">{comment.text}</p>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
     </div>;
 };
 export default PartyGallery;
