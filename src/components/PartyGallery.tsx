@@ -305,13 +305,13 @@ const PartyGallery: React.FC = () => {
 
       {showNameModal && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4" onClick={() => setShowNameModal(false)}>
           <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-4">Como devemos te chamar?</h3>
+            <h3 className="text-lg font-semibold mb-4 text-black">Como devemos te chamar?</h3>
             <Input placeholder="Digite seu nome" value={guestName} onChange={e => setGuestName(e.target.value)} className="mb-4" />
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowNameModal(false)}>
+              <Button variant="outline" onClick={() => setShowNameModal(false)} className="text-white bg-wedding-primary">
                 Cancelar
               </Button>
-              <Button onClick={handleNameSubmit} disabled={!guestName.trim()}>
+              <Button onClick={handleNameSubmit} disabled={!guestName.trim()} className="bg-wedding-secondary text-black">
                 Confirmar
               </Button>
             </div>
