@@ -5,14 +5,14 @@ const WeddingHeader: React.FC = () => {
         <span className="text-4xl">💍</span>
       </div>
       
-      <h1 className="font-script text-6xl md:text-7xl text-wedding-marsala mb-4 animate-fade-in">
+      <h1 className="font-script text-6xl md:text-7xl mb-4 animate-fade-in text-black">
         Sim, Aceito!
       </h1>
       
       <div className="space-y-2 animate-fade-in" style={{
       animationDelay: '0.2s'
     }}>
-        <h2 className="font-elegant text-2xl md:text-3xl text-foreground">Fabiola &amp; Xuniim</h2>
+        <h2 className="font-elegant text-2xl md:text-3xl text-black">Fabiola &amp; Xuniim</h2>
         <p className="text-lg text-muted-foreground">
           15 de Junho de 2024
         </p>
