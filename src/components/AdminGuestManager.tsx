@@ -8,7 +8,18 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2 } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle } from "lucide-react";
+import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+interface Message {
+  id: string;
+  text: string;
+  author: string;
+  createdAt: Date;
+  approved: boolean;
+}
+
 export function AdminGuestManager() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [newGuest, setNewGuest] = useState({
@@ -18,11 +29,15 @@ export function AdminGuestManager() {
   });
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Carregar convidados do Firestore
   useEffect(() => {
     loadGuests();
+    fetchMessages();
   }, []);
+
   const loadGuests = async () => {
     try {
       const guestsData = await getGuests();
@@ -31,6 +46,28 @@ export function AdminGuestManager() {
       console.error('Erro ao carregar convidados:', error);
     }
   };
+
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      const messagesRef = collection(db, 'party_messages');
+      const q = query(messagesRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const fetchedMessages = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt.toDate()
+      })) as Message[];
+      console.log('Recados carregados:', fetchedMessages);
+      setMessages(fetchedMessages);
+    } catch (error) {
+      console.error('Erro ao buscar mensagens:', error);
+      toast.error('Erro ao carregar mensagens');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddGuest = async () => {
     if (!newGuest.name) return;
     try {
@@ -50,6 +87,7 @@ export function AdminGuestManager() {
       console.error('Erro ao adicionar convidado:', error);
     }
   };
+
   const handleStatusChange = async (guestId: string, status: Guest['status']) => {
     try {
       await updateGuestStatus(guestId, status);
@@ -58,6 +96,7 @@ export function AdminGuestManager() {
       console.error('Erro ao atualizar status:', error);
     }
   };
+
   const handleDeleteGuest = async (guestId: string) => {
     try {
       await deleteGuest(guestId);
@@ -66,6 +105,7 @@ export function AdminGuestManager() {
       console.error('Erro ao deletar convidado:', error);
     }
   };
+
   const handleSendQRCode = async (guest: Guest) => {
     if (!guest.email) {
       toast.error('Este convidado não possui email cadastrado');
@@ -96,6 +136,7 @@ export function AdminGuestManager() {
       setSendingEmail(null);
     }
   };
+
   const handleSendInvite = (guest: Guest) => {
     if (!guest.phone) {
       toast.error('Este convidado não possui telefone cadastrado');
@@ -115,9 +156,44 @@ export function AdminGuestManager() {
     const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
+
   const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
   const pendingCount = guests.filter(g => g.status === 'pending').length;
   const declinedCount = guests.filter(g => g.status === 'declined').length;
+
+  const handleApproveMessage = async (messageId: string) => {
+    try {
+      const messageRef = doc(db, 'party_messages', messageId);
+      await updateDoc(messageRef, {
+        approved: true
+      });
+      
+      setMessages(prev => prev.map(message => 
+        message.id === messageId 
+          ? { ...message, approved: true }
+          : message
+      ));
+      
+      toast.success('Mensagem aprovada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao aprovar mensagem:', error);
+      toast.error('Erro ao aprovar mensagem');
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const messageRef = doc(db, 'party_messages', messageId);
+      await deleteDoc(messageRef);
+      
+      setMessages(prev => prev.filter(message => message.id !== messageId));
+      toast.success('Mensagem excluída com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir mensagem:', error);
+      toast.error('Erro ao excluir mensagem');
+    }
+  };
+
   return <div className="space-y-6 p-6">
       <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-white">Gerenciamento de Convidados</h3>
@@ -154,7 +230,7 @@ export function AdminGuestManager() {
       </div>
 
       <Tabs defaultValue="add" className="w-full">
-        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-10">
+        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-20">
           <TabsTrigger value="add" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
             Adicionar Convidado
           </TabsTrigger>
@@ -166,6 +242,10 @@ export function AdminGuestManager() {
           </TabsTrigger>
           <TabsTrigger value="qrcode" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
             QR Code
+          </TabsTrigger>
+          <TabsTrigger value="messages" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Recados
           </TabsTrigger>
         </TabsList>
 
@@ -379,6 +459,62 @@ export function AdminGuestManager() {
                         Enviar por Email
                       </Button>}
                   </div>}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="messages">
+          <Card className="bg-wedding-secondary">
+            <CardHeader className="bg-wedding-secondary">
+              <CardTitle className="text-black">Gerenciar Recados</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center text-black">Carregando recados...</div>
+                ) : (
+                  <div className="space-y-4">
+                    {messages.map((message) => (
+                      <Card key={message.id} className="p-4 bg-wedding-primary/10">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-medium text-black">{message.author}</p>
+                            <p className="text-sm text-gray-600">
+                              {new Date(message.createdAt).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleApproveMessage(message.id)}
+                              className="text-green-600 hover:text-green-700"
+                              disabled={message.approved}
+                            >
+                              <Check className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteMessage(message.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-gray-800">{message.text}</p>
+                        {message.approved && (
+                          <div className="mt-2 flex items-center text-green-600">
+                            <Check className="w-4 h-4 mr-1" />
+                            <span className="text-sm">Aprovado</span>
+                          </div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

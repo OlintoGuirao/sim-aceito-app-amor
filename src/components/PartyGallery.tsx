@@ -3,12 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Camera, Upload, Heart, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { collection, addDoc, query, orderBy, limit, startAfter, getDocs, updateDoc, doc, increment, arrayUnion } from 'firebase/firestore';
+import { Camera, Upload, Heart, MessageCircle, ChevronLeft, ChevronRight, QrCode, X, Check, Trash2 } from 'lucide-react';
+import { collection, addDoc, query, orderBy, limit, startAfter, getDocs, updateDoc, doc, increment, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadImage } from '@/lib/cloudinary';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback } from 'react';
+
 interface PartyPhoto {
   id: string;
   url: string;
@@ -18,12 +19,22 @@ interface PartyPhoto {
   likes: number;
   comments: Comment[];
 }
+
 interface Comment {
   id: string;
   text: string;
   author: string;
   createdAt: Date;
 }
+
+interface Message {
+  id: string;
+  text: string;
+  author: string;
+  createdAt: Date;
+  approved: boolean;
+}
+
 const PartyGallery: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
   const [photos, setPhotos] = useState<PartyPhoto[]>([]);
@@ -48,9 +59,13 @@ const PartyGallery: React.FC = () => {
   const [uploaderName, setUploaderName] = useState('');
   const [tempComment, setTempComment] = useState('');
   const [tempCaption, setTempCaption] = useState('');
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+
   useEffect(() => {
     fetchPhotos();
   }, []);
+
   useEffect(() => {
     if (!emblaApi) return;
     const onSelect = () => {
@@ -61,6 +76,7 @@ const PartyGallery: React.FC = () => {
       emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
+
   const fetchPhotos = async () => {
     try {
       setLoading(true);
@@ -80,12 +96,14 @@ const PartyGallery: React.FC = () => {
       setLoading(false);
     }
   };
+
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
     }
   };
+
   const handleUpload = async () => {
     if (!selectedFile) {
       toast.error('Selecione uma foto primeiro');
@@ -127,6 +145,7 @@ const PartyGallery: React.FC = () => {
       setUploading(false);
     }
   };
+
   const handleLike = async (photoId: string) => {
     try {
       const photoRef = doc(db, 'party_photos', photoId);
@@ -142,6 +161,7 @@ const PartyGallery: React.FC = () => {
       toast.error('Erro ao curtir foto');
     }
   };
+
   const handleComment = async (photoId: string) => {
     if (!newComment) return;
     if (!guestName) {
@@ -175,6 +195,7 @@ const PartyGallery: React.FC = () => {
       toast.error('Erro ao adicionar comentário');
     }
   };
+
   const handleNameSubmit = () => {
     if (!guestName.trim()) {
       toast.error('Por favor, digite seu nome');
@@ -183,6 +204,7 @@ const PartyGallery: React.FC = () => {
     setShowNameModal(false);
     handleComment(selectedPhoto !== null ? photos[selectedPhoto].id : '');
   };
+
   const handleUploaderNameSubmit = () => {
     if (!uploaderName.trim()) {
       toast.error('Por favor, digite seu nome');
@@ -191,6 +213,7 @@ const PartyGallery: React.FC = () => {
     setShowUploaderNameModal(false);
     handleUpload();
   };
+
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -215,6 +238,7 @@ const PartyGallery: React.FC = () => {
       toast.error('Não foi possível acessar a câmera. Verifique se você deu permissão de acesso.');
     }
   };
+
   const toggleCamera = async () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -222,6 +246,7 @@ const PartyGallery: React.FC = () => {
     setCameraMode(prev => prev === 'front' ? 'back' : 'front');
     await startCamera();
   };
+
   const stopCamera = () => {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
@@ -232,6 +257,7 @@ const PartyGallery: React.FC = () => {
     }
     setShowCamera(false);
   };
+
   const takePhoto = () => {
     if (!videoRef.current) return;
     const canvas = document.createElement('canvas');
@@ -251,6 +277,7 @@ const PartyGallery: React.FC = () => {
       }, 'image/jpeg', 0.95);
     }
   };
+
   useEffect(() => {
     return () => {
       if (stream) {
@@ -258,6 +285,63 @@ const PartyGallery: React.FC = () => {
       }
     };
   }, [stream]);
+
+  const fetchMessages = async () => {
+    try {
+      const messagesRef = collection(db, 'messages');
+      const q = query(messagesRef, orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      const fetchedMessages = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt.toDate()
+      })) as Message[];
+      setMessages(fetchedMessages);
+    } catch (error) {
+      console.error('Erro ao buscar mensagens:', error);
+      toast.error('Erro ao carregar mensagens');
+    }
+  };
+
+  const handleApproveMessage = async (messageId: string) => {
+    try {
+      const messageRef = doc(db, 'messages', messageId);
+      await updateDoc(messageRef, {
+        approved: true
+      });
+      
+      setMessages(prev => prev.map(message => 
+        message.id === messageId 
+          ? { ...message, approved: true }
+          : message
+      ));
+      
+      toast.success('Mensagem aprovada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao aprovar mensagem:', error);
+      toast.error('Erro ao aprovar mensagem');
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const messageRef = doc(db, 'messages', messageId);
+      await deleteDoc(messageRef);
+      
+      setMessages(prev => prev.filter(message => message.id !== messageId));
+      toast.success('Mensagem excluída com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir mensagem:', error);
+      toast.error('Erro ao excluir mensagem');
+    }
+  };
+
+  useEffect(() => {
+    if (showMessagesModal) {
+      fetchMessages();
+    }
+  }, [showMessagesModal]);
+
   return <div className="space-y-6">
       <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Hora da Festa</h3>
@@ -409,6 +493,66 @@ const PartyGallery: React.FC = () => {
             </div>
           </div>
         </div>}
+
+      {/* Modal de Recados */}
+      {showMessagesModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-semibold text-black">Recados Enviados</h3>
+              <Button
+                variant="ghost"
+                onClick={() => setShowMessagesModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div key={message.id} className="bg-wedding-primary/10 p-4 rounded-lg">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <p className="font-medium text-black">{message.author}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(message.createdAt).toLocaleDateString('pt-BR')}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleApproveMessage(message.id)}
+                        className="text-green-600 hover:text-green-700"
+                        disabled={message.approved}
+                      >
+                        <Check className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteMessage(message.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-gray-800">{message.text}</p>
+                  {message.approved && (
+                    <div className="mt-2 flex items-center text-green-600">
+                      <Check className="w-4 h-4 mr-1" />
+                      <span className="text-sm">Aprovado</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>;
 };
+
 export default PartyGallery;

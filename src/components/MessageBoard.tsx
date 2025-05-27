@@ -9,9 +9,9 @@ import { toast } from 'sonner';
 
 interface Message {
   id: string;
-  name: string;
-  message: string;
-  date: string;
+  author: string;
+  text: string;
+  createdAt: Date;
   approved: boolean;
 }
 
@@ -27,14 +27,14 @@ const MessageBoard: React.FC = () => {
 
   const fetchMessages = async () => {
     try {
-      const messagesRef = collection(db, 'messages');
-      const q = query(messagesRef, orderBy('date', 'desc'));
+      const messagesRef = collection(db, 'party_messages');
+      const q = query(messagesRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
       
       const fetchedMessages = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        date: doc.data().date.toDate().toLocaleDateString('pt-BR')
+        createdAt: doc.data().createdAt.toDate()
       })) as Message[];
       
       setMessages(fetchedMessages);
@@ -49,11 +49,11 @@ const MessageBoard: React.FC = () => {
   const addMessage = async () => {
     if (newName && newMessage) {
       try {
-        const messagesRef = collection(db, 'messages');
+        const messagesRef = collection(db, 'party_messages');
         const messageData = {
-          name: newName,
-          message: newMessage,
-          date: Timestamp.now(),
+          author: newName,
+          text: newMessage,
+          createdAt: Timestamp.now(),
           approved: false
         };
 
@@ -68,8 +68,6 @@ const MessageBoard: React.FC = () => {
       }
     }
   };
-
-  const approvedMessages = messages.filter(m => m.approved);
 
   return (
     <div className="space-y-6">
@@ -113,23 +111,25 @@ const MessageBoard: React.FC = () => {
         <h4 className="text-lg font-semibold text-slate-50">Mensagens dos Convidados</h4>
         {loading ? (
           <div className="text-center text-slate-50">Carregando mensagens...</div>
-        ) : approvedMessages.length === 0 ? (
+        ) : messages.filter(m => m.approved).length === 0 ? (
           <div className="text-center text-slate-50">Nenhuma mensagem ainda. Seja o primeiro a deixar um recado!</div>
         ) : (
-          approvedMessages.map(message => (
+          messages.filter(m => m.approved).map(message => (
             <Card key={message.id} className="p-4 bg-wedding-primary/50 backdrop-blur-sm">
               <div className="flex items-start space-x-3">
                 <div className="w-10 h-10 rounded-full bg-wedding-secondary/20 flex items-center justify-center">
                   <span className="text-sm font-medium text-slate-50">
-                    {message.name.charAt(0).toUpperCase()}
+                    {message.author.charAt(0).toUpperCase()}
                   </span>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-2">
-                    <h5 className="font-medium text-slate-50">{message.name}</h5>
-                    <span className="text-xs text-slate-50/70">{message.date}</span>
+                    <h5 className="font-medium text-slate-50">{message.author}</h5>
+                    <span className="text-xs text-slate-50/70">
+                      {new Date(message.createdAt).toLocaleDateString('pt-BR')}
+                    </span>
                   </div>
-                  <p className="text-sm text-slate-50">{message.message}</p>
+                  <p className="text-sm text-slate-50">{message.text}</p>
                 </div>
               </div>
             </Card>
