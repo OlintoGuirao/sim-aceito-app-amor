@@ -348,7 +348,7 @@ const PartyGallery: React.FC = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Input placeholder="Adicione um comentário..." value={newComment} onChange={e => setNewComment(e.target.value)} onClick={e => e.stopPropagation()} className="flex-1 text-white bg-wedding-primary" />
+                  <Input placeholder="Adicione um comentário..." value={newComment} onChange={e => setNewComment(e.target.value)} onClick={e => e.stopPropagation()} className="flex-1 text-white bg-wedding-primary text-white" />
                   <Button onClick={e => {
                 e.stopPropagation();
                 handleComment(photos[selectedPhoto].id);
@@ -359,8 +359,8 @@ const PartyGallery: React.FC = () => {
 
                 <div className="space-y-2 max-h-40 overflow-y-auto">
                   {photos[selectedPhoto].comments.map(comment => <div key={comment.id} className="p-2 rounded bg-wedding-primary">
-                      <p className="text-white text-base font-medium">{comment.author}</p>
-                      <p className="text-sm text-gray-600">{comment.text}</p>
+                      <p className="text-base font-medium text-wedding-secondary">{comment.author}</p>
+                      <p className="text-sm text-white">{comment.text}</p>
                     </div>)}
                 </div>
               </div>
