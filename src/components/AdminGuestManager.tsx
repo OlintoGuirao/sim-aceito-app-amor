@@ -9,7 +9,7 @@ import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/li
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
 import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket } from "lucide-react";
-import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,75 +34,96 @@ export function AdminGuestManager() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Carregar convidados do Firestore
+  // Configurar listener em tempo real para convidados
   useEffect(() => {
-    loadGuests();
-    fetchMessages();
+    const guestsRef = collection(db, 'guests');
+    const q = query(guestsRef, orderBy('createdAt', 'desc'));
+    
+    // Criar listener em tempo real
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const guestsList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Guest[];
+      
+      setGuests(guestsList);
+      setLoading(false);
+    }, (error) => {
+      console.error('Erro ao carregar convidados:', error);
+      toast.error('Erro ao carregar convidados');
+      setLoading(false);
+    });
+
+    // Limpar listener quando componente for desmontado
+    return () => unsubscribe();
   }, []);
 
-  const loadGuests = async () => {
-    try {
-      const guestsData = await getGuests();
-      setGuests(guestsData);
-    } catch (error) {
-      console.error('Erro ao carregar convidados:', error);
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      const messagesRef = collection(db, 'party_messages');
-      const q = query(messagesRef, orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const fetchedMessages = querySnapshot.docs.map(doc => ({
+  // Configurar listener em tempo real para mensagens
+  useEffect(() => {
+    const messagesRef = collection(db, 'party_messages');
+    const q = query(messagesRef, orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const messagesList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         createdAt: doc.data().createdAt.toDate()
       })) as Message[];
-      console.log('Recados carregados:', fetchedMessages);
-      setMessages(fetchedMessages);
-    } catch (error) {
-      console.error('Erro ao buscar mensagens:', error);
+      
+      setMessages(messagesList);
+    }, (error) => {
+      console.error('Erro ao carregar mensagens:', error);
       toast.error('Erro ao carregar mensagens');
-    } finally {
-      setLoading(false);
-    }
-  };
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleAddGuest = async () => {
     if (!newGuest.name) return;
     try {
-      await addGuest({
-        name: newGuest.name,
-        email: newGuest.email,
-        phone: newGuest.phone,
-        status: 'pending'
+      const guestRef = collection(db, 'guests');
+      await addDoc(guestRef, {
+        ...newGuest,
+        status: 'pending',
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
       });
+      
       setNewGuest({
         name: '',
         email: '',
         phone: ''
       });
-      loadGuests();
+      
+      toast.success('Convidado adicionado com sucesso!');
     } catch (error) {
       console.error('Erro ao adicionar convidado:', error);
+      toast.error('Erro ao adicionar convidado');
     }
   };
 
   const handleStatusChange = async (guestId: string, status: Guest['status']) => {
     try {
-      await updateGuestStatus(guestId, status);
-      loadGuests();
+      const guestRef = doc(db, 'guests', guestId);
+      await updateDoc(guestRef, {
+        status,
+        updatedAt: Timestamp.now(),
+        ...(status === 'confirmed' ? { confirmedAt: Timestamp.now() } : {}),
+        ...(status === 'declined' ? { declinedAt: Timestamp.now() } : {})
+      });
+      
+      toast.success(`Status atualizado para ${status === 'confirmed' ? 'Confirmado' : 'Declinado'}`);
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status');
     }
   };
 
   const handleDeleteGuest = async (guestId: string) => {
     try {
       await deleteGuest(guestId);
-      loadGuests();
+      setGuests(prev => prev.filter(g => g.id !== guestId));
     } catch (error) {
       console.error('Erro ao deletar convidado:', error);
     }
@@ -283,7 +304,7 @@ export function AdminGuestManager() {
         </TabsContent>
 
         <TabsContent value="import">
-          <GuestImport onImport={loadGuests} />
+          <GuestImport onImport={setGuests} />
         </TabsContent>
 
         <TabsContent value="list" className="mt-0">
@@ -336,101 +357,57 @@ export function AdminGuestManager() {
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4 bg-wedding-secondary">
-                      <div className="w-full sm:w-auto">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-medium text-black">{guest.name}</h3>
-                          <Badge 
-                            className={`${
-                              guest.status === 'confirmed' 
-                                ? 'bg-green-500 hover:bg-green-600' 
-                                : guest.status === 'declined'
-                                ? 'bg-red-500 hover:bg-red-600'
-                                : 'bg-yellow-500 hover:bg-yellow-600'
-                            }`}
-                          >
-                            {guest.status === 'confirmed' 
-                              ? 'Confirmado' 
-                              : guest.status === 'declined'
-                              ? 'Não Confirmado'
-                              : 'Pendente'}
-                          </Badge>
-                        </div>
-                        {guest.email && <p className="text-sm text-black">{guest.email}</p>}
-                        {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
-                        {guest.companions > 0 && (
-                          <p className="text-sm text-black">
-                            Acompanhantes: {guest.companions}
-                          </p>
-                        )}
-                        {guest.message && (
-                          <p className="text-sm text-black italic mt-1">
-                            "{guest.message}"
-                          </p>
-                        )}
-                        {guest.confirmedAt && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
-                        {guest.declinedAt && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button 
-                          variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
-                          onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
-                          className={`flex-1 sm:flex-none ${
-                            guest.status === 'confirmed'
-                              ? 'bg-green-500 hover:bg-green-600 text-white'
-                              : 'bg-wedding-primary text-white'
-                          }`}
-                        >
-                          Confirmado
-                        </Button>
-                        <Button 
-                          variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
-                          onClick={() => handleStatusChange(guest.id!, 'declined')} 
-                          className={`flex-1 sm:flex-none ${
-                            guest.status === 'declined'
-                              ? 'bg-red-500 hover:bg-red-600 text-white'
-                              : 'text-white'
-                          }`}
-                        >
-                          Declinado
-                        </Button>
-                        {guest.phone && (
-                          <Button 
-                            variant="outline" 
-                            onClick={() => handleSendInvite(guest)} 
-                            className="flex-1 sm:flex-none bg-wedding-primary text-white"
-                          >
-                            <Share2 className="h-4 w-4 mr-2" />
-                            Enviar Convite
-                          </Button>
-                        )}
-                        {guest.email && (
-                          <Button 
-                            variant="outline" 
-                            size="icon" 
-                            onClick={() => handleSendQRCode(guest)} 
-                            disabled={sendingEmail === guest.id} 
-                            className="bg-wedding-primary text-white"
-                          >
-                            <Mail className="h-4 w-4" />
-                          </Button>
-                        )}
+                    <div className="flex flex-wrap gap-2">
+                      <Button 
+                        variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
+                        className={`flex-1 sm:flex-none ${
+                          guest.status === 'confirmed'
+                            ? 'bg-green-500 hover:bg-green-600 text-white'
+                            : 'bg-wedding-primary text-white'
+                        }`}
+                      >
+                        Confirmado
+                      </Button>
+                      <Button 
+                        variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                        onClick={() => handleStatusChange(guest.id!, 'declined')} 
+                        className={`flex-1 sm:flex-none ${
+                          guest.status === 'declined'
+                            ? 'bg-red-500 hover:bg-red-600 text-white'
+                            : 'text-white'
+                        }`}
+                      >
+                        Declinado
+                      </Button>
+                      {guest.phone && (
                         <Button 
                           variant="outline" 
-                          onClick={() => handleDeleteGuest(guest.id!)} 
-                          className="flex-1 sm:flex-none text-white"
+                          onClick={() => handleSendInvite(guest)} 
+                          className="flex-1 sm:flex-none bg-wedding-primary text-white"
                         >
-                          Excluir
+                          <Share2 className="h-4 w-4 mr-2" />
+                          Enviar Convite
                         </Button>
-                      </div>
+                      )}
+                      {guest.email && (
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => handleSendQRCode(guest)} 
+                          disabled={sendingEmail === guest.id} 
+                          className="bg-wedding-primary text-white"
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <Button 
+                        variant="outline" 
+                        onClick={() => handleDeleteGuest(guest.id!)} 
+                        className="flex-1 sm:flex-none text-white"
+                      >
+                        Excluir
+                      </Button>
                     </div>
                   </div>)}
               </div>
