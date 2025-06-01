@@ -252,43 +252,6 @@ export function AdminGuestManager() {
     }
   };
 
-  const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
-  const pendingCount = guests.filter(g => g.status === 'pending').length;
-  const declinedCount = guests.filter(g => g.status === 'declined').length;
-
-  const handleApproveMessage = async (messageId: string) => {
-    try {
-      const messageRef = doc(db, 'party_messages', messageId);
-      await updateDoc(messageRef, {
-        approved: true
-      });
-      
-      setMessages(prev => prev.map(message => 
-        message.id === messageId 
-          ? { ...message, approved: true }
-          : message
-      ));
-      
-      toast.success('Mensagem aprovada com sucesso!');
-    } catch (error) {
-      console.error('Erro ao aprovar mensagem:', error);
-      toast.error('Erro ao aprovar mensagem');
-    }
-  };
-
-  const handleDeleteMessage = async (messageId: string) => {
-    try {
-      const messageRef = doc(db, 'party_messages', messageId);
-      await deleteDoc(messageRef);
-      
-      setMessages(prev => prev.filter(message => message.id !== messageId));
-      toast.success('Mensagem excluída com sucesso!');
-    } catch (error) {
-      console.error('Erro ao excluir mensagem:', error);
-      toast.error('Erro ao excluir mensagem');
-    }
-  };
-
   const handleSendLinkToConfirmed = async () => {
     const confirmedGuests = guests.filter(g => g.status === 'confirmed');
     if (confirmedGuests.length === 0) {
@@ -306,6 +269,12 @@ export function AdminGuestManager() {
       }
 
       try {
+        // Formata o número de telefone para o WhatsApp
+        const formattedPhone = guest.phone
+          .replace(/\D/g, '') // Remove tudo que não é número
+          .replace(/^0/, '') // Remove o 0 do início se houver
+          .replace(/^(\d{2})/, '55$1'); // Adiciona o código do país (55)
+
         const baseUrl = window.location.origin;
         const message = `Olá ${guest.name}! 🎉\n\n` +
           `Aqui está o link para acessar o site do nosso casamento:\n` +
@@ -313,7 +282,7 @@ export function AdminGuestManager() {
           `Contamos com sua presença! 💑\n` +
           `Fabii e Xuniim`;
 
-        const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
         successCount++;
       } catch (error) {
@@ -361,6 +330,43 @@ export function AdminGuestManager() {
     )
   );
 
+  const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
+  const pendingCount = guests.filter(g => g.status === 'pending').length;
+  const declinedCount = guests.filter(g => g.status === 'declined').length;
+
+  const handleApproveMessage = async (messageId: string) => {
+    try {
+      const messageRef = doc(db, 'party_messages', messageId);
+      await updateDoc(messageRef, {
+        approved: true
+      });
+      
+      setMessages(prev => prev.map(message => 
+        message.id === messageId 
+          ? { ...message, approved: true }
+          : message
+      ));
+      
+      toast.success('Mensagem aprovada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao aprovar mensagem:', error);
+      toast.error('Erro ao aprovar mensagem');
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const messageRef = doc(db, 'party_messages', messageId);
+      await deleteDoc(messageRef);
+      
+      setMessages(prev => prev.filter(message => message.id !== messageId));
+      toast.success('Mensagem excluída com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir mensagem:', error);
+      toast.error('Erro ao excluir mensagem');
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
@@ -376,7 +382,7 @@ export function AdminGuestManager() {
             <CardTitle className="text-sm font-medium text-black">Confirmados</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold bg-transparent text-black">{confirmedCount}</div>
+            <div className="text-2xl font-bold bg-transparent text-black">{guests.filter(g => g.status === 'confirmed').length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -384,7 +390,7 @@ export function AdminGuestManager() {
             <CardTitle className="text-sm font-medium text-black">Pendentes</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold text-black">{pendingCount}</div>
+            <div className="text-2xl font-bold text-black">{guests.filter(g => g.status === 'pending').length}</div>
           </CardContent>
         </Card>
         <Card>
@@ -392,7 +398,7 @@ export function AdminGuestManager() {
             <CardTitle className="text-sm font-medium text-black">Declinados</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold text-black">{declinedCount}</div>
+            <div className="text-2xl font-bold text-black">{guests.filter(g => g.status === 'declined').length}</div>
           </CardContent>
         </Card>
       </div>
