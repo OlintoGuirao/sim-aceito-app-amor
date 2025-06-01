@@ -8,8 +8,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X } from "lucide-react";
-import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users } from "lucide-react";
+import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, onSnapshot, addDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
 
@@ -86,10 +86,40 @@ export function AdminGuestManager() {
     }
 
     try {
+      // Formata o número de telefone antes de salvar
+      const formattedPhone = newGuest.phone
+        .replace(/\D/g, '') // Remove tudo que não é número
+        .replace(/^0/, '') // Remove o 0 do início se houver
+        .replace(/^(\d{2})/, '$1'); // Mantém apenas o DDD e o número
+
+      // Verifica se já existe um grupo com este telefone
+      const guestsRef = collection(db, 'guests');
+      const q = query(guestsRef, where('phone', '==', formattedPhone));
+      const querySnapshot = await getDocs(q);
+      
+      let groupId = '';
+      
+      if (!querySnapshot.empty) {
+        // Usa o groupId do primeiro convidado encontrado com este telefone
+        const existingGuest = querySnapshot.docs[0].data();
+        groupId = existingGuest.groupId || `group_${querySnapshot.docs[0].id}`;
+        
+        // Se o convidado existente não tinha groupId, atualiza ele também
+        if (!existingGuest.groupId) {
+          await updateDoc(doc(db, 'guests', querySnapshot.docs[0].id), {
+            groupId: groupId
+          });
+        }
+      } else {
+        // Cria um novo groupId
+        groupId = `group_${Date.now()}`;
+      }
+
       const guestRef = collection(db, 'guests');
       await addDoc(guestRef, {
         name: newGuest.name,
-        phone: newGuest.phone,
+        phone: formattedPhone,
+        groupId: groupId,
         status: 'pending',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
@@ -164,24 +194,62 @@ export function AdminGuestManager() {
     }
   };
 
-  const handleSendInvite = (guest: Guest) => {
+  const handleSendInvite = async (guest: Guest) => {
     if (!guest.phone) {
       toast.error('Este convidado não possui telefone cadastrado');
       return;
     }
 
-    const baseUrl = window.location.origin;
-    const message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n` +
-      `📅 Data: 15 de Dezembro de 2024\n` +
-      `⏰ Horário: 19:00\n` +
-      `📍 Local: Espaço de Eventos\n\n` +
-      `Para confirmar sua presença, acesse:\n` +
-      `${baseUrl}/confirm/${guest.id}\n\n` +
-      `Contamos com sua presença! 💑\n` +
-      `Fabii e Xuniim`;
+    try {
+      // Formata o número de telefone para o WhatsApp
+      const formattedPhone = guest.phone
+        .replace(/\D/g, '') // Remove tudo que não é número
+        .replace(/^0/, '') // Remove o 0 do início se houver
+        .replace(/^(\d{2})/, '55$1'); // Adiciona o código do país (55)
 
-    const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+      // Busca todos os convidados do mesmo grupo
+      const groupMembers = guests.filter(g => 
+        // Compara pelo groupId se existir, senão compara pelo telefone
+        (guest.groupId && g.groupId === guest.groupId) || 
+        (!guest.groupId && g.phone === guest.phone)
+      );
+
+      const baseUrl = window.location.origin;
+      let message = '';
+
+      // Se tiver mais de um membro no grupo
+      if (groupMembers.length > 1) {
+        const memberNames = groupMembers.map(g => g.name).join(' e ');
+        message = `Olá ${memberNames}! 🎉\n\nVocês estão convidados para o nosso casamento!\n\n`;
+      } else {
+        message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n`;
+      }
+
+      message += `📅 Data: 15 de Dezembro de 2024\n` +
+        `⏰ Horário: 19:00\n` +
+        `📍 Local: Espaço de Eventos\n\n`;
+
+      if (groupMembers.length > 1) {
+        message += `Para confirmar suas presenças, acessem os links abaixo:\n\n`;
+        groupMembers.forEach(member => {
+          message += `${member.name}:\n${baseUrl}/confirm/${member.id}\n\n`;
+        });
+      } else {
+        message += `Para confirmar sua presença, acesse:\n${baseUrl}/confirm/${guest.id}\n\n`;
+      }
+
+      message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! 💑\n` +
+        `Fabii e Xuniim`;
+
+      // Usa o formato correto do link do WhatsApp
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+
+      toast.success(`Convite enviado com sucesso para ${groupMembers.length > 1 ? 'o grupo' : guest.name}`);
+    } catch (error) {
+      console.error('Erro ao enviar convite:', error);
+      toast.error('Erro ao enviar convite');
+    }
   };
 
   const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
@@ -262,11 +330,35 @@ export function AdminGuestManager() {
     }
   };
 
+  // Agrupar convidados por groupId e separar os sem grupo
+  const { groupedGuests, ungroupedGuests } = guests.reduce((acc, guest) => {
+    if (guest.groupId) {
+      if (!acc.groupedGuests[guest.groupId]) {
+        acc.groupedGuests[guest.groupId] = [];
+      }
+      acc.groupedGuests[guest.groupId].push(guest);
+    } else {
+      acc.ungroupedGuests.push(guest);
+    }
+    return acc;
+  }, { 
+    groupedGuests: {} as Record<string, Guest[]>,
+    ungroupedGuests: [] as Guest[]
+  });
+
   // Filtrar convidados baseado no termo de busca
-  const filteredGuests = guests.filter(guest =>
+  const filteredUngroupedGuests = ungroupedGuests.filter(guest =>
     guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     guest.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredGroupedGuests = Object.entries(groupedGuests).filter(([_, guests]) =>
+    guests.some(guest =>
+      guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      guest.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   return (
@@ -396,7 +488,109 @@ export function AdminGuestManager() {
                   </Button>
                 </div>
                 <div className="space-y-4">
-                  {filteredGuests.map(guest => (
+                  {/* Convidados Agrupados */}
+                  {filteredGroupedGuests.map(([groupId, groupMembers]) => (
+                    <div key={groupId} className="flex flex-col p-4 border rounded-lg gap-4 bg-wedding-secondary">
+                      <div className="w-full">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="h-5 w-5 text-black" />
+                          <span className="text-sm text-black">
+                            Grupo: {groupMembers[0].phone}
+                          </span>
+                        </div>
+                        {groupMembers.map(guest => (
+                          <div key={guest.id} className="ml-7 mb-4 last:mb-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                              <h3 className="font-medium text-black text-lg">{guest.name}</h3>
+                              <Badge 
+                                className={`${
+                                  guest.status === 'confirmed' 
+                                    ? 'bg-green-500 hover:bg-green-600' 
+                                    : guest.status === 'declined'
+                                    ? 'bg-red-500 hover:bg-red-600'
+                                    : 'bg-yellow-500 hover:bg-yellow-600'
+                                } self-start sm:self-auto`}
+                              >
+                                {guest.status === 'confirmed' 
+                                  ? 'Confirmado' 
+                                  : guest.status === 'declined'
+                                  ? 'Não Confirmado'
+                                  : 'Pendente'}
+                              </Badge>
+                            </div>
+                            {guest.email && <p className="text-sm text-black mb-1">{guest.email}</p>}
+                            {guest.companions > 0 && (
+                              <p className="text-sm text-black mb-1">
+                                Acompanhantes: {guest.companions}
+                              </p>
+                            )}
+                            {guest.message && (
+                              <p className="text-sm text-black italic mb-2">
+                                "{guest.message}"
+                              </p>
+                            )}
+                            {guest.confirmedAt && (
+                              <p className="text-xs text-gray-500 mb-1">
+                                Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
+                              </p>
+                            )}
+                            {guest.declinedAt && (
+                              <p className="text-xs text-gray-500">
+                                Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <Button 
+                                variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                                onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
+                                className={`flex-1 sm:flex-none ${
+                                  guest.status === 'confirmed'
+                                    ? 'bg-green-500 hover:bg-green-600 text-white'
+                                    : 'bg-wedding-primary text-white'
+                                }`}
+                              >
+                                <Check className="h-4 w-4 mr-2" />
+                                <span className="whitespace-nowrap">Confirmado</span>
+                              </Button>
+                              <Button 
+                                variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                                onClick={() => handleStatusChange(guest.id!, 'declined')} 
+                                className={`flex-1 sm:flex-none ${
+                                  guest.status === 'declined'
+                                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                                    : 'text-white'
+                                }`}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                <span className="whitespace-nowrap">Declinado</span>
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                onClick={() => handleDeleteGuest(guest.id!)} 
+                                className="flex-1 sm:flex-none bg-red-500 text-white hover:bg-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                <span className="whitespace-nowrap">Excluir</span>
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="mt-4 border-t pt-4">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => handleSendInvite(groupMembers[0])} 
+                            className="w-full sm:w-auto bg-wedding-primary text-white"
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Enviar Convite para o Grupo</span>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Convidados Individuais */}
+                  {filteredUngroupedGuests.map(guest => (
                     <div key={guest.id} className="flex flex-col p-4 border rounded-lg gap-4 bg-wedding-secondary">
                       <div className="w-full">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
@@ -439,61 +633,50 @@ export function AdminGuestManager() {
                             Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
                           </p>
                         )}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <Button 
-                          variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
-                          onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
-                          className={`flex-1 sm:flex-none ${
-                            guest.status === 'confirmed'
-                              ? 'bg-green-500 hover:bg-green-600 text-white'
-                              : 'bg-wedding-primary text-white'
-                          }`}
-                        >
-                          <Check className="h-4 w-4 mr-2" />
-                          <span className="whitespace-nowrap">Confirmado</span>
-                        </Button>
-                        <Button 
-                          variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
-                          onClick={() => handleStatusChange(guest.id!, 'declined')} 
-                          className={`flex-1 sm:flex-none ${
-                            guest.status === 'declined'
-                              ? 'bg-red-500 hover:bg-red-600 text-white'
-                              : 'text-white'
-                          }`}
-                        >
-                          <X className="h-4 w-4 mr-2" />
-                          <span className="whitespace-nowrap">Declinado</span>
-                        </Button>
-                        {guest.phone && (
+                        <div className="flex flex-wrap gap-2">
+                          <Button 
+                            variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                            onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
+                            className={`flex-1 sm:flex-none ${
+                              guest.status === 'confirmed'
+                                ? 'bg-green-500 hover:bg-green-600 text-white'
+                                : 'bg-wedding-primary text-white'
+                            }`}
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Confirmado</span>
+                          </Button>
+                          <Button 
+                            variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                            onClick={() => handleStatusChange(guest.id!, 'declined')} 
+                            className={`flex-1 sm:flex-none ${
+                              guest.status === 'declined'
+                                ? 'bg-red-500 hover:bg-red-600 text-white'
+                                : 'text-white'
+                            }`}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Declinado</span>
+                          </Button>
+                          {guest.phone && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => handleSendInvite(guest)} 
+                              className="flex-1 sm:flex-none bg-wedding-primary text-white"
+                            >
+                              <Share2 className="h-4 w-4 mr-2" />
+                              <span className="whitespace-nowrap">Enviar Convite</span>
+                            </Button>
+                          )}
                           <Button 
                             variant="outline" 
-                            onClick={() => handleSendInvite(guest)} 
-                            className="flex-1 sm:flex-none bg-wedding-primary text-white"
+                            onClick={() => handleDeleteGuest(guest.id!)} 
+                            className="flex-1 sm:flex-none bg-red-500 text-white hover:bg-red-600"
                           >
-                            <Share2 className="h-4 w-4 mr-2" />
-                            <span className="whitespace-nowrap">Enviar Convite</span>
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Excluir</span>
                           </Button>
-                        )}
-                        {guest.email && (
-                          <Button 
-                            variant="outline" 
-                            onClick={() => handleSendQRCode(guest)} 
-                            disabled={sendingEmail === guest.id} 
-                            className="flex-1 sm:flex-none bg-wedding-primary text-white"
-                          >
-                            <Mail className="h-4 w-4 mr-2" />
-                            <span className="whitespace-nowrap">Enviar Email</span>
-                          </Button>
-                        )}
-                        <Button 
-                          variant="outline" 
-                          onClick={() => handleDeleteGuest(guest.id!)} 
-                          className="flex-1 sm:flex-none bg-red-500 text-white hover:bg-red-600"
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          <span className="whitespace-nowrap">Excluir</span>
-                        </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
