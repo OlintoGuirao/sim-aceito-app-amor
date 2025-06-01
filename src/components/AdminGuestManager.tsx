@@ -8,7 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X } from "lucide-react";
 import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -25,13 +25,13 @@ export function AdminGuestManager() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [newGuest, setNewGuest] = useState({
     name: '',
-    email: '',
     phone: ''
   });
   const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
 
   // Configurar listener em tempo real para convidados
@@ -80,11 +80,16 @@ export function AdminGuestManager() {
   }, []);
 
   const handleAddGuest = async () => {
-    if (!newGuest.name) return;
+    if (!newGuest.name || !newGuest.phone) {
+      toast.error('Por favor, preencha todos os campos');
+      return;
+    }
+
     try {
       const guestRef = collection(db, 'guests');
       await addDoc(guestRef, {
-        ...newGuest,
+        name: newGuest.name,
+        phone: newGuest.phone,
         status: 'pending',
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now()
@@ -92,7 +97,6 @@ export function AdminGuestManager() {
       
       setNewGuest({
         name: '',
-        email: '',
         phone: ''
       });
       
@@ -217,7 +221,56 @@ export function AdminGuestManager() {
     }
   };
 
-  return <div className="space-y-6 p-6">
+  const handleSendLinkToConfirmed = async () => {
+    const confirmedGuests = guests.filter(g => g.status === 'confirmed');
+    if (confirmedGuests.length === 0) {
+      toast.error('Não há convidados confirmados para enviar o link');
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const guest of confirmedGuests) {
+      if (!guest.phone) {
+        errorCount++;
+        continue;
+      }
+
+      try {
+        const baseUrl = window.location.origin;
+        const message = `Olá ${guest.name}! 🎉\n\n` +
+          `Aqui está o link para acessar o site do nosso casamento:\n` +
+          `${baseUrl}/confirm/${guest.id}\n\n` +
+          `Contamos com sua presença! 💑\n` +
+          `Fabii e Xuniim`;
+
+        const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank');
+        successCount++;
+      } catch (error) {
+        console.error('Erro ao enviar mensagem para', guest.name, ':', error);
+        errorCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`Link enviado com sucesso para ${successCount} convidado(s)`);
+    }
+    if (errorCount > 0) {
+      toast.error(`Falha ao enviar para ${errorCount} convidado(s) sem telefone cadastrado`);
+    }
+  };
+
+  // Filtrar convidados baseado no termo de busca
+  const filteredGuests = guests.filter(guest =>
+    guest.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    guest.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    guest.phone?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6 p-6">
       <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-white">Gerenciamento de Convidados</h3>
         <p className="text-white">
@@ -283,20 +336,23 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4 bg-wedding-secondary">
-                <Input placeholder="Nome do convidado" value={newGuest.name} onChange={e => setNewGuest({
-                ...newGuest,
-                name: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Input placeholder="Email (opcional)" value={newGuest.email} onChange={e => setNewGuest({
-                ...newGuest,
-                email: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Input placeholder="Telefone (opcional)" value={newGuest.phone} onChange={e => setNewGuest({
-                ...newGuest,
-                phone: e.target.value
-              })} className="bg-wedding-primary text-black" />
-                <Button onClick={handleAddGuest} className="text-black bg-wedding-primary">
-                  Adicionar
+                <Input 
+                  placeholder="Nome do convidado" 
+                  value={newGuest.name} 
+                  onChange={e => setNewGuest({...newGuest, name: e.target.value})} 
+                  className="bg-wedding-primary text-black" 
+                />
+                <Input 
+                  placeholder="Telefone (com DDD)" 
+                  value={newGuest.phone} 
+                  onChange={e => setNewGuest({...newGuest, phone: e.target.value})} 
+                  className="bg-wedding-primary text-black" 
+                />
+                <Button 
+                  onClick={handleAddGuest} 
+                  className="w-full text-black bg-wedding-primary hover:bg-wedding-secondary"
+                >
+                  Adicionar Convidado
                 </Button>
               </div>
             </CardContent>
@@ -304,112 +360,144 @@ export function AdminGuestManager() {
         </TabsContent>
 
         <TabsContent value="import">
-          <GuestImport onImport={setGuests} />
+          <GuestImport onImport={(importedGuests) => {
+            const newGuests = importedGuests.map(guest => ({
+              ...guest,
+              id: undefined // O Firestore vai gerar o ID
+            }));
+            setGuests(prevGuests => [...prevGuests, ...newGuests]);
+          }} />
         </TabsContent>
 
-        <TabsContent value="list" className="mt-0">
-          <Card className="mt-4">
+        <TabsContent value="list">
+          <Card>
             <CardHeader className="bg-wedding-secondary">
               <CardTitle className="text-black">Lista de Convidados</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
-                {guests.map(guest => <div key={guest.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-4 bg-wedding-secondary">
-                    <div className="w-full sm:w-auto">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="font-medium text-black">{guest.name}</h3>
-                        <Badge 
-                          className={`${
-                            guest.status === 'confirmed' 
-                              ? 'bg-green-500 hover:bg-green-600' 
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type="text"
+                      placeholder="Buscar convidado..."
+                      className="w-full bg-white"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleSendLinkToConfirmed}
+                    size="icon"
+                    className="bg-wedding-primary text-white hover:bg-wedding-secondary"
+                    title="Enviar Link para Confirmados"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-4">
+                  {filteredGuests.map(guest => (
+                    <div key={guest.id} className="flex flex-col p-4 border rounded-lg gap-4 bg-wedding-secondary">
+                      <div className="w-full">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                          <h3 className="font-medium text-black text-lg">{guest.name}</h3>
+                          <Badge 
+                            className={`${
+                              guest.status === 'confirmed' 
+                                ? 'bg-green-500 hover:bg-green-600' 
+                                : guest.status === 'declined'
+                                ? 'bg-red-500 hover:bg-red-600'
+                                : 'bg-yellow-500 hover:bg-yellow-600'
+                            } self-start sm:self-auto`}
+                          >
+                            {guest.status === 'confirmed' 
+                              ? 'Confirmado' 
                               : guest.status === 'declined'
-                              ? 'bg-red-500 hover:bg-red-600'
-                              : 'bg-yellow-500 hover:bg-yellow-600'
+                              ? 'Não Confirmado'
+                              : 'Pendente'}
+                          </Badge>
+                        </div>
+                        {guest.email && <p className="text-sm text-black mb-1">{guest.email}</p>}
+                        {guest.phone && <p className="text-sm text-black mb-1">{guest.phone}</p>}
+                        {guest.companions > 0 && (
+                          <p className="text-sm text-black mb-1">
+                            Acompanhantes: {guest.companions}
+                          </p>
+                        )}
+                        {guest.message && (
+                          <p className="text-sm text-black italic mb-2">
+                            "{guest.message}"
+                          </p>
+                        )}
+                        {guest.confirmedAt && (
+                          <p className="text-xs text-gray-500 mb-1">
+                            Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                        {guest.declinedAt && (
+                          <p className="text-xs text-gray-500">
+                            Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
+                          onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
+                          className={`flex-1 sm:flex-none ${
+                            guest.status === 'confirmed'
+                              ? 'bg-green-500 hover:bg-green-600 text-white'
+                              : 'bg-wedding-primary text-white'
                           }`}
                         >
-                          {guest.status === 'confirmed' 
-                            ? 'Confirmado' 
-                            : guest.status === 'declined'
-                            ? 'Não Confirmado'
-                            : 'Pendente'}
-                        </Badge>
+                          <Check className="h-4 w-4 mr-2" />
+                          <span className="whitespace-nowrap">Confirmado</span>
+                        </Button>
+                        <Button 
+                          variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
+                          onClick={() => handleStatusChange(guest.id!, 'declined')} 
+                          className={`flex-1 sm:flex-none ${
+                            guest.status === 'declined'
+                              ? 'bg-red-500 hover:bg-red-600 text-white'
+                              : 'text-white'
+                          }`}
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          <span className="whitespace-nowrap">Declinado</span>
+                        </Button>
+                        {guest.phone && (
+                          <Button 
+                            variant="outline" 
+                            onClick={() => handleSendInvite(guest)} 
+                            className="flex-1 sm:flex-none bg-wedding-primary text-white"
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Enviar Convite</span>
+                          </Button>
+                        )}
+                        {guest.email && (
+                          <Button 
+                            variant="outline" 
+                            onClick={() => handleSendQRCode(guest)} 
+                            disabled={sendingEmail === guest.id} 
+                            className="flex-1 sm:flex-none bg-wedding-primary text-white"
+                          >
+                            <Mail className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Enviar Email</span>
+                          </Button>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          onClick={() => handleDeleteGuest(guest.id!)} 
+                          className="flex-1 sm:flex-none bg-red-500 text-white hover:bg-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          <span className="whitespace-nowrap">Excluir</span>
+                        </Button>
                       </div>
-                      {guest.email && <p className="text-sm text-black">{guest.email}</p>}
-                      {guest.phone && <p className="text-sm text-black">{guest.phone}</p>}
-                      {guest.companions > 0 && (
-                        <p className="text-sm text-black">
-                          Acompanhantes: {guest.companions}
-                        </p>
-                      )}
-                      {guest.message && (
-                        <p className="text-sm text-black italic mt-1">
-                          "{guest.message}"
-                        </p>
-                      )}
-                      {guest.confirmedAt && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
-                        </p>
-                      )}
-                      {guest.declinedAt && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
-                        </p>
-                      )}
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Button 
-                        variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
-                        onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
-                        className={`flex-1 sm:flex-none ${
-                          guest.status === 'confirmed'
-                            ? 'bg-green-500 hover:bg-green-600 text-white'
-                            : 'bg-wedding-primary text-white'
-                        }`}
-                      >
-                        Confirmado
-                      </Button>
-                      <Button 
-                        variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
-                        onClick={() => handleStatusChange(guest.id!, 'declined')} 
-                        className={`flex-1 sm:flex-none ${
-                          guest.status === 'declined'
-                            ? 'bg-red-500 hover:bg-red-600 text-white'
-                            : 'text-white'
-                        }`}
-                      >
-                        Declinado
-                      </Button>
-                      {guest.phone && (
-                        <Button 
-                          variant="outline" 
-                          onClick={() => handleSendInvite(guest)} 
-                          className="flex-1 sm:flex-none bg-wedding-primary text-white"
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          Enviar Convite
-                        </Button>
-                      )}
-                      {guest.email && (
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          onClick={() => handleSendQRCode(guest)} 
-                          disabled={sendingEmail === guest.id} 
-                          className="bg-wedding-primary text-white"
-                        >
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <Button 
-                        variant="outline" 
-                        onClick={() => handleDeleteGuest(guest.id!)} 
-                        className="flex-1 sm:flex-none text-white"
-                      >
-                        Excluir
-                      </Button>
-                    </div>
-                  </div>)}
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -422,80 +510,40 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
-                <select onChange={e => {
-                const guest = guests.find(g => g.id === e.target.value);
-                setSelectedGuest(guest || null);
-              }} className="w-full p-2 border rounded bg-wedding-secondary text-black">
+                <select 
+                  onChange={e => {
+                    const guest = guests.find(g => g.id === e.target.value);
+                    setSelectedGuest(guest || null);
+                  }} 
+                  className="w-full p-3 border rounded bg-wedding-secondary text-black"
+                >
                   <option value="">Selecione um convidado</option>
-                  {guests.map(guest => <option key={guest.id} value={guest.id}>
+                  {guests.map(guest => (
+                    <option key={guest.id} value={guest.id}>
                       {guest.name}
-                    </option>)}
+                    </option>
+                  ))}
                 </select>
 
-                {selectedGuest && <div className="flex flex-col items-center space-y-4">
-                    <QRCodeSVG value={`${window.location.origin}/confirm/${selectedGuest.id}`} size={200} />
-                    <p className="text-sm text-black text-center">
+                {selectedGuest && (
+                  <div className="flex flex-col items-center space-y-4 p-4">
+                    <QRCodeSVG 
+                      value={`${window.location.origin}/confirm/${selectedGuest.id}`} 
+                      size={250} 
+                    />
+                    <p className="text-base text-black text-center font-medium">
                       QR Code para: {selectedGuest.name}
                     </p>
-                    {selectedGuest.email && <Button onClick={() => handleSendQRCode(selectedGuest)} disabled={sendingEmail === selectedGuest.id} className="bg-wedding-primary text-black hover:bg-wedding-secondary w-full sm:w-auto">
+                    {selectedGuest.email && (
+                      <Button 
+                        onClick={() => handleSendQRCode(selectedGuest)} 
+                        disabled={sendingEmail === selectedGuest.id} 
+                        className="w-full sm:w-auto bg-wedding-primary text-white hover:bg-wedding-secondary"
+                      >
                         <Mail className="h-4 w-4 mr-2" />
-                        Enviar por Email
-                      </Button>}
-                  </div>}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="messages">
-          <Card className="bg-wedding-secondary">
-            <CardHeader className="bg-wedding-secondary">
-              <CardTitle className="text-black">Gerenciar Recados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {loading ? (
-                  <div className="text-center text-black">Carregando recados...</div>
-                ) : (
-                  <div className="space-y-4">
-                    {messages.map((message) => (
-                      <Card key={message.id} className="p-4 bg-wedding-primary/10">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <p className="font-medium text-black">{message.author}</p>
-                            <p className="text-sm text-gray-600">
-                              {new Date(message.createdAt).toLocaleDateString('pt-BR')}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleApproveMessage(message.id)}
-                              className="text-green-600 hover:text-green-700"
-                              disabled={message.approved}
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteMessage(message.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <p className="text-gray-800">{message.text}</p>
-                        {message.approved && (
-                          <div className="mt-2 flex items-center text-green-600">
-                            <Check className="w-4 h-4 mr-1" />
-                            <span className="text-sm">Aprovado</span>
-                          </div>
-                        )}
-                      </Card>
-                    ))}
+                        <span className="whitespace-nowrap">Enviar por Email</span>
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
@@ -503,24 +551,70 @@ export function AdminGuestManager() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="raffle">
-          <Card className="bg-wedding-secondary">
+        <TabsContent value="messages">
+          <Card>
             <CardHeader className="bg-wedding-secondary">
-              <CardTitle className="text-black">Gerenciar Rifa</CardTitle>
+              <CardTitle className="text-black">Recados</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="bg-wedding-secondary">
               <div className="space-y-4">
-                <Button
-                  onClick={() => navigate('/admin/raffle')}
-                  className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90"
-                >
-                  <Ticket className="w-4 h-4 mr-2" />
-                  Acessar Gerenciamento da Rifa
-                </Button>
+                {messages.map(message => (
+                  <div key={message.id} className="bg-wedding-primary/10 p-4 rounded-lg">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2 mb-3">
+                      <div>
+                        <p className="font-medium text-black text-lg">{message.author}</p>
+                        <p className="text-sm text-gray-600">
+                          {message.createdAt.toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 self-end sm:self-start">
+                        {!message.approved && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleApproveMessage(message.id)}
+                            className="bg-green-500 text-white hover:bg-green-600"
+                          >
+                            <Check className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Aprovar</span>
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteMessage(message.id)}
+                          className="bg-red-500 text-white hover:bg-red-600"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          <span className="whitespace-nowrap">Excluir</span>
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-black text-base">{message.text}</p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="raffle">
+          <Card>
+            <CardHeader className="bg-wedding-secondary">
+              <CardTitle className="text-black">Rifa</CardTitle>
+            </CardHeader>
+            <CardContent className="bg-wedding-secondary">
+              <Button
+                onClick={() => navigate('/raffle')}
+                className="w-full bg-wedding-primary text-white hover:bg-wedding-secondary"
+              >
+                <Ticket className="h-4 w-4 mr-2" />
+                Ir para Área da Rifa
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 }
