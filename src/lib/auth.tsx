@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getAuth, onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { toast } from 'sonner';
 
 type UserRole = 'admin' | 'padrinho';
 
@@ -18,7 +18,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ isAdmin: boolean; isPadrinho: boolean }>;
   logout: () => Promise<void>;
   isAdmin: boolean;
   isMainAdmin: boolean;
@@ -31,31 +31,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
-      if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({ 
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            ...userData 
-          } as User);
-        } else {
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            isAdmin: false,
-            isMainAdmin: false,
-            role: 'padrinho',
-            name: firebaseUser.displayName || ''
-          });
-        }
+  const processUserData = async (firebaseUser: FirebaseUser) => {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      let userData;
+
+      if (userDoc.exists()) {
+        userData = userDoc.data();
+        console.log('Dados do usuário encontrados:', userData);
       } else {
-        setUser(null);
+        console.log('Documento do usuário não existe, usando dados padrão');
+        userData = {
+          isAdmin: false,
+          isMainAdmin: false,
+          role: 'padrinho' as UserRole,
+          name: firebaseUser.displayName || ''
+        };
       }
-      setLoading(false);
+
+      return {
+        uid: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        isAdmin: userData.isAdmin || false,
+        isMainAdmin: userData.isMainAdmin || false,
+        role: userData.role || 'padrinho',
+        name: userData.name || firebaseUser.displayName || ''
+      };
+    } catch (error) {
+      console.error('Erro ao processar dados do usuário:', error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
+        if (firebaseUser) {
+          const userData = await processUserData(firebaseUser);
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+        toast.error('Erro ao verificar autenticação');
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();
@@ -64,26 +86,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        setUser({ 
-          uid: userCredential.user.uid,
-          email: userCredential.user.email || '',
-          ...userData 
-        } as User);
-      } else {
-        setUser({
-          uid: userCredential.user.uid,
-          email: userCredential.user.email || '',
-          isAdmin: false,
-          isMainAdmin: false,
-          role: 'padrinho',
-          name: userCredential.user.displayName || ''
-        });
-      }
-    } catch (error) {
+      const userData = await processUserData(userCredential.user);
+      setUser(userData);
+
+      const isAdmin = Boolean(userData.isAdmin || userData.isMainAdmin);
+      const isPadrinho = userData.role === 'padrinho' && !isAdmin;
+
+      // Log para debug
+      console.log('Login bem-sucedido:', {
+        email: userData.email,
+        role: userData.role,
+        isAdmin,
+        isPadrinho
+      });
+
+      return { isAdmin, isPadrinho };
+
+    } catch (error: any) {
       console.error('Erro no login:', error);
       throw error;
     }
@@ -93,26 +112,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await signOut(auth);
       setUser(null);
+      localStorage.removeItem('user');
+      sessionStorage.clear();
+      window.location.href = '/';
     } catch (error) {
       console.error('Erro no logout:', error);
       throw error;
     }
   };
 
-  const isAdmin = user?.isAdmin === true || user?.isMainAdmin === true;
-  const isMainAdmin = user?.isMainAdmin === true;
-  const isPadrinho = user?.role === 'padrinho';
+  const isAdmin = Boolean(user?.isAdmin || user?.isMainAdmin);
+  const isMainAdmin = Boolean(user?.isMainAdmin);
+  const isPadrinho = user?.role === 'padrinho' && !isAdmin;
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    isAdmin,
+    isMainAdmin,
+    isPadrinho
+  };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      login, 
-      logout, 
-      isAdmin, 
-      isMainAdmin,
-      isPadrinho
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

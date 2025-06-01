@@ -11,39 +11,44 @@ const AdminLogin: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, user, logout } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/login');
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error);
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await login(email, password);
-      toast.success('Login realizado com sucesso!');
+      const userRole = await login(email, password);
       
-      // Após login, vai direto para a rifa
-      navigate('/raffle');
+      // Redireciona baseado no retorno do login
+      if (userRole.isAdmin) {
+        navigate('/raffle');
+        toast.success('Bem-vindo, Administrador!');
+      } else if (userRole.isPadrinho) {
+        navigate('/padrinhos');
+        toast.success('Bem-vindo, Padrinho!');
+      } else {
+        toast.error('Usuário não tem permissões adequadas');
+      }
+
     } catch (error: any) {
       console.error('Erro no login:', error);
+      
+      // Mensagens de erro mais amigáveis
+      let errorMessage = 'Erro ao fazer login. Tente novamente.';
+      
       if (error.code === 'auth/invalid-credential') {
-        toast.error('Email ou senha incorretos');
+        errorMessage = 'Email ou senha incorretos. Por favor, verifique suas credenciais.';
       } else if (error.code === 'auth/user-not-found') {
-        toast.error('Usuário não encontrado');
+        errorMessage = 'Usuário não encontrado.';
       } else if (error.code === 'auth/wrong-password') {
-        toast.error('Senha incorreta');
-      } else {
-        toast.error('Erro ao fazer login. Tente novamente.');
+        errorMessage = 'Senha incorreta.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Muitas tentativas de login. Por favor, tente novamente mais tarde.';
       }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }

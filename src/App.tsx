@@ -8,34 +8,9 @@ import AdminLogin from './pages/AdminLogin';
 import PadrinhoPage from './pages/PadrinhoPage';
 import { useAuth } from './lib/auth';
 
-// Componente para rota protegida da rifa
+// Componente para rota protegida da rifa (admin)
 const RaffleRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isPadrinho, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center text-slate-50">Carregando...</div>
-      </div>
-    );
-  }
-
-  // Se não estiver logado, redireciona para login da rifa
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Se for padrinho, redireciona para área de padrinhos
-  if (isPadrinho) {
-    return <Navigate to="/padrinhos" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-// Componente para rota protegida de padrinhos
-const PadrinhoRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isPadrinho, loading } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
 
   if (loading) {
     return (
@@ -50,8 +25,33 @@ const PadrinhoRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Se não for padrinho, redireciona para rifa
-  if (!isPadrinho) {
+  // Se não for admin, redireciona para área de padrinhos
+  if (!isAdmin) {
+    return <Navigate to="/padrinhos" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Componente para rota protegida de padrinhos
+const PadrinhoRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center text-slate-50">Carregando...</div>
+      </div>
+    );
+  }
+
+  // Se não estiver logado, redireciona para login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Se for admin, redireciona para área de rifas
+  if (isAdmin) {
     return <Navigate to="/raffle" replace />;
   }
 
@@ -76,17 +76,20 @@ function App() {
         {/* ===== ROTAS PÚBLICAS ===== */}
         <Route path="/" element={<Index />} />
         <Route path="/confirm/:guestId" element={<ConfirmPage />} />
-
-        {/* ===== ROTAS DA RIFA ===== */}
         <Route path="/login" element={<AdminLogin />} />
+
+        {/* ===== ROTAS DA RIFA (ADMIN) ===== */}
         <Route path="/raffle" element={
           <RaffleRoute>
             <AdminRaffle />
           </RaffleRoute>
         } />
-
-        {/* ===== ROTA DE GERENCIAMENTO DE CONVIDADOS ===== */}
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/admin/raffle" element={
+          <RaffleRoute>
+            <AdminRaffle />
+          </RaffleRoute>
+        } />
 
         {/* ===== ROTAS DOS PADRINHOS ===== */}
         <Route path="/padrinhos" element={
@@ -97,7 +100,6 @@ function App() {
 
         {/* ===== ROTA 404 ===== */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        <Route path="/admin/raffle" element={<AdminRaffle />} />
       </Routes>
     </Router>
   );

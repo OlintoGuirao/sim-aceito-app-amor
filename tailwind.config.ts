@@ -70,7 +70,8 @@ export default {
 					palha: '#F5EDD7',
 					cream: '#FAF7F0',
 					darkMarsala: '#4a1115',
-					lightPalha: '#F5EDD7'
+					lightPalha: '#F5EDD7',
+					gold: '#FFD700'
 				}
 			},
 			borderRadius: {
@@ -122,6 +123,14 @@ export default {
 						opacity: '1',
 						transform: 'scale(1.2)'
 					}
+				},
+				'shimmer': {
+					'0%': {
+						transform: 'translateX(-100%)'
+					},
+					'100%': {
+						transform: 'translateX(100%)'
+					}
 				}
 			},
 			animation: {
@@ -129,7 +138,8 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.6s ease-out',
 				'float': 'float 3s ease-in-out infinite',
-				'sparkle': 'sparkle 2s ease-in-out infinite'
+				'sparkle': 'sparkle 2s ease-in-out infinite',
+				'shimmer': 'shimmer 2s infinite linear'
 			},
 			fontFamily: {
 				'script': ['Dancing Script', 'cursive'],

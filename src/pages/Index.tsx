@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import WeddingHeader from '@/components/WeddingHeader';
 import CountdownTimer from '@/components/CountdownTimer';
 import NavigationMenu from '@/components/NavigationMenu';
@@ -9,12 +9,19 @@ import PartyGallery from '@/components/PartyGallery';
 import MessageBoard from '@/components/MessageBoard';
 import Raffle from '@/components/Raffle';
 import { Toaster } from 'sonner';
+import { useAuth } from '@/lib/auth';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('countdown');
+  const { user, isAdmin } = useAuth();
   
   // Data do casamento - ajuste conforme necessário
   const weddingDate = new Date('2024-06-15T16:00:00');
+
+  // Efeito para verificar autenticação ao montar o componente
+  useEffect(() => {
+    console.log('Estado de autenticação:', { user, isAdmin });
+  }, [user, isAdmin]);
 
   const renderSection = () => {
     switch (activeSection) {

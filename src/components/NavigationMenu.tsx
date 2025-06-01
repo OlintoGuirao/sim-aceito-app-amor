@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { MessageCircle, Ticket } from 'lucide-react';
 
 interface NavigationMenuProps {
@@ -14,8 +14,10 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
   activeSection,
   onSectionChange
 }) => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   const menuItems = [{
     id: 'countdown',
@@ -66,7 +68,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
         ))}
       </div>
 
-      {user && (
+      {isAdmin && !isHomePage && (
         <div className="flex gap-2 mt-4 justify-end">
           <Button
             variant="outline"
