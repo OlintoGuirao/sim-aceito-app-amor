@@ -1,0 +1,45 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Função auxiliar para verificar se o usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Função para verificar se o usuário é um padrinho
+    function isPadrinho() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'padrinho';
+    }
+
+    // Regras para o chat dos padrinhos
+    match /padrinhosChat/{message} {
+      allow read: if isPadrinho();
+      allow create: if isPadrinho() && 
+        request.resource.data.userId == request.auth.uid;
+      allow delete: if false; // Não permite deletar mensagens
+    }
+
+    // Regras para o checklist dos padrinhos
+    match /padrinhosChecklist/{userId} {
+      allow read, write: if isAuthenticated() && 
+        request.auth.uid == userId;
+    }
+
+    // Regras para sugestões de músicas
+    match /suggestedMusics/{musicId} {
+      allow read: if isPadrinho();
+      allow create: if isPadrinho() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isPadrinho(); // Permite atualizar para os votos
+      allow delete: if false; // Não permite deletar músicas
+    }
+
+    // Regras para usuários
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if request.auth.uid == userId;
+    }
+  }
+} 

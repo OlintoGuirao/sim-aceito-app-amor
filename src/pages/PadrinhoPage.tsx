@@ -1,14 +1,130 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
-import { Crown, Users, Gift, Calendar } from 'lucide-react';
+import { LogOut, Send, Music, Plus, ThumbsUp, ThumbsDown, Heart, Camera, Clock, Gift } from 'lucide-react';
+import { collection, query, orderBy, addDoc, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, getDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { motion } from 'framer-motion';
+
+// Interfaces
+interface Message {
+  id: string;
+  text: string;
+  userId: string;
+  userName: string;
+  createdAt: Date;
+}
+
+interface ChecklistItem {
+  id: string;
+  label: string;
+  checked: boolean;
+}
+
+interface SuggestedMusic {
+  id: string;
+  title: string;
+  artist: string;
+  suggestedBy: string;
+  userId: string;
+  likes: string[];
+  dislikes: string[];
+}
 
 const PadrinhoPage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
+  const [musicTitle, setMusicTitle] = useState('');
+  const [artist, setArtist] = useState('');
+  const [suggestedMusics, setSuggestedMusics] = useState<SuggestedMusic[]>([]);
 
+  // Função para formatar o nome dos padrinhos
+  const formatPadrinhosNames = (email: string | undefined) => {
+    if (!email) return '';
+    
+    // Remove o domínio do email
+    const namesOnly = email.split('@')[0];
+    
+    // Substitui & por ' & ' para melhor espaçamento e capitaliza os nomes
+    return namesOnly
+      .split('&')
+      .map(name => name.charAt(0).toUpperCase() + name.slice(1))
+      .join(' & ');
+  };
+
+  // Carregar mensagens do chat
+  useEffect(() => {
+    const messagesRef = collection(db, 'padrinhosChat');
+    const q = query(messagesRef, orderBy('createdAt', 'asc'));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const newMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        createdAt: doc.data().createdAt?.toDate()
+      })) as Message[];
+      
+      setMessages(newMessages);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Carregar checklist
+  useEffect(() => {
+    const loadChecklist = async () => {
+      if (!user) return;
+
+      try {
+        const padrinhoDoc = doc(db, 'padrinhosChecklist', user.uid);
+        const docSnap = await getDoc(padrinhoDoc);
+
+        if (docSnap.exists()) {
+          setChecklist(docSnap.data().items);
+        } else {
+          const defaultChecklist: ChecklistItem[] = [
+            { id: '1', label: 'Terno/vestido comprado', checked: false },
+            { id: '2', label: 'Presença confirmada', checked: false },
+            { id: '3', label: 'Música enviada', checked: false },
+            { id: '4', label: 'Acessórios escolhidos', checked: false }
+          ];
+
+          await updateDoc(padrinhoDoc, { items: defaultChecklist });
+          setChecklist(defaultChecklist);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar checklist:', error);
+      }
+    };
+
+    loadChecklist();
+  }, [user]);
+
+  // Carregar músicas sugeridas
+  useEffect(() => {
+    const musicsRef = collection(db, 'suggestedMusics');
+    const q = query(musicsRef);
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const musics = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as SuggestedMusic[];
+      
+      setSuggestedMusics(musics);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Funções de manipulação
   const handleLogout = async () => {
     try {
       await logout();
@@ -18,91 +134,397 @@ const PadrinhoPage: React.FC = () => {
     }
   };
 
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !user) return;
+
+    try {
+      await addDoc(collection(db, 'padrinhosChat'), {
+        text: newMessage,
+        userId: user.uid,
+        userName: user.email,
+        createdAt: serverTimestamp()
+      });
+
+      setNewMessage('');
+    } catch (error) {
+      console.error('Erro ao enviar mensagem:', error);
+    }
+  };
+
+  const toggleChecklistItem = async (itemId: string) => {
+    if (!user) return;
+
+    const newChecklist = checklist.map(item =>
+      item.id === itemId ? { ...item, checked: !item.checked } : item
+    );
+
+    try {
+      const padrinhoDoc = doc(db, 'padrinhosChecklist', user.uid);
+      await updateDoc(padrinhoDoc, { items: newChecklist });
+      setChecklist(newChecklist);
+    } catch (error) {
+      console.error('Erro ao atualizar checklist:', error);
+    }
+  };
+
+  const handleMusicSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!musicTitle.trim() || !artist.trim() || !user) return;
+
+    try {
+      await addDoc(collection(db, 'suggestedMusics'), {
+        title: musicTitle,
+        artist,
+        suggestedBy: user.email,
+        userId: user.uid,
+        likes: [],
+        dislikes: []
+      });
+
+      setMusicTitle('');
+      setArtist('');
+    } catch (error) {
+      console.error('Erro ao sugerir música:', error);
+    }
+  };
+
+  const handleMusicVote = async (musicId: string, voteType: 'like' | 'dislike') => {
+    if (!user) return;
+
+    const musicRef = doc(db, 'suggestedMusics', musicId);
+    const music = suggestedMusics.find(m => m.id === musicId);
+    
+    if (!music) return;
+
+    try {
+      if (voteType === 'like') {
+        if (music.likes.includes(user.uid)) {
+          await updateDoc(musicRef, {
+            likes: arrayRemove(user.uid)
+          });
+        } else {
+          await updateDoc(musicRef, {
+            likes: arrayUnion(user.uid),
+            dislikes: arrayRemove(user.uid)
+          });
+        }
+      } else {
+        if (music.dislikes.includes(user.uid)) {
+          await updateDoc(musicRef, {
+            dislikes: arrayRemove(user.uid)
+          });
+        } else {
+          await updateDoc(musicRef, {
+            dislikes: arrayUnion(user.uid),
+            likes: arrayRemove(user.uid)
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao votar:', error);
+    }
+  };
+
   return (
-    <div className="container mx-auto p-4 space-y-6">
-      <Card className="p-6 bg-wedding-primary">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Crown className="w-6 h-6 text-wedding-gold" />
-            <h1 className="text-2xl font-elegant font-semibold text-slate-50">
-              Área do Padrinho
-            </h1>
+    <div className="min-h-screen bg-gradient-to-b from-wedding-primary/5 to-wedding-secondary/5 py-8">
+      <div className="container mx-auto px-4">
+        {/* Header com animação */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between mb-8 bg-wedding-primary p-6 rounded-xl shadow-lg"
+        >
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-wedding-gold flex items-center justify-center">
+              <Heart className="w-6 h-6 text-black" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-elegant font-semibold text-slate-50">
+                Bem-vindo(a), {formatPadrinhosNames(user?.email)}
+              </h1>
+              <p className="text-slate-50/70">Área exclusiva dos padrinhos</p>
+            </div>
           </div>
-          <Button 
+          <Button
             onClick={handleLogout}
-            variant="outline"
-            className="text-white hover:bg-wedding-secondary"
+            className="bg-wedding-secondary text-black hover:bg-wedding-gold border-wedding-primary"
           >
+            <LogOut className="w-4 h-4 mr-2" />
             Sair
           </Button>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Coluna da Esquerda */}
+          <div className="space-y-8">
+            {/* Dresscode com animação */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="p-6 bg-wedding-primary shadow-lg hover:shadow-xl transition-shadow">
+                <div className="flex items-center gap-3 mb-6">
+                  <Camera className="w-6 h-6 text-wedding-gold" />
+                  <h2 className="text-2xl font-elegant font-semibold text-slate-50">
+                    Dresscode
+                  </h2>
+                </div>
+                <div className="space-y-6 text-slate-50">
+                  <div className="aspect-video bg-wedding-secondary/20 rounded-xl overflow-hidden transform hover:scale-[1.02] transition-transform">
+                    <img
+                      src="/dresscode/exemplo1.jpg"
+                      alt="Exemplo de Dresscode"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="bg-wedding-secondary/10 p-4 rounded-lg">
+                    <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+                      <Gift className="w-5 h-5 text-wedding-gold" />
+                      Orientações
+                    </h3>
+                    <ul className="list-disc list-inside space-y-2 marker:text-wedding-gold">
+                      <li>Padrinhos: Terno azul marinho com gravata dourada</li>
+                      <li>Madrinhas: Vestido longo em tons de rose gold</li>
+                      <li>Evitar cores brancas ou muito claras</li>
+                      <li>Sapatos sociais escuros para padrinhos</li>
+                    </ul>
+                  </div>
+                  <div className="bg-wedding-secondary/10 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold mb-3">Lojas Sugeridas</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <a
+                        href="https://loja1.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-wedding-gold hover:underline hover:text-wedding-gold/80 transition-colors"
+                      >
+                        <Gift className="w-4 h-4" />
+                        Loja 1 - Ternos
+                      </a>
+                      <a
+                        href="https://loja2.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-wedding-gold hover:underline hover:text-wedding-gold/80 transition-colors"
+                      >
+                        <Gift className="w-4 h-4" />
+                        Loja 2 - Vestidos
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* Sugestões de Música com animação */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="p-6 bg-wedding-primary shadow-lg">
+                <div className="flex items-center gap-3 mb-6">
+                  <Music className="w-6 h-6 text-wedding-gold" />
+                  <h2 className="text-2xl font-elegant font-semibold text-slate-50">
+                    Sugestões de Músicas
+                  </h2>
+                </div>
+                <form onSubmit={handleMusicSubmit} className="mb-6 space-y-4">
+                  <div className="bg-wedding-secondary/10 p-4 rounded-lg space-y-4">
+                    <Input
+                      value={musicTitle}
+                      onChange={(e) => setMusicTitle(e.target.value)}
+                      placeholder="Nome da música"
+                      className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
+                    />
+                    <Input
+                      value={artist}
+                      onChange={(e) => setArtist(e.target.value)}
+                      placeholder="Artista"
+                      className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Sugerir Música
+                    </Button>
+                  </div>
+                </form>
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {suggestedMusics.map((music) => (
+                    <motion.div
+                      key={music.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="transform hover:-translate-y-1 transition-all"
+                    >
+                      <Card className="p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <Music className="w-4 h-4 text-wedding-gold" />
+                              <h3 className="font-semibold text-slate-50">{music.title}</h3>
+                            </div>
+                            <p className="text-sm text-slate-50/70">{music.artist}</p>
+                            <p className="text-xs text-slate-50/50 mt-1">
+                              Sugerido por: {music.suggestedBy}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMusicVote(music.id, 'like')}
+                              className={`hover:bg-wedding-secondary/20 ${
+                                music.likes.includes(user?.uid || '')
+                                  ? 'text-green-500'
+                                  : 'text-slate-50'
+                              }`}
+                            >
+                              <ThumbsUp className="w-4 h-4 mr-1" />
+                              {music.likes.length}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleMusicVote(music.id, 'dislike')}
+                              className={`hover:bg-wedding-secondary/20 ${
+                                music.dislikes.includes(user?.uid || '')
+                                  ? 'text-red-500'
+                                  : 'text-slate-50'
+                              }`}
+                            >
+                              <ThumbsDown className="w-4 h-4 mr-1" />
+                              {music.dislikes.length}
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Coluna da Direita */}
+          <div className="space-y-8">
+            {/* Checklist com animação */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="p-6 bg-wedding-primary shadow-lg">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-6 h-6 text-wedding-gold" />
+                    <h2 className="text-2xl font-elegant font-semibold text-slate-50">
+                      Seu Checklist
+                    </h2>
+                  </div>
+                  <div className="text-wedding-gold bg-wedding-secondary/20 px-4 py-2 rounded-full">
+                    <span className="text-lg font-semibold">
+                      {checklist.filter(item => item.checked).length}
+                    </span>
+                    <span className="text-slate-50/70">/{checklist.length}</span>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {checklist.map((item) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="transform hover:-translate-y-1 transition-all"
+                    >
+                      <div className="flex items-center space-x-3 bg-wedding-secondary/20 p-4 rounded-lg hover:bg-wedding-secondary/30">
+                        <Checkbox
+                          checked={item.checked}
+                          onCheckedChange={() => toggleChecklistItem(item.id)}
+                          className="border-wedding-gold data-[state=checked]:bg-wedding-gold data-[state=checked]:text-black"
+                        />
+                        <label className="text-slate-50 flex-1 cursor-pointer">{item.label}</label>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                {checklist.every(item => item.checked) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-wedding-gold/20 rounded-lg text-center"
+                  >
+                    <p className="text-wedding-gold font-semibold">
+                      Parabéns! Você completou todas as tarefas! 🎉
+                    </p>
+                  </motion.div>
+                )}
+              </Card>
+            </motion.div>
+
+            {/* Chat com animação */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="p-6 bg-wedding-primary shadow-lg h-[500px] flex flex-col">
+                <div className="flex items-center gap-3 mb-4">
+                  <Heart className="w-6 h-6 text-wedding-gold" />
+                  <h2 className="text-2xl font-elegant font-semibold text-slate-50">
+                    Chat dos Padrinhos
+                  </h2>
+                </div>
+                <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2 custom-scrollbar">
+                  {messages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex ${message.userId === user?.uid ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[70%] rounded-lg p-3 ${
+                          message.userId === user?.uid
+                            ? 'bg-wedding-gold text-black'
+                            : 'bg-wedding-secondary/20 text-slate-50'
+                        }`}
+                      >
+                        <div className="text-sm font-medium mb-1">
+                          {message.userId === user?.uid ? 'Você' : formatPadrinhosNames(message.userName)}
+                        </div>
+                        <div>{message.text}</div>
+                        <div className="text-xs mt-1 opacity-70">
+                          {message.createdAt?.toLocaleTimeString()}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                <form onSubmit={sendMessage} className="flex gap-2">
+                  <Input
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Digite sua mensagem..."
+                    className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
+                  />
+                  <Button
+                    type="submit"
+                    className="bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                  </Button>
+                </form>
+              </Card>
+            </motion.div>
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4 bg-wedding-secondary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Users className="w-5 h-5 text-wedding-gold" />
-              <h3 className="text-lg font-semibold text-slate-50">Lista de Convidados</h3>
-            </div>
-            <p className="text-slate-50/70 mb-4">
-              Visualize e gerencie os convidados da sua lista
-            </p>
-            <Button 
-              className="w-full bg-wedding-secondary text-black hover:bg-wedding-gold"
-              onClick={() => navigate('/admin/guests')}
-            >
-              Ver Lista
-            </Button>
-          </Card>
-
-          <Card className="p-4 bg-wedding-secondary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Gift className="w-5 h-5 text-wedding-gold" />
-              <h3 className="text-lg font-semibold text-slate-50">Lista de Presentes</h3>
-            </div>
-            <p className="text-slate-50/70 mb-4">
-              Acompanhe os presentes escolhidos pelos convidados
-            </p>
-            <Button 
-              className="w-full bg-wedding-secondary text-black hover:bg-wedding-gold"
-              onClick={() => navigate('/admin/gifts')}
-            >
-              Ver Presentes
-            </Button>
-          </Card>
-
-          <Card className="p-4 bg-wedding-secondary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="w-5 h-5 text-wedding-gold" />
-              <h3 className="text-lg font-semibold text-slate-50">Cronograma</h3>
-            </div>
-            <p className="text-slate-50/70 mb-4">
-              Acompanhe as tarefas e prazos importantes
-            </p>
-            <Button 
-              className="w-full bg-wedding-secondary text-black hover:bg-wedding-gold"
-              onClick={() => navigate('/admin/schedule')}
-            >
-              Ver Cronograma
-            </Button>
-          </Card>
-
-          <Card className="p-4 bg-wedding-secondary/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Crown className="w-5 h-5 text-wedding-gold" />
-              <h3 className="text-lg font-semibold text-slate-50">Informações do Casamento</h3>
-            </div>
-            <p className="text-slate-50/70 mb-4">
-              Acesse todas as informações importantes do casamento
-            </p>
-            <Button 
-              className="w-full bg-wedding-secondary text-black hover:bg-wedding-gold"
-              onClick={() => navigate('/admin/info')}
-            >
-              Ver Informações
-            </Button>
-          </Card>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 };

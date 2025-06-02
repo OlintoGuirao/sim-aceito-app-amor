@@ -3,6 +3,7 @@ import { getAuth, onAuthStateChanged, User as FirebaseUser, signInWithEmailAndPa
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { toast } from 'sonner';
+import { initializePadrinhoChecklist, setPadrinhoRole } from './initializeFirestore';
 
 type UserRole = 'admin' | 'padrinho';
 
@@ -40,13 +41,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userData = userDoc.data();
         console.log('Dados do usuário encontrados:', userData);
       } else {
-        console.log('Documento do usuário não existe, usando dados padrão');
+        console.log('Documento do usuário não existe, criando como padrinho');
+        // Se o usuário não existe, cria como padrinho
+        await setPadrinhoRole(firebaseUser.uid, firebaseUser.email || '');
         userData = {
           isAdmin: false,
           isMainAdmin: false,
           role: 'padrinho' as UserRole,
-          name: firebaseUser.displayName || ''
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || ''
         };
+      }
+
+      // Se for padrinho, garante que o checklist existe
+      if (userData.role === 'padrinho') {
+        await initializePadrinhoChecklist(firebaseUser.uid);
       }
 
       return {
@@ -92,7 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const isAdmin = Boolean(userData.isAdmin || userData.isMainAdmin);
       const isPadrinho = userData.role === 'padrinho' && !isAdmin;
 
-      // Log para debug
       console.log('Login bem-sucedido:', {
         email: userData.email,
         role: userData.role,

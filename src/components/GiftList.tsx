@@ -121,9 +121,9 @@ const GiftList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
-        <h3 className="text-2xl font-elegant font-semibold mb-2 text-black">Lista de Presentes</h3>
-        <p className="text-black">
+      <Card className="p-6 text-center bg-wedding-primary border-wedding-primary">
+        <h3 className="text-2xl font-elegant font-semibold mb-2 text-wedding-secondary">Lista de Presentes</h3>
+        <p className="text-wedding-secondary">
           Sua presença é nosso maior presente, mas se desejar nos presentear, aqui estão algumas sugestões
         </p>
       </Card>
@@ -172,9 +172,9 @@ const GiftList: React.FC = () => {
               {gifts
                 .filter(gift => selectedCategory === 'all' || gift.category === selectedCategory)
                 .map(gift => (
-                  <Card key={gift.id} className="bg-wedding-secondary">
+                  <Card key={gift.id} className="bg-wedding-primary border-wedding-primary">
                     <CardHeader>
-                      <CardTitle className="text-black">{gift.name}</CardTitle>
+                      <CardTitle className="text-wedding-secondary">{gift.name}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -183,7 +183,7 @@ const GiftList: React.FC = () => {
                           alt={gift.name}
                           className="w-full h-48 object-cover rounded-lg"
                         />
-                        <p className="text-black font-semibold">
+                        <p className="text-wedding-secondary font-semibold">
                           R$ {gift.price.toFixed(2)}
                         </p>
                         <div className="flex gap-2">
@@ -239,9 +239,9 @@ const GiftList: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="pix">
-          <Card className="bg-wedding-secondary">
+          <Card className="bg-wedding-primary border-wedding-primary">
             <CardHeader>
-              <CardTitle className="text-black">Pix</CardTitle>
+              <CardTitle className="text-wedding-secondary">Pix</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center space-y-6">
@@ -250,8 +250,8 @@ const GiftList: React.FC = () => {
                   size={200}
                 />
                 <div className="text-center space-y-2">
-                  <p className="text-black font-semibold">Chave PIX: {pixData.key}</p>
-                  <p className="text-black">Titular: {pixData.name}</p>
+                  <p className="text-wedding-secondary font-semibold">Chave PIX: {pixData.key}</p>
+                  <p className="text-wedding-secondary">Titular: {pixData.name}</p>
                 </div>
                 <Button
                   className="bg-wedding-primary text-white"
@@ -268,28 +268,28 @@ const GiftList: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="transfer">
-          <Card className="bg-wedding-secondary">
+          <Card className="bg-wedding-primary border-wedding-primary">
             <CardHeader>
-              <CardTitle className="text-black">Transferência Bancária</CardTitle>
+              <CardTitle className="text-wedding-secondary">Transferência Bancária</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-black font-semibold">Banco</p>
-                    <p className="text-black">{pixData.bank}</p>
+                    <p className="text-wedding-secondary font-semibold">Banco</p>
+                    <p className="text-wedding-secondary">{pixData.bank}</p>
                   </div>
                   <div>
-                    <p className="text-black font-semibold">Agência</p>
-                    <p className="text-black">{pixData.agency}</p>
+                    <p className="text-wedding-secondary font-semibold">Agência</p>
+                    <p className="text-wedding-secondary">{pixData.agency}</p>
                   </div>
                   <div>
-                    <p className="text-black font-semibold">Conta</p>
-                    <p className="text-black">{pixData.account}</p>
+                    <p className="text-wedding-secondary font-semibold">Conta</p>
+                    <p className="text-wedding-secondary">{pixData.account}</p>
                   </div>
                   <div>
-                    <p className="text-black font-semibold">Titular</p>
-                    <p className="text-black">{pixData.name}</p>
+                    <p className="text-wedding-secondary font-semibold">Titular</p>
+                    <p className="text-wedding-secondary">{pixData.name}</p>
                   </div>
                 </div>
                 <Button
