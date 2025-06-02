@@ -322,7 +322,7 @@ const PadrinhoPage: React.FC = () => {
                   </h2>
                 </div>
                 <div className="space-y-6 text-slate-50">
-                  <div className="aspect-video bg-wedding-secondary/20 rounded-xl overflow-hidden flex items-center justify-center md:h-[500px] mx-auto transform hover:scale-[1.02] transition-transform">
+                  <div className="aspect-video bg-wedding-secondary/20 rounded-xl overflow-hidden flex items-center justify-center md:h-[500px] max-w-xl md:max-w-2xl mx-auto transform hover:scale-[1.02] transition-transform">
                     <div className="overflow-hidden w-full h-full" ref={emblaRef}>
                       <div className="flex h-full">
                         {dresscodeImages.map((src, idx) => (

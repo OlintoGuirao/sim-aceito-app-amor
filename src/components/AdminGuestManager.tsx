@@ -8,7 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock } from "lucide-react";
 import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, onSnapshot, addDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
@@ -368,8 +368,8 @@ export function AdminGuestManager() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
+    <div className="space-y-6 p-6 min-h-screen bg-wedding-marsala">
+      <Card className="p-6 text-center bg-wedding-marsala">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-white">Gerenciamento de Convidados</h3>
         <p className="text-white">
           Área administrativa para gerenciar a lista de convidados
@@ -484,96 +484,76 @@ export function AdminGuestManager() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
-                  <Button
-                    onClick={handleSendLinkToConfirmed}
-                    size="icon"
-                    className="bg-wedding-primary text-white hover:bg-wedding-secondary"
-                    title="Enviar Link para Confirmados"
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </Button>
                 </div>
                 <div className="space-y-4">
                   {/* Convidados Agrupados */}
                   {filteredGroupedGuests.map(([groupId, groupMembers]) => (
-                    <div key={groupId} className="flex flex-col p-4 border rounded-lg gap-4 bg-wedding-secondary">
-                      <div className="w-full">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Users className="h-5 w-5 text-black" />
-                          <span className="text-sm text-black">
-                            Grupo: {groupMembers[0].phone}
-                          </span>
+                    <div key={groupId} className="flex flex-col bg-white rounded-2xl shadow-lg mb-8 border-t-4 border-wedding-marsala">
+                      <div className="flex items-center gap-3 px-6 pt-4 pb-2">
+                        <Users className="h-6 w-6 text-wedding-marsala" />
+                        <div>
+                          <span className="block text-lg font-bold text-wedding-marsala">Grupo</span>
+                          <span className="block text-xs text-gray-500">{groupMembers[0].phone}</span>
                         </div>
-                        {groupMembers.map(guest => (
-                          <div key={guest.id} className="ml-7 mb-4 last:mb-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                              <h3 className="font-medium text-black text-lg">{guest.name}</h3>
-                              <Badge 
-                                className={`${
-                                  guest.status === 'confirmed' 
-                                    ? 'bg-green-500 hover:bg-green-600' 
+                      </div>
+                      <div className="divide-y divide-gray-200">
+                        {groupMembers.map((guest, idx) => (
+                          <div key={guest.id} className="px-8 py-6 flex flex-col gap-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                              <h3 className="font-semibold text-black text-lg flex-1">{guest.name}</h3>
+                              <Badge
+                                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold gap-1 border-none ${
+                                  guest.status === 'confirmed'
+                                    ? 'bg-green-100 text-green-700'
                                     : guest.status === 'declined'
-                                    ? 'bg-red-500 hover:bg-red-600'
-                                    : 'bg-yellow-500 hover:bg-yellow-600'
-                                } self-start sm:self-auto`}
+                                    ? 'bg-red-100 text-red-700'
+                                    : 'bg-yellow-100 text-yellow-700'
+                                }`}
                               >
-                                {guest.status === 'confirmed' 
-                                  ? 'Confirmado' 
+                                {guest.status === 'confirmed' && <Check className="w-4 h-4" />}
+                                {guest.status === 'declined' && <X className="w-4 h-4" />}
+                                {guest.status === 'pending' && <Clock className="w-4 h-4" />}
+                                {guest.status === 'confirmed'
+                                  ? 'Confirmado'
                                   : guest.status === 'declined'
                                   ? 'Não Confirmado'
                                   : 'Pendente'}
                               </Badge>
                             </div>
-                            {guest.email && <p className="text-sm text-black mb-1">{guest.email}</p>}
+                            {guest.email && <p className="text-xs text-gray-500">{guest.email}</p>}
                             {guest.companions > 0 && (
-                              <p className="text-sm text-black mb-1">
-                                Acompanhantes: {guest.companions}
-                              </p>
+                              <p className="text-xs text-gray-500">Acompanhantes: {guest.companions}</p>
                             )}
                             {guest.message && (
-                              <p className="text-sm text-black italic mb-2">
-                                "{guest.message}"
-                              </p>
+                              <p className="text-xs text-gray-400 italic">"{guest.message}"</p>
                             )}
                             {guest.confirmedAt && (
-                              <p className="text-xs text-gray-500 mb-1">
-                                Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
-                              </p>
+                              <p className="text-xs text-gray-400">Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}</p>
                             )}
                             {guest.declinedAt && (
-                              <p className="text-xs text-gray-500">
-                                Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
-                              </p>
+                              <p className="text-xs text-gray-400">Declinou em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}</p>
                             )}
                             <div className="flex flex-wrap gap-2 mt-2">
-                              <Button 
-                                variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
-                                onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
-                                className={`flex-1 sm:flex-none ${
-                                  guest.status === 'confirmed'
-                                    ? 'bg-green-500 hover:bg-green-600 text-white'
-                                    : 'bg-wedding-primary text-white'
-                                }`}
+                              <Button
+                                variant="outline"
+                                onClick={() => handleStatusChange(guest.id!, 'confirmed')}
+                                className={`flex-1 sm:flex-none rounded-full border-2 border-green-500 text-green-700 hover:bg-green-50 px-4 py-2 ${guest.status === 'confirmed' ? 'bg-green-100' : ''}`}
                               >
                                 <Check className="h-4 w-4 mr-2" />
                                 <span className="whitespace-nowrap">Confirmado</span>
                               </Button>
-                              <Button 
-                                variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
-                                onClick={() => handleStatusChange(guest.id!, 'declined')} 
-                                className={`flex-1 sm:flex-none ${
-                                  guest.status === 'declined'
-                                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                                    : 'text-white'
-                                }`}
+                              <Button
+                                variant="outline"
+                                onClick={() => handleStatusChange(guest.id!, 'declined')}
+                                className={`flex-1 sm:flex-none rounded-full border-2 border-red-500 text-red-700 hover:bg-red-50 px-4 py-2 ${guest.status === 'declined' ? 'bg-red-100' : ''}`}
                               >
                                 <X className="h-4 w-4 mr-2" />
                                 <span className="whitespace-nowrap">Declinado</span>
                               </Button>
-                              <Button 
-                                variant="outline" 
-                                onClick={() => handleDeleteGuest(guest.id!)} 
-                                className="flex-1 sm:flex-none bg-red-500 text-white hover:bg-red-600"
+                              <Button
+                                variant="outline"
+                                onClick={() => handleDeleteGuest(guest.id!)}
+                                className={`flex-1 sm:flex-none rounded-full border-2 border-gray-300 text-gray-600 hover:bg-gray-100 px-4 py-2`}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 <span className="whitespace-nowrap">Excluir</span>
@@ -581,16 +561,16 @@ export function AdminGuestManager() {
                             </div>
                           </div>
                         ))}
-                        <div className="mt-4 border-t pt-4">
-                          <Button 
-                            variant="outline" 
-                            onClick={() => handleSendInvite(groupMembers[0])} 
-                            className="w-full sm:w-auto bg-wedding-primary text-white"
-                          >
-                            <Share2 className="h-4 w-4 mr-2" />
-                            <span className="whitespace-nowrap">Enviar Convite para o Grupo</span>
-                          </Button>
-                        </div>
+                      </div>
+                      <div className="px-8 pb-6 pt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => handleSendInvite(groupMembers[0])}
+                          className="w-full sm:w-auto rounded-full bg-wedding-marsala text-white hover:bg-wedding-primary px-6 py-2 border-none"
+                        >
+                          <Share2 className="h-4 w-4 mr-2" />
+                          <span className="whitespace-nowrap">Enviar Convite</span>
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -655,11 +635,7 @@ export function AdminGuestManager() {
                           <Button 
                             variant={guest.status === 'declined' ? 'destructive' : 'outline'} 
                             onClick={() => handleStatusChange(guest.id!, 'declined')} 
-                            className={`flex-1 sm:flex-none ${
-                              guest.status === 'declined'
-                                ? 'bg-red-500 hover:bg-red-600 text-white'
-                                : 'text-white'
-                            }`}
+                            className={`flex-1 sm:flex-none bg-red-500 text-white hover:bg-red-600`}
                           >
                             <X className="h-4 w-4 mr-2" />
                             <span className="whitespace-nowrap">Declinado</span>

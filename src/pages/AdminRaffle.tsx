@@ -243,7 +243,7 @@ const AdminRaffle: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-2 md:p-4 space-y-4 md:space-y-6">
+    <div className="min-h-screen bg-wedding-marsala p-4">
       <Card className="p-3 md:p-6 bg-wedding-primary">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6">
           <h1 className="text-xl md:text-2xl font-elegant font-semibold text-slate-50">
@@ -254,25 +254,25 @@ const AdminRaffle: React.FC = () => {
               onClick={handleRefresh}
               variant="outline"
               size="sm"
-              className="text-white hover:bg-wedding-secondary flex-1 md:flex-none"
+              className="flex-1 md:flex-none bg-white text-wedding-marsala border-2 border-wedding-marsala hover:bg-wedding-marsala hover:text-white group rounded-full shadow-md px-5 py-2 transition-colors duration-200"
               disabled={isRefreshing}
             >
-              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 mr-2 group-hover:text-white text-wedding-marsala ${isRefreshing ? 'animate-spin' : ''}`} />
               Atualizar
             </Button>
             <Button
               onClick={exportToCSV}
               variant="outline"
               size="sm"
-              className="text-white hover:bg-wedding-secondary flex-1 md:flex-none"
+              className="flex-1 md:flex-none bg-white text-wedding-marsala border-2 border-wedding-marsala hover:bg-wedding-marsala hover:text-white group rounded-full shadow-md px-5 py-2 transition-colors duration-200"
             >
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4 mr-2 group-hover:text-white text-wedding-marsala" />
               Exportar
             </Button>
-            <Button 
+            <Button
               onClick={handleLogout}
               variant="outline"
-              className="text-white hover:bg-wedding-secondary flex-1 md:flex-none"
+              className="flex-1 md:flex-none bg-white text-wedding-marsala border-2 border-wedding-marsala hover:bg-wedding-marsala hover:text-white group rounded-full shadow-md px-5 py-2 transition-colors duration-200"
             >
               Sair
             </Button>

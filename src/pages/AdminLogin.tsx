@@ -55,7 +55,7 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-wedding-marsala p-4">
       <Card className="w-full max-w-md">
         <div className="p-6 space-y-6">
           <div className="text-center">
