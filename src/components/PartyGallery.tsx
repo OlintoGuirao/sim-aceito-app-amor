@@ -353,32 +353,52 @@ const PartyGallery: React.FC = () => {
       {loading ? <div className="text-center text-slate-50">Carregando fotos...</div> : <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
-              {photos.map((photo, index) => <div key={photo.id} className="flex-[0_0_100%] min-w-0 relative">
+              {photos.map((photo, index) => (
+                <div key={photo.id} className="flex-[0_0_100%] min-w-0 relative">
                   <Card className="mx-4 overflow-hidden bg-wedding-secondary">
-                    <div className="aspect-[4/3] relative">
-                      <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
-                        <p className="text-white font-medium">{photo.caption}</p>
-                        <p className="text-white/80 text-sm">Por: {photo.uploadedBy}</p>
-                        <div className="flex items-center gap-4 mt-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleLike(photo.id)} className="text-white hover:text-red-500 bg-transparent">
-                            <Heart className="w-4 h-4 mr-1" />
-                            {photo.likes}
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setSelectedPhoto(index)} className="text-white hover:text-blue-500 bg-transparent">
-                            <MessageCircle className="w-4 h-4 mr-1" />
-                            {photo.comments.length}
-                          </Button>
+                    <div className="relative group overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl">
+                      <img
+                        src={photo.url}
+                        alt={photo.caption}
+                        className="w-full h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4">
+                        <p className="text-white font-medium text-lg mb-1">{photo.caption}</p>
+                        <p className="text-white/90 text-sm mb-3">Por: {photo.uploadedBy}</p>
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => handleLike(photo.id)}
+                            className="flex items-center gap-2 text-white/90 hover:text-red-500 transition-colors duration-200 bg-black/30 hover:bg-black/40 px-3 py-1.5 rounded-full"
+                          >
+                            <Heart className="w-4 h-4" />
+                            <span>{photo.likes}</span>
+                          </button>
+                          <button
+                            onClick={() => setSelectedPhoto(index)}
+                            className="flex items-center gap-2 text-white/90 hover:text-blue-500 transition-colors duration-200 bg-black/30 hover:bg-black/40 px-3 py-1.5 rounded-full"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>{photo.comments.length}</span>
+                          </button>
                         </div>
                       </div>
                     </div>
                   </Card>
-                </div>)}
+                </div>
+              ))}
             </div>
           </div>
 
           <div className="flex justify-center gap-2 mt-4">
-            {photos.map((_, index) => <button key={index} onClick={() => emblaApi?.scrollTo(index)} className={`w-2 h-2 rounded-full transition-all ${index === selectedIndex ? 'bg-wedding-primary w-4' : 'bg-gray-300 hover:bg-gray-400'}`} />)}
+            {photos.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => emblaApi?.scrollTo(index)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  index === selectedIndex ? 'bg-wedding-primary w-4' : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
+            ))}
           </div>
         </div>}
 
@@ -444,55 +464,70 @@ const PartyGallery: React.FC = () => {
           </div>
         </div>}
 
-      {selectedPhoto !== null && <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setSelectedPhoto(null)}>
-          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto bg-white rounded-lg" onClick={e => e.stopPropagation()}>
-            <div className="p-4">
-              <div className="relative aspect-[4/3] mb-4">
-                <img src={photos[selectedPhoto].url} alt={photos[selectedPhoto].caption} className="w-full h-full object-cover rounded-lg" />
+      {selectedPhoto !== null && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+          <div className="relative w-full max-w-6xl bg-wedding-secondary rounded-lg overflow-hidden">
+            <button
+              onClick={() => setSelectedPhoto(null)}
+              className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/30 hover:bg-black/50 p-2 rounded-full transition-colors duration-200 z-10"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="relative aspect-[4/3]">
+                <img
+                  src={photos[selectedPhoto].url}
+                  alt={photos[selectedPhoto].caption}
+                  className="w-full h-full object-contain"
+                />
               </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <p className="text-center font-medium text-lg text-black">{photos[selectedPhoto].caption}</p>
-                  <p className="text-center text-sm text-gray-600 mt-1">
-                    Por: {photos[selectedPhoto].uploadedBy}
-                  </p>
+              <div className="p-6 bg-gradient-to-t from-black/80 to-transparent overflow-y-auto max-h-[80vh]">
+                <h3 className="text-white text-xl font-medium mb-2">{photos[selectedPhoto].caption}</h3>
+                <p className="text-white/80 mb-4">Por: {photos[selectedPhoto].uploadedBy}</p>
+                <div className="flex items-center gap-4 mb-6">
+                  <button
+                    onClick={() => handleLike(photos[selectedPhoto].id)}
+                    className="flex items-center gap-2 text-white/90 hover:text-red-500 transition-colors duration-200 bg-black/30 hover:bg-black/40 px-4 py-2 rounded-full"
+                  >
+                    <Heart className="w-5 h-5" />
+                    <span>{photos[selectedPhoto].likes}</span>
+                  </button>
+                  <button
+                    onClick={() => handleComment(photos[selectedPhoto].id)}
+                    className="flex items-center gap-2 text-white/90 hover:text-blue-500 transition-colors duration-200 bg-black/30 hover:bg-black/40 px-4 py-2 rounded-full"
+                  >
+                    <MessageCircle className="w-5 h-5" />
+                    <span>{photos[selectedPhoto].comments.length}</span>
+                  </button>
                 </div>
-
-                <div className="flex items-center justify-center gap-4">
-                  <Button variant="ghost" size="sm" onClick={e => {
-                e.stopPropagation();
-                handleLike(photos[selectedPhoto].id);
-              }} className="text-gray-600 hover:text-red-500">
-                    <Heart className="w-4 h-4 mr-1" />
-                    {photos[selectedPhoto].likes}
-                  </Button>
-                  <Button variant="ghost" size="sm" className="text-gray-600 hover:text-blue-500">
-                    <MessageCircle className="w-4 h-4 mr-1" />
-                    {photos[selectedPhoto].comments.length}
-                  </Button>
-                </div>
-
-                <div className="flex gap-2">
-                  <Input placeholder="Adicione um comentário..." value={newComment} onChange={e => setNewComment(e.target.value)} onClick={e => e.stopPropagation()} className="flex-1 text-white bg-wedding-primary text-white" />
-                  <Button onClick={e => {
-                e.stopPropagation();
-                handleComment(photos[selectedPhoto].id);
-              }} disabled={!newComment} className="text-black bg-wedding-secondary">
-                    Comentar
-                  </Button>
-                </div>
-
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {photos[selectedPhoto].comments.map(comment => <div key={comment.id} className="p-2 rounded bg-wedding-primary">
-                      <p className="text-base font-medium text-wedding-secondary">{comment.author}</p>
-                      <p className="text-sm text-white">{comment.text}</p>
-                    </div>)}
+                <div className="space-y-4">
+                  {photos[selectedPhoto].comments.map((comment) => (
+                    <div key={comment.id} className="bg-black/30 rounded-lg p-4">
+                      <p className="text-white/90 font-medium mb-1">{comment.author}</p>
+                      <p className="text-white/70">{comment.text}</p>
+                    </div>
+                  ))}
+                  <div className="flex gap-2 mt-4">
+                    <Input
+                      placeholder="Adicione um comentário..."
+                      value={newComment}
+                      onChange={e => setNewComment(e.target.value)}
+                      className="flex-1 bg-black/30 border-black/50 text-white placeholder:text-white/50"
+                    />
+                    <Button
+                      onClick={() => handleComment(photos[selectedPhoto].id)}
+                      disabled={!newComment}
+                      className="bg-wedding-primary hover:bg-wedding-primary/90 text-white"
+                    >
+                      Comentar
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>}
+        </div>
+      )}
 
       {/* Modal de Recados */}
       {showMessagesModal && (
