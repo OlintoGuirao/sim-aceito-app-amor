@@ -6,9 +6,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Send, Music, Plus, ThumbsUp, ThumbsDown, Heart, Camera, Clock, Gift } from 'lucide-react';
-import { collection, query, orderBy, addDoc, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, addDoc, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, getDoc, serverTimestamp, setDoc, runTransaction } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion } from 'framer-motion';
+import { toast } from 'react-hot-toast';
 
 // Interfaces
 interface Message {
@@ -79,32 +80,42 @@ const PadrinhoPage: React.FC = () => {
 
   // Carregar checklist
   useEffect(() => {
-    const loadChecklist = async () => {
-      if (!user) return;
+    if (!user) return;
 
-      try {
-        const padrinhoDoc = doc(db, 'padrinhosChecklist', user.uid);
-        const docSnap = await getDoc(padrinhoDoc);
+    const checklistRef = collection(db, 'padrinhosChecklist', user.uid, 'items');
+    
+    // Configurar o listener para atualizações em tempo real
+    const unsubscribe = onSnapshot(checklistRef, (snapshot) => {
+      if (snapshot.empty) {
+        // Se não houver itens, criar os itens padrão
+        const defaultItems = [
+          { id: '1', label: 'Terno/vestido comprado', checked: false },
+          { id: '2', label: 'Presença confirmada', checked: false },
+          { id: '3', label: 'Música enviada', checked: false },
+          { id: '4', label: 'Acessórios escolhidos', checked: false }
+        ];
 
-        if (docSnap.exists()) {
-          setChecklist(docSnap.data().items);
-        } else {
-          const defaultChecklist: ChecklistItem[] = [
-            { id: '1', label: 'Terno/vestido comprado', checked: false },
-            { id: '2', label: 'Presença confirmada', checked: false },
-            { id: '3', label: 'Música enviada', checked: false },
-            { id: '4', label: 'Acessórios escolhidos', checked: false }
-          ];
-
-          await updateDoc(padrinhoDoc, { items: defaultChecklist });
-          setChecklist(defaultChecklist);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar checklist:', error);
+        // Criar cada item individualmente
+        Promise.all(defaultItems.map(item => 
+          setDoc(doc(checklistRef, item.id), item)
+        )).catch(error => {
+          console.error('Erro ao criar itens padrão:', error);
+          toast.error('Erro ao criar checklist. Tente novamente.');
+        });
+      } else {
+        // Converter os documentos em array de itens
+        const items = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as ChecklistItem[];
+        
+        // Ordenar os itens pelo ID
+        items.sort((a, b) => a.id.localeCompare(b.id));
+        setChecklist(items);
       }
-    };
+    });
 
-    loadChecklist();
+    return () => unsubscribe();
   }, [user]);
 
   // Carregar músicas sugeridas
@@ -155,16 +166,35 @@ const PadrinhoPage: React.FC = () => {
   const toggleChecklistItem = async (itemId: string) => {
     if (!user) return;
 
-    const newChecklist = checklist.map(item =>
-      item.id === itemId ? { ...item, checked: !item.checked } : item
-    );
-
     try {
-      const padrinhoDoc = doc(db, 'padrinhosChecklist', user.uid);
-      await updateDoc(padrinhoDoc, { items: newChecklist });
-      setChecklist(newChecklist);
+      const itemRef = doc(db, 'padrinhosChecklist', user.uid, 'items', itemId);
+      
+      // Buscar o item atual
+      const itemSnap = await getDoc(itemRef);
+      if (!itemSnap.exists()) {
+        // Se o item não existir, criar com o estado atual do checklist
+        const currentItem = checklist.find(item => item.id === itemId);
+        if (!currentItem) {
+          throw new Error('Item não encontrado');
+        }
+
+        await setDoc(itemRef, {
+          ...currentItem,
+          checked: !currentItem.checked
+        });
+      } else {
+        // Se o item existir, atualizar
+        const currentItem = itemSnap.data() as ChecklistItem;
+        await updateDoc(itemRef, {
+          checked: !currentItem.checked
+        });
+      }
+
+      // Feedback visual
+      toast.success('Checklist atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar checklist:', error);
+      toast.error('Erro ao atualizar o checklist. Tente novamente.');
     }
   };
 

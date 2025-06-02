@@ -16,7 +16,7 @@ const Index = () => {
   const { user, isAdmin } = useAuth();
   
   // Data do casamento - ajuste conforme necessário
-  const weddingDate = new Date('2024-06-15T16:00:00');
+  const weddingDate = new Date('2026-04-25T17:30:00');
 
   // Efeito para verificar autenticação ao montar o componente
   useEffect(() => {

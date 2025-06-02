@@ -25,6 +25,12 @@ service cloud.firestore {
     match /padrinhosChecklist/{userId} {
       allow read, write: if isAuthenticated() && 
         request.auth.uid == userId;
+      
+      // Regras para a subcoleção de itens
+      match /items/{itemId} {
+        allow read, write: if isAuthenticated() && 
+          request.auth.uid == userId;
+      }
     }
 
     // Regras para sugestões de músicas
