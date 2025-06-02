@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { QRCodeSVG } from 'qrcode.react';
-import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest } from '@/lib/firestore';
+import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest, getGifts, addGift } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift } from "lucide-react";
 import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, onSnapshot, addDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
+import type { Gift as GiftType } from '@/lib/firestore';
 
 interface Message {
   id: string;
@@ -33,6 +34,16 @@ export function AdminGuestManager() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const [tab, setTab] = useState('add');
+  const [gifts, setGifts] = useState<GiftType[]>([]);
+  const [loadingGifts, setLoadingGifts] = useState(true);
+  const [newGift, setNewGift] = useState({
+    name: '',
+    category: '',
+    price: '',
+    image: '',
+    link: ''
+  });
 
   // Configurar listener em tempo real para convidados
   useEffect(() => {
@@ -78,6 +89,26 @@ export function AdminGuestManager() {
 
     return () => unsubscribe();
   }, []);
+
+  // Buscar presentes
+  useEffect(() => {
+    if (tab === 'gifts') {
+      setLoadingGifts(true);
+      const giftsRef = collection(db, 'gifts');
+      const unsubscribe = onSnapshot(giftsRef, (snapshot) => {
+        const giftsList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as GiftType[];
+        setGifts(giftsList);
+        setLoadingGifts(false);
+      }, (error) => {
+        toast.error('Erro ao carregar presentes');
+        setLoadingGifts(false);
+      });
+      return () => unsubscribe();
+    }
+  }, [tab]);
 
   const handleAddGuest = async () => {
     if (!newGuest.name || !newGuest.phone) {
@@ -367,8 +398,42 @@ export function AdminGuestManager() {
     }
   };
 
+  // Adicionar presente
+  const handleAddGift = async () => {
+    if (!newGift.name || !newGift.category || !newGift.price) {
+      toast.error('Preencha nome, categoria e valor');
+      return;
+    }
+    try {
+      await addGift({
+        name: newGift.name,
+        category: newGift.category,
+        price: parseFloat(newGift.price),
+        image: newGift.image,
+        link: newGift.link,
+        status: 'available',
+      });
+      setNewGift({ name: '', category: '', price: '', image: '', link: '' });
+      toast.success('Presente adicionado!');
+      setTab('gifts');
+    } catch (e) {
+      toast.error('Erro ao adicionar presente');
+    }
+  };
+
+  // Remover presente
+  const handleDeleteGift = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'gifts', id));
+      setGifts(gifts.filter(g => g.id !== id));
+      toast.success('Presente removido!');
+    } catch (e) {
+      toast.error('Erro ao remover presente');
+    }
+  };
+
   return (
-    <div className="space-y-6 p-6 min-h-screen bg-wedding-marsala">
+    <div className="min-h-screen w-full bg-wedding-marsala space-y-6 p-6">
       <Card className="p-6 text-center bg-wedding-marsala">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-white">Gerenciamento de Convidados</h3>
         <p className="text-white">
@@ -403,8 +468,8 @@ export function AdminGuestManager() {
         </Card>
       </div>
 
-      <Tabs defaultValue="add" className="w-full">
-        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-20">
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-32">
           <TabsTrigger value="add" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
             Adicionar Convidado
           </TabsTrigger>
@@ -424,6 +489,9 @@ export function AdminGuestManager() {
           <TabsTrigger value="raffle" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
             <Ticket className="w-4 h-4 mr-2" />
             Rifa
+          </TabsTrigger>
+          <TabsTrigger value="gifts" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+            <Gift className="w-4 h-4 mr-2" /> Presentes
           </TabsTrigger>
         </TabsList>
 
@@ -458,12 +526,8 @@ export function AdminGuestManager() {
         </TabsContent>
 
         <TabsContent value="import">
-          <GuestImport onImport={(importedGuests) => {
-            const newGuests = importedGuests.map(guest => ({
-              ...guest,
-              id: undefined // O Firestore vai gerar o ID
-            }));
-            setGuests(prevGuests => [...prevGuests, ...newGuests]);
+          <GuestImport onImport={() => {
+            // Se quiser recarregar convidados, chame aqui a função de reload
           }} />
         </TabsContent>
 
@@ -778,6 +842,59 @@ export function AdminGuestManager() {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="gifts">
+          <Card className="bg-wedding-secondary">
+            <CardHeader className="bg-wedding-secondary">
+              <CardTitle className="text-black">Adicionar Novo Presente</CardTitle>
+            </CardHeader>
+            <CardContent className="bg-wedding-secondary">
+              <div className="space-y-7">
+                <Input placeholder="Nome do presente" value={newGift.name} onChange={e => setNewGift({ ...newGift, name: e.target.value })} className="bg-wedding-primary text-black" />
+                <Input placeholder="Categoria (ex: cozinha, casa)" value={newGift.category} onChange={e => setNewGift({ ...newGift, category: e.target.value })} className="bg-wedding-primary text-black" />
+                <Input placeholder="Valor" type="number" value={newGift.price} onChange={e => setNewGift({ ...newGift, price: e.target.value })} className="bg-wedding-primary text-black" />
+                <Input placeholder="URL da imagem" value={newGift.image} onChange={e => setNewGift({ ...newGift, image: e.target.value })} className="bg-wedding-primary text-black" />
+                <Input placeholder="Link para compra" value={newGift.link} onChange={e => setNewGift({ ...newGift, link: e.target.value })} className="bg-wedding-primary text-black" />
+                <Button onClick={handleAddGift} className="w-full text-black bg-wedding-primary hover:bg-wedding-secondary">Adicionar Presente</Button>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="mt-8">
+            <h3 className="text-lg font-semibold mb-4 text-black">Presentes Cadastrados</h3>
+            {loadingGifts ? (
+              <div className="text-black">Carregando presentes...</div>
+            ) : gifts.length === 0 ? (
+              <div className="text-black">Nenhum presente cadastrado.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {gifts.map(gift => (
+                  <Card key={gift.id} className="bg-wedding-primary border-wedding-primary">
+                    <CardHeader>
+                      <CardTitle className="text-wedding-secondary">{gift.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <img src={gift.image} alt={gift.name} className="w-full h-32 object-contain bg-white rounded" />
+                        <div className="text-black font-semibold">R$ {gift.price?.toFixed(2)}</div>
+                        <div className="text-black text-sm">Categoria: {gift.category}</div>
+                        <div className="flex gap-2 mt-2">
+                          <Button onClick={() => handleDeleteGift(gift.id!)} variant="outline" className="bg-red-500 text-white hover:bg-red-600">
+                            <Trash2 className="w-4 h-4 mr-2" /> Remover
+                          </Button>
+                          {gift.link && (
+                            <Button onClick={() => window.open(gift.link, '_blank')} variant="outline" className="bg-wedding-primary text-white hover:bg-wedding-primary/90">
+                              Ver na Loja
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

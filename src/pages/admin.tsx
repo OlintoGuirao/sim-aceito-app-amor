@@ -3,9 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AdminGuestManager } from '@/components/AdminGuestManager';
+import { useNavigate } from 'react-router-dom';
+import { Gift } from 'lucide-react';
+
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+
   const handleLogin = () => {
     // Aqui você pode implementar uma verificação mais segura
     if (password === 'admin123') {
@@ -14,6 +19,7 @@ export default function AdminPage() {
       alert('Senha incorreta');
     }
   };
+
   if (!isAuthenticated) {
     return <div style={{
       backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))'
@@ -33,5 +39,10 @@ export default function AdminPage() {
         </Card>
       </div>;
   }
-  return <AdminGuestManager />;
+
+  return (
+    <div className="container mx-auto p-4">
+      <AdminGuestManager />
+    </div>
+  );
 }
