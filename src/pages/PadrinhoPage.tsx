@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { collection, query, orderBy, addDoc, onSnapshot, updateDoc, doc, arrayUn
 import { db } from '@/lib/firebase';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
+import useEmblaCarousel from 'embla-carousel-react';
 
 // Interfaces
 interface Message {
@@ -45,6 +46,15 @@ const PadrinhoPage: React.FC = () => {
   const [musicTitle, setMusicTitle] = useState('');
   const [artist, setArtist] = useState('');
   const [suggestedMusics, setSuggestedMusics] = useState<SuggestedMusic[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+
+  const dresscodeImages = [
+    'https://img.ltwebstatic.com/images3_pi/2025/01/07/82/17362321262a1b76b66ac9c105912006bd9a006254_thumbnail_405x.webp',
+    'https://img.ltwebstatic.com/images3_pi/2025/01/07/c5/1736232128d9cb88e830eed010850ea40dc429da17_thumbnail_560x.webp',
+    'https://img.ltwebstatic.com/images3_pi/2024/01/24/da/1706063409dfa5184aa50df866ba90c32a92094bf8_wk_1746698871_thumbnail_900x.webp',
+    'https://img.ltwebstatic.com/images3_pi/2024/01/24/af/1706063405e2ad54118a292d0edaa0bc17a662ac68_wk_1746698870_thumbnail_900x.webp',
+  ];
 
   // Função para formatar o nome dos padrinhos
   const formatPadrinhosNames = (email: string | undefined) => {
@@ -134,6 +144,16 @@ const PadrinhoPage: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    emblaApi.on('select', onSelect);
+    return () => {
+      emblaApi.off('select', onSelect);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [emblaApi]);
 
   // Funções de manipulação
   const handleLogout = async () => {
@@ -302,22 +322,38 @@ const PadrinhoPage: React.FC = () => {
                   </h2>
                 </div>
                 <div className="space-y-6 text-slate-50">
-                  <div className="aspect-video bg-wedding-secondary/20 rounded-xl overflow-hidden transform hover:scale-[1.02] transition-transform">
-                    <img
-                      src="/dresscode/exemplo1.jpg"
-                      alt="Exemplo de Dresscode"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="aspect-video bg-wedding-secondary/20 rounded-xl overflow-hidden flex items-center justify-center md:h-[500px] mx-auto transform hover:scale-[1.02] transition-transform">
+                    <div className="overflow-hidden w-full h-full" ref={emblaRef}>
+                      <div className="flex h-full">
+                        {dresscodeImages.map((src, idx) => (
+                          <img
+                            key={src}
+                            src={src}
+                            alt={`Exemplo de Dresscode ${idx + 1}`}
+                            className="w-full h-full object-contain flex-[0_0_100%] min-w-0 bg-white"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-center gap-2 mt-2">
+                    {dresscodeImages.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => emblaApi && emblaApi.scrollTo(idx)}
+                        className={`w-2 h-2 rounded-full transition-all ${selectedIndex === idx ? 'bg-wedding-gold w-4' : 'bg-gray-300 hover:bg-gray-400'}`}
+                        aria-label={`Ir para o exemplo ${idx + 1}`}
+                      />
+                    ))}
                   </div>
                   <div className="bg-wedding-secondary/10 p-4 rounded-lg">
                     <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
                       <Gift className="w-5 h-5 text-wedding-gold" />
                       Orientações
                     </h3>
-                    <ul className="list-disc list-inside space-y-2 marker:text-wedding-gold">
-                      <li>Padrinhos: Terno azul marinho com gravata dourada</li>
-                      <li>Madrinhas: Vestido longo em tons de rose gold</li>
-                      <li>Evitar cores brancas ou muito claras</li>
+                    <ul className="list-disc space-y-3 marker:text-wedding-gold">
+                      <li>Padrinhos: Traje esporte fino na cor preta</li>
+                      <li>Madrinhas: Vestido longo na cor preta</li>
                       <li>Sapatos sociais escuros para padrinhos</li>
                     </ul>
                   </div>
@@ -325,16 +361,16 @@ const PadrinhoPage: React.FC = () => {
                     <h3 className="text-lg font-semibold mb-3">Lojas Sugeridas</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <a
-                        href="https://loja1.com"
+                        href="https://br.shein.com/ark/3715?goods_id=52661242&test=5051&url_from=adhub1194581989&scene=1&pf=google&ad_type=DPA&language=pt-br&siteuid=br&landing_page_id=3715&ad_test_id=9800&requestId=olw-4qexi4abracw&gad_source=1&skucode=I54vr06nq35g&coloration=1&onelink=0/googlefeed_br&gad_campaignid=22215650136&gclid=CjwKCAjwl_XBBhAUEiwAWK2hznSHm0M-WwYkr6G3OaZ4GKJk7S5MLbpFPCMksE_mk0u16SWZY4FxuhoC-DEQAvD_BwE&gbraid=0AAAAADm0yO6b-vhJONRXrjTcimfjh5ZoR&currency=BRL&lang=pt"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-wedding-gold hover:underline hover:text-wedding-gold/80 transition-colors"
                       >
                         <Gift className="w-4 h-4" />
-                        Loja 1 - Ternos
+                        Loja 1 - Camisa
                       </a>
                       <a
-                        href="https://loja2.com"
+                        href="https://br.shein.com/EVER-PRETTYVestidodeDamadeHonraFormalPretocomDecoteProfundoeFendaLateral,VestidodeConvidadodeCasamento-p-29542985-cat-3091.html?share_from=null&url_from=GM71101396375&ref=www&rep=dir&ret=br"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 text-wedding-gold hover:underline hover:text-wedding-gold/80 transition-colors"
