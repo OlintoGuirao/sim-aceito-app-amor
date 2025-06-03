@@ -77,6 +77,17 @@ const PartyGallery: React.FC = () => {
     };
   }, [emblaApi]);
 
+  // Função para verificar se a URL da imagem é válida
+  const checkImageUrl = async (url: string): Promise<boolean> => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch (error) {
+      console.error('Erro ao verificar URL da imagem:', error);
+      return false;
+    }
+  };
+
   const fetchPhotos = async () => {
     try {
       setLoading(true);
@@ -88,7 +99,25 @@ const PartyGallery: React.FC = () => {
         ...doc.data(),
         uploadedAt: doc.data().uploadedAt.toDate()
       })) as PartyPhoto[];
-      setPhotos(fetchedPhotos);
+
+      // Verificar URLs válidas e filtrar fotos inválidas
+      const validPhotos = await Promise.all(
+        fetchedPhotos.map(async (photo) => {
+          const isValid = await checkImageUrl(photo.url);
+          if (!isValid) {
+            // Se a foto não é válida, deletar do Firestore
+            try {
+              await deleteDoc(doc(db, 'party_photos', photo.id));
+            } catch (error) {
+              console.error('Erro ao deletar foto inválida:', error);
+            }
+          }
+          return isValid ? photo : null;
+        })
+      );
+
+      // Filtrar fotos nulas e atualizar o estado
+      setPhotos(validPhotos.filter((photo): photo is PartyPhoto => photo !== null));
     } catch (error) {
       console.error('Erro ao buscar fotos:', error);
       toast.error('Erro ao carregar fotos');
