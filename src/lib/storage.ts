@@ -9,8 +9,18 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
     const uniquePath = `party_photos/${timestamp}_${file.name}`;
     const storageRef = ref(storage, uniquePath);
     
-    // Fazer o upload do arquivo
-    const snapshot = await uploadBytes(storageRef, file);
+    // Configurar metadados
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+      }
+    };
+    
+    // Fazer o upload do arquivo com metadados
+    const snapshot = await uploadBytes(storageRef, file, metadata);
     
     // Obter a URL de download
     const downloadURL = await getDownloadURL(snapshot.ref);

@@ -61,6 +61,7 @@ const PartyGallery: React.FC = () => {
   const [tempCaption, setTempCaption] = useState('');
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPhotos();
@@ -80,8 +81,12 @@ const PartyGallery: React.FC = () => {
   // Função para verificar se a URL da imagem é válida
   const checkImageUrl = async (url: string): Promise<boolean> => {
     try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok;
+      const img = new Image();
+      return new Promise((resolve) => {
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = url;
+      });
     } catch (error) {
       console.error('Erro ao verificar URL da imagem:', error);
       return false;
@@ -130,6 +135,9 @@ const PartyGallery: React.FC = () => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
+      // Criar URL para preview
+      const imageUrl = URL.createObjectURL(file);
+      setPreviewUrl(imageUrl);
     }
   };
 
@@ -166,6 +174,10 @@ const PartyGallery: React.FC = () => {
       toast.success('Foto enviada com sucesso!');
       setNewCaption('');
       setSelectedFile(null);
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
       fetchPhotos(); // Recarrega as fotos
     } catch (error) {
       console.error('Erro ao enviar foto:', error);
@@ -371,6 +383,14 @@ const PartyGallery: React.FC = () => {
     }
   }, [showMessagesModal]);
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   return <div className="space-y-6">
       <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Hora da Festa</h3>
@@ -434,30 +454,67 @@ const PartyGallery: React.FC = () => {
       <Card className="p-6 bg-wedding-secondary/20">
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Compartilhe Suas Fotos</h4>
         <div className="space-y-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <Button variant="outline" className="bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={() => document.getElementById('photo-upload')?.click()} disabled={uploading}>
-              <Camera className="w-4 h-4 mr-2" />
-              {uploading ? 'Enviando...' : 'Escolher Foto'}
-            </Button>
-            <Button variant="outline" className="bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={() => document.getElementById('camera-capture')?.click()} disabled={uploading}>
-              <Camera className="w-4 h-4 mr-2" />
-              {uploading ? 'Enviando...' : 'Tirar Foto'}
-            </Button>
-            <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} disabled={uploading} />
-            <input id="camera-capture" type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} disabled={uploading} />
-            {selectedFile && <div className="flex-1 min-w-0">
-                <span className="text-slate-50 truncate block">
-                  {selectedFile.name}
-                </span>
-              </div>}
-          </div>
-
-          <Input placeholder="Adicione uma legenda para sua foto" value={newCaption} onChange={e => setNewCaption(e.target.value)} className="bg-wedding-primary text-slate-50" disabled={uploading} />
-
-          <Button className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90" onClick={handleUpload} disabled={!selectedFile || !newCaption || uploading}>
-            <Upload className="w-4 h-4 mr-2" />
-            {uploading ? 'Enviando...' : 'Enviar Foto'}
-          </Button>
+          {selectedFile ? (
+            <div className="space-y-4">
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black/20">
+                <img
+                  src={previewUrl || ''}
+                  alt="Preview"
+                  className="w-full h-full object-contain"
+                />
+                <button
+                  onClick={() => {
+                    setSelectedFile(null);
+                    if (previewUrl) {
+                      URL.revokeObjectURL(previewUrl);
+                      setPreviewUrl(null);
+                    }
+                  }}
+                  className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <Input 
+                placeholder="Adicione uma legenda para sua foto" 
+                value={newCaption} 
+                onChange={e => setNewCaption(e.target.value)} 
+                className="bg-wedding-primary/20 text-slate-50 placeholder:text-slate-300 border-wedding-primary/30 focus:border-wedding-primary" 
+                disabled={uploading} 
+              />
+              <Button 
+                className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90" 
+                onClick={handleUpload} 
+                disabled={!selectedFile || !newCaption || uploading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading ? 'Enviando...' : 'Enviar Foto'}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4 flex-wrap">
+              <Button 
+                variant="outline" 
+                className="bg-wedding-primary text-white hover:bg-wedding-primary/90 flex-1 min-w-[200px]" 
+                onClick={() => document.getElementById('photo-upload')?.click()} 
+                disabled={uploading}
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                {uploading ? 'Enviando...' : 'Escolher Foto'}
+              </Button>
+              <Button 
+                variant="outline" 
+                className="bg-wedding-primary text-white hover:bg-wedding-primary/90 flex-1 min-w-[200px]" 
+                onClick={() => document.getElementById('camera-capture')?.click()} 
+                disabled={uploading}
+              >
+                <Camera className="w-4 h-4 mr-2" />
+                {uploading ? 'Enviando...' : 'Tirar Foto'}
+              </Button>
+              <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+              <input id="camera-capture" type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+            </div>
+          )}
         </div>
       </Card>
 
