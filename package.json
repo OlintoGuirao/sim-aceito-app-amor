@@ -11,7 +11,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cloudinary/url-gen": "^1.21.0",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -45,7 +44,6 @@
     "@types/nodemailer": "^6.4.17",
     "@types/papaparse": "^5.3.16",
     "class-variance-authority": "^0.7.1",
-    "cloudinary-react": "^1.8.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",

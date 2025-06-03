@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Camera, Upload, Heart, MessageCircle, ChevronLeft, ChevronRight, QrCode, X, Check, Trash2 } from 'lucide-react';
 import { collection, addDoc, query, orderBy, limit, startAfter, getDocs, updateDoc, doc, increment, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { uploadImage } from '@/lib/cloudinary';
+import { uploadFile } from '@/lib/storage';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback } from 'react';
 
@@ -121,8 +121,8 @@ const PartyGallery: React.FC = () => {
     try {
       setUploading(true);
 
-      // Upload da imagem para o Cloudinary
-      const imageUrl = await uploadImage(selectedFile);
+      // Upload da imagem para o Firebase Storage
+      const imageUrl = await uploadFile(selectedFile, 'party_photos');
 
       // Salvar informações no Firestore
       const photoData = {
