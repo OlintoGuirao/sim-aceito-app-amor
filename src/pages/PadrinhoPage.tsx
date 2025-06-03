@@ -399,18 +399,20 @@ const PadrinhoPage: React.FC = () => {
                 </div>
                 <form onSubmit={handleMusicSubmit} className="mb-6 space-y-4">
                   <div className="bg-wedding-secondary/10 p-4 rounded-lg space-y-4">
-                    <Input
-                      value={musicTitle}
-                      onChange={(e) => setMusicTitle(e.target.value)}
-                      placeholder="Nome da música"
-                      className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
-                    />
-                    <Input
-                      value={artist}
-                      onChange={(e) => setArtist(e.target.value)}
-                      placeholder="Artista"
-                      className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        value={musicTitle}
+                        onChange={(e) => setMusicTitle(e.target.value)}
+                        placeholder="Nome da música"
+                        className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
+                      />
+                      <Input
+                        value={artist}
+                        onChange={(e) => setArtist(e.target.value)}
+                        placeholder="Artista"
+                        className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
+                      />
+                    </div>
                     <Button
                       type="submit"
                       className="w-full bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"
@@ -429,18 +431,18 @@ const PadrinhoPage: React.FC = () => {
                       className="transform hover:-translate-y-1 transition-all"
                     >
                       <Card className="p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30">
-                        <div className="flex items-start justify-between">
-                          <div>
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                          <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <Music className="w-4 h-4 text-wedding-gold" />
                               <h3 className="font-semibold text-slate-50">{music.title}</h3>
                             </div>
                             <p className="text-sm text-slate-50/70">{music.artist}</p>
                             <p className="text-xs text-slate-50/50 mt-1">
-                              Sugerido por: {music.suggestedBy}
+                              Sugerido por: {formatPadrinhosNames(music.suggestedBy)}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
                             <Button
                               variant="ghost"
                               size="sm"
