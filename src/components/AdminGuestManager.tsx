@@ -1,4 +1,18 @@
 import { useState, useEffect } from 'react';
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  deleteDoc, 
+  doc, 
+  updateDoc, 
+  query, 
+  orderBy,
+  onSnapshot,
+  Timestamp,
+  where 
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,10 +23,9 @@ import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest, getGifts, a
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
 import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift } from "lucide-react";
-import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, onSnapshot, addDoc, Timestamp, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import type { Gift as GiftType } from '@/lib/firestore';
+import PartyQRCode from './PartyQRCode';
 
 interface Message {
   id: string;
@@ -199,6 +212,7 @@ export function AdminGuestManager() {
       toast.error('Este convidado não possui email cadastrado');
       return;
     }
+
     setSendingEmail(guest.id);
     try {
       const qrCodeUrl = `${window.location.origin}/confirm/${guest.id}`;
@@ -213,6 +227,7 @@ export function AdminGuestManager() {
           qrCodeUrl
         })
       });
+
       if (!response.ok) {
         throw new Error('Erro ao enviar email');
       }
@@ -502,20 +517,20 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="space-y-4 bg-wedding-secondary">
-                <Input 
-                  placeholder="Nome do convidado" 
+                <Input
+                  placeholder="Nome do convidado"
                   value={newGuest.name} 
                   onChange={e => setNewGuest({...newGuest, name: e.target.value})} 
                   className="bg-wedding-primary text-black" 
                 />
-                <Input 
+                <Input
                   placeholder="Telefone (com DDD)" 
                   value={newGuest.phone} 
                   onChange={e => setNewGuest({...newGuest, phone: e.target.value})} 
                   className="bg-wedding-primary text-black" 
                 />
                 <Button 
-                  onClick={handleAddGuest} 
+                  onClick={handleAddGuest}
                   className="w-full text-black bg-wedding-primary hover:bg-wedding-secondary"
                 >
                   Adicionar Convidado
@@ -684,7 +699,7 @@ export function AdminGuestManager() {
                           </p>
                         )}
                         <div className="flex flex-wrap gap-2">
-                          <Button 
+                          <Button
                             variant={guest.status === 'confirmed' ? 'default' : 'outline'} 
                             onClick={() => handleStatusChange(guest.id!, 'confirmed')} 
                             className={`flex-1 sm:flex-none ${
@@ -735,46 +750,11 @@ export function AdminGuestManager() {
         <TabsContent value="qrcode">
           <Card>
             <CardHeader className="bg-wedding-secondary">
-              <CardTitle className="text-black">Gerar QR Code</CardTitle>
+              <CardTitle className="text-black">QR Code para Compartilhar Fotos</CardTitle>
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
-              <div className="space-y-4">
-                <select 
-                  onChange={e => {
-                    const guest = guests.find(g => g.id === e.target.value);
-                    setSelectedGuest(guest || null);
-                  }} 
-                  className="w-full p-3 border rounded bg-wedding-secondary text-black"
-                >
-                  <option value="">Selecione um convidado</option>
-                  {guests.map(guest => (
-                    <option key={guest.id} value={guest.id}>
-                      {guest.name}
-                    </option>
-                  ))}
-                </select>
-
-                {selectedGuest && (
-                  <div className="flex flex-col items-center space-y-4 p-4">
-                    <QRCodeSVG 
-                      value={`${window.location.origin}/confirm/${selectedGuest.id}`} 
-                      size={250} 
-                    />
-                    <p className="text-base text-black text-center font-medium">
-                      QR Code para: {selectedGuest.name}
-                    </p>
-                    {selectedGuest.email && (
-                      <Button 
-                        onClick={() => handleSendQRCode(selectedGuest)} 
-                        disabled={sendingEmail === selectedGuest.id} 
-                        className="w-full sm:w-auto bg-wedding-primary text-white hover:bg-wedding-secondary"
-                      >
-                        <Mail className="h-4 w-4 mr-2" />
-                        <span className="whitespace-nowrap">Enviar por Email</span>
-                      </Button>
-                    )}
-                  </div>
-                )}
+              <div className="flex justify-center">
+                <PartyQRCode />
               </div>
             </CardContent>
           </Card>

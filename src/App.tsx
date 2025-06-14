@@ -6,6 +6,7 @@ import { ConfirmPage } from './pages/confirm';
 import AdminRaffle from '@/pages/AdminRaffle';
 import AdminLogin from './pages/AdminLogin';
 import PadrinhoPage from './pages/PadrinhoPage';
+import PartyGallery from '@/components/PartyGallery';
 import { useAuth } from './lib/auth';
 
 // Componente para rota protegida da rifa (admin)
@@ -77,6 +78,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/confirm/:guestId" element={<ConfirmPage />} />
         <Route path="/login" element={<AdminLogin />} />
+        <Route path="/party-gallery/:userId" element={<PartyGallery />} />
 
         {/* ===== ROTAS DA RIFA (ADMIN) ===== */}
         <Route path="/raffle" element={

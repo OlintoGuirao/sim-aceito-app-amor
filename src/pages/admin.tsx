@@ -1,47 +1,9 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React from 'react';
 import { AdminGuestManager } from '@/components/AdminGuestManager';
-import { useNavigate } from 'react-router-dom';
-import { Gift } from 'lucide-react';
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate();
-
-  const handleLogin = () => {
-    // Aqui você pode implementar uma verificação mais segura
-    if (password === 'admin123') {
-      setIsAuthenticated(true);
-    } else {
-      alert('Senha incorreta');
-    }
-  };
-
-  if (!isAuthenticated) {
-    return <div style={{
-      backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))'
-    }} className="min-h-screen flex items-center justify-center bg-wedding-secondary">
-        <Card className="w-full max-w-md">
-          <CardHeader className="bg-wedding-secondary">
-            <CardTitle className="text-center text-black">Área Administrativa</CardTitle>
-          </CardHeader>
-          <CardContent className="bg-wedding-secondary">
-            <div className="space-y-4">
-              <Input type="password" placeholder="Digite a senha" value={password} onChange={e => setPassword(e.target.value)} className="bg-wedding-primary" />
-              <Button onClick={handleLogin} className="w-full bg-wedding-primary text-white">
-                Entrar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>;
-  }
-
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 md:p-6 lg:p-8">
       <AdminGuestManager />
     </div>
   );
