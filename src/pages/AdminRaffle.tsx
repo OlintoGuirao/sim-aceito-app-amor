@@ -5,11 +5,12 @@ import { useAuth } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
 import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, where, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import toast from 'react-hot-toast';
-import { Check, X, Eye, Trash2, Trophy, DollarSign, Search, Filter, Download, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { Check, X, Eye, Trash2, Trophy, DollarSign, Search, Filter, Download, RefreshCw, LogOut } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Ticket, CheckCircle, Clock } from 'lucide-react';
 
 interface RaffleTicket {
   id: string;
@@ -38,6 +39,9 @@ const AdminRaffle: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('date');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [ticketsPerPage, setTicketsPerPage] = useState(10);
 
   const handleLogout = async () => {
     try {
@@ -49,35 +53,60 @@ const AdminRaffle: React.FC = () => {
   };
 
   useEffect(() => {
-    // Configurar listener em tempo real para atualizações
-    const ticketsRef = collection(db, 'raffle_tickets');
-    const q = query(ticketsRef, orderBy('purchasedAt', 'desc'));
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedTickets = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        purchasedAt: doc.data().purchasedAt.toDate(),
-        expiresAt: doc.data().expiresAt.toDate()
-      })) as RaffleTicket[];
-      
-      setTickets(fetchedTickets);
-      
-      // Buscar os ganhadores
-      const winnerTickets = fetchedTickets.filter(t => t.isWinner);
-      if (winnerTickets.length > 0) {
-        setWinners(winnerTickets);
-        setCurrentPrize(Math.max(...winnerTickets.map(w => w.winningPrize || 0)) + 1);
-      }
-      
-      setLoading(false);
-    }, (error) => {
-      console.error('Erro ao observar tickets:', error);
-      toast.error('Erro ao monitorar atualizações');
-    });
+    const fetchTickets = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const ticketsRef = collection(db, 'raffle_tickets');
+        const q = query(ticketsRef, orderBy('purchasedAt', 'desc'));
+        
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          try {
+            const fetchedTickets = snapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                number: data.number || 0,
+                guestName: data.guestName || '',
+                guestEmail: data.guestEmail || '',
+                purchasedAt: data.purchasedAt?.toDate() || new Date(),
+                isWinner: data.isWinner || false,
+                winningPrize: data.winningPrize || 0,
+                paymentStatus: data.paymentStatus || 'pending',
+                paymentProof: data.paymentProof || '',
+                expiresAt: data.expiresAt?.toDate() || new Date()
+              } as RaffleTicket;
+            });
+            
+            setTickets(fetchedTickets);
+            
+            const winnerTickets = fetchedTickets.filter(t => t.isWinner && t.winningPrize);
+            if (winnerTickets.length > 0) {
+              setWinners(winnerTickets);
+              const maxPrize = Math.max(...winnerTickets.map(w => w.winningPrize || 0));
+              setCurrentPrize(maxPrize);
+            }
+          } catch (err) {
+            console.error('Erro ao processar tickets:', err);
+            setError('Erro ao processar dados dos tickets');
+          } finally {
+            setLoading(false);
+          }
+        }, (error) => {
+          console.error('Erro ao observar tickets:', error);
+          setError('Erro ao monitorar atualizações');
+          setLoading(false);
+        });
 
-    // Limpar listener ao desmontar
-    return () => unsubscribe();
+        return () => unsubscribe();
+      } catch (err) {
+        console.error('Erro ao buscar tickets:', err);
+        setError('Erro ao carregar tickets');
+        setLoading(false);
+      }
+    };
+
+    fetchTickets();
   }, []);
 
   const approvePayment = async (ticketId: string) => {
@@ -116,8 +145,10 @@ const AdminRaffle: React.FC = () => {
 
     try {
       setIsDrawing(true);
+      setError(null);
+
       const confirmedTickets = tickets.filter(t => 
-        t.paymentStatus === 'confirmed' && !t.isWinner // Não sortear números que já ganharam
+        t.paymentStatus === 'confirmed' && !t.isWinner && t.number > 0
       );
       
       if (confirmedTickets.length === 0) {
@@ -125,39 +156,62 @@ const AdminRaffle: React.FC = () => {
         return;
       }
 
-      // Simula um sorteio com animação
+      const existingWinner = winners.find(w => w && w.winningPrize === currentPrize);
+      if (existingWinner) {
+        toast.error('Este prêmio já foi sorteado!');
+        return;
+      }
+
+      let currentWinner: RaffleTicket | null = null;
       const drawInterval = setInterval(() => {
         const randomIndex = Math.floor(Math.random() * confirmedTickets.length);
-        setWinners(prev => {
-          const newWinners = [...prev];
-          newWinners[currentPrize - 1] = confirmedTickets[randomIndex];
-          return newWinners;
-        });
+        currentWinner = confirmedTickets[randomIndex];
+        if (currentWinner) {
+          setWinners(prev => {
+            const newWinners = [...prev];
+            newWinners[currentPrize - 1] = {
+              ...currentWinner!,
+              winningPrize: currentPrize
+            };
+            return newWinners;
+          });
+        }
       }, 100);
 
-      // Após 3 segundos, define o ganhador final
       setTimeout(async () => {
-        clearInterval(drawInterval);
-        const finalWinner = confirmedTickets[Math.floor(Math.random() * confirmedTickets.length)];
-        
-        // Atualiza o ticket como ganhador no banco de dados
-        const ticketRef = doc(db, 'raffle_tickets', finalWinner.id);
-        await updateDoc(ticketRef, { 
-          isWinner: true,
-          winningPrize: currentPrize
-        });
-        
-        setWinners(prev => {
-          const newWinners = [...prev];
-          newWinners[currentPrize - 1] = finalWinner;
-          return newWinners;
-        });
-        setShowDrawDialog(true);
-        toast.success(`${currentPrize}º Prêmio sorteado com sucesso!`);
-        setCurrentPrize(prev => prev + 1);
+        try {
+          clearInterval(drawInterval);
+          if (!currentWinner || !currentWinner.id) {
+            throw new Error('Erro ao selecionar ganhador');
+          }
+
+          const ticketRef = doc(db, 'raffle_tickets', currentWinner.id);
+          await updateDoc(ticketRef, { 
+            isWinner: true,
+            winningPrize: currentPrize
+          });
+          
+          setWinners(prev => {
+            const newWinners = [...prev];
+            newWinners[currentPrize - 1] = {
+              ...currentWinner!,
+              winningPrize: currentPrize
+            };
+            return newWinners;
+          });
+          
+          setShowDrawDialog(true);
+          toast.success(`${currentPrize}º Prêmio sorteado com sucesso!`);
+          setCurrentPrize(prev => prev + 1);
+        } catch (err) {
+          console.error('Erro ao finalizar sorteio:', err);
+          setError('Erro ao finalizar sorteio');
+          toast.error('Erro ao finalizar sorteio');
+        }
       }, 3000);
-    } catch (error) {
-      console.error('Erro ao realizar sorteio:', error);
+    } catch (err) {
+      console.error('Erro ao realizar sorteio:', err);
+      setError('Erro ao realizar sorteio');
       toast.error('Erro ao realizar sorteio');
     } finally {
       setIsDrawing(false);
@@ -206,35 +260,66 @@ const AdminRaffle: React.FC = () => {
 
   const filteredTickets = tickets
     .filter(ticket => {
+      if (!ticket) return false;
+      
       const matchesSearch = 
-        ticket.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.guestEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ticket.number.toString().includes(searchTerm);
+        (ticket.guestName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (ticket.guestEmail?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (ticket.number?.toString() || '').includes(searchTerm);
       
       const matchesStatus = statusFilter === 'all' || ticket.paymentStatus === statusFilter;
       
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
+      if (!a || !b) return 0;
+      
       if (sortBy === 'date') {
-        return b.purchasedAt.getTime() - a.purchasedAt.getTime();
+        return (b.purchasedAt?.getTime() || 0) - (a.purchasedAt?.getTime() || 0);
       }
       if (sortBy === 'number') {
-        return a.number - b.number;
+        return (a.number || 0) - (b.number || 0);
       }
       if (sortBy === 'name') {
-        return a.guestName.localeCompare(b.guestName);
+        return (a.guestName || '').localeCompare(b.guestName || '');
       }
       return 0;
     });
 
-  const confirmPayment = async (ticketId: string) => {
+  const paginatedTickets = filteredTickets.slice(
+    (currentPage - 1) * ticketsPerPage,
+    currentPage * ticketsPerPage
+  );
+
+  const totalPages = Math.ceil(filteredTickets.length / ticketsPerPage);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleSort = (field: 'date' | 'number' | 'name') => {
+    setSortBy(field);
+  };
+
+  const handleStatusFilter = (status: 'all' | 'pending' | 'confirmed' | 'expired') => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const handleTicketsPerPageChange = (value: number) => {
+    setTicketsPerPage(value);
+    setCurrentPage(1);
+  };
+
+  const handleConfirmPayment = async (ticketId: string) => {
     try {
       const ticketRef = doc(db, 'raffle_tickets', ticketId);
-      await updateDoc(ticketRef, {
-        paymentStatus: 'confirmed'
-      });
-      
+      await updateDoc(ticketRef, { paymentStatus: 'confirmed' });
       toast.success('Pagamento confirmado com sucesso!');
     } catch (error) {
       console.error('Erro ao confirmar pagamento:', error);
@@ -242,108 +327,183 @@ const AdminRaffle: React.FC = () => {
     }
   };
 
+  const handleRejectPayment = async (ticketId: string) => {
+    try {
+      const ticketRef = doc(db, 'raffle_tickets', ticketId);
+      await updateDoc(ticketRef, { paymentStatus: 'pending' });
+      toast.success('Pagamento rejeitado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao rejeitar pagamento:', error);
+      toast.error('Erro ao rejeitar pagamento');
+    }
+  };
+
+  const handleExpireTicket = async (ticketId: string) => {
+    try {
+      const ticketRef = doc(db, 'raffle_tickets', ticketId);
+      await updateDoc(ticketRef, { paymentStatus: 'expired' });
+      toast.success('Ticket expirado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao expirar ticket:', error);
+      toast.error('Erro ao expirar ticket');
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId: string) => {
+    try {
+      const ticketRef = doc(db, 'raffle_tickets', ticketId);
+      await deleteDoc(ticketRef);
+      toast.success('Ticket excluído com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir ticket:', error);
+      toast.error('Erro ao excluir ticket');
+    }
+  };
+
+  const handleViewPaymentProof = (proofUrl: string) => {
+    window.open(proofUrl, '_blank');
+  };
+
+  const handleDownloadCSV = () => {
+    const headers = ['Número', 'Nome', 'Email', 'Data de Compra', 'Status', 'Prêmio'];
+    const data = filteredTickets.map(ticket => {
+      if (!ticket) return ['', '', '', '', '', ''];
+      
+      return [
+        ticket.number?.toString() || '',
+        ticket.guestName || '',
+        ticket.guestEmail || '',
+        ticket.purchasedAt?.toLocaleDateString() || '',
+        ticket.paymentStatus || '',
+        ticket.isWinner ? `${ticket.winningPrize}º Prêmio` : ''
+      ];
+    });
+
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `rifas_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-wedding-primary p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 text-red-500">
+            <h2 className="text-lg font-semibold mb-2">Erro</h2>
+            <p>{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-wedding-marsala p-4">
-      <Card className="p-3 md:p-6 bg-wedding-primary">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4 md:mb-6">
-          <h1 className="text-xl md:text-2xl font-elegant font-semibold text-slate-50">
-            Gerenciamento da Rifa
-          </h1>
-          <div className="flex flex-wrap gap-2">
+    <div className="min-h-screen bg-wedding-primary p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-50">Painel de Rifas</h1>
+            <p className="text-slate-50/70">Gerencie as rifas e realize os sorteios</p>
+          </div>
+          <div className="flex gap-2">
             <Button
-              onClick={handleRefresh}
-              variant="outline"
-              size="sm"
-              className="flex-1 md:flex-none bg-white text-wedding-marsala border-2 border-wedding-marsala hover:bg-wedding-marsala hover:text-white group rounded-full shadow-md px-5 py-2 transition-colors duration-200"
-              disabled={isRefreshing}
+              onClick={handleDownloadCSV}
+              className="bg-wedding-secondary/20 hover:bg-wedding-secondary/30 text-slate-50"
             >
-              <RefreshCw className={`w-4 h-4 mr-2 group-hover:text-white text-wedding-marsala ${isRefreshing ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-            <Button
-              onClick={exportToCSV}
-              variant="outline"
-              size="sm"
-              className="flex-1 md:flex-none bg-white text-wedding-marsala border-2 border-wedding-marsala hover:bg-wedding-marsala hover:text-white group rounded-full shadow-md px-5 py-2 transition-colors duration-200"
-            >
-              <Download className="w-4 h-4 mr-2 group-hover:text-white text-wedding-marsala" />
-              Exportar
+              <Download className="w-4 h-4 mr-2" />
+              Exportar CSV
             </Button>
             <Button
               onClick={handleLogout}
-              variant="outline"
-              className="flex-1 md:flex-none bg-white text-wedding-marsala border-2 border-wedding-marsala hover:bg-wedding-marsala hover:text-white group rounded-full shadow-md px-5 py-2 transition-colors duration-200"
+              className="bg-red-500/20 hover:bg-red-500/30 text-red-500"
             >
+              <LogOut className="w-4 h-4 mr-2" />
               Sair
             </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-4 md:mb-6">
-          <Card className="p-3 md:p-4 bg-wedding-secondary/20">
-            <div className="text-xl md:text-2xl font-bold text-slate-50">{pendingCount}</div>
-            <div className="text-xs md:text-sm text-slate-50/70">Pendentes</div>
-          </Card>
-          <Card className="p-3 md:p-4 bg-wedding-secondary/20">
-            <div className="text-xl md:text-2xl font-bold text-slate-50">{underReviewCount}</div>
-            <div className="text-xs md:text-sm text-slate-50/70">Em Análise</div>
-          </Card>
-          <Card className="p-3 md:p-4 bg-wedding-secondary/20">
-            <div className="text-xl md:text-2xl font-bold text-slate-50">{confirmedCount}</div>
-            <div className="text-xs md:text-sm text-slate-50/70">Confirmados</div>
-          </Card>
-          {showTotalValue && (
-            <Card className="p-3 md:p-4 bg-wedding-secondary/20">
-              <div className="flex items-center gap-2">
-                <DollarSign className="w-4 h-4 md:w-5 md:h-5 text-wedding-gold" />
+        <Card className="p-3 md:p-6 bg-wedding-primary">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+            <div>
+              <h2 className="text-lg md:text-xl font-semibold text-slate-50">Resumo</h2>
+              <p className="text-slate-50/70">Estatísticas das rifas</p>
+            </div>
+            <Button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="bg-wedding-secondary/20 hover:bg-wedding-secondary/30 text-slate-50"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Atualizando...' : 'Atualizar'}
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="p-4 bg-wedding-secondary/20">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xl md:text-2xl font-bold text-slate-50">R$ {totalValue.toFixed(2)}</div>
-                  <div className="text-xs md:text-sm text-slate-50/70">Total Arrecadado</div>
+                  <p className="text-sm text-slate-50/70">Total de Rifas</p>
+                  <p className="text-2xl font-bold text-slate-50">{tickets.length}</p>
                 </div>
+                <Ticket className="w-8 h-8 text-wedding-gold" />
+              </div>
+            </Card>
+
+            <Card className="p-4 bg-wedding-secondary/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-50/70">Confirmados</p>
+                  <p className="text-2xl font-bold text-slate-50">{confirmedCount}</p>
+                </div>
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+            </Card>
+
+            <Card className="p-4 bg-wedding-secondary/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-50/70">Pendentes</p>
+                  <p className="text-2xl font-bold text-slate-50">{pendingCount}</p>
+                </div>
+                <Clock className="w-8 h-8 text-yellow-500" />
+              </div>
+            </Card>
+
+            <Card className="p-4 bg-wedding-secondary/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-50/70">Próximo Prêmio</p>
+                  <p className="text-2xl font-bold text-slate-50">{currentPrize}º</p>
+                </div>
+                <Trophy className="w-8 h-8 text-wedding-gold" />
+              </div>
+            </Card>
+          </div>
+
+          {showTotalValue && (
+            <Card className="p-4 bg-wedding-secondary/20 mt-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-50/70">Total Arrecadado</p>
+                  <p className="text-2xl font-bold text-slate-50">R$ {totalValue.toFixed(2)}</p>
+                </div>
+                <DollarSign className="w-8 h-8 text-wedding-gold" />
               </div>
             </Card>
           )}
-        </div>
-
-        {winners.length > 0 && (
-          <Card className="p-4 md:p-6 bg-wedding-secondary/20 mb-4 md:mb-6">
-            <div className="text-center mb-6">
-              <h4 className="text-2xl md:text-3xl font-elegant font-semibold text-wedding-gold mb-2">
-                🎉 Ganhadores da Rifa! 🎉
-              </h4>
-              <p className="text-sm md:text-base text-slate-50/80">
-                Parabéns aos nossos ganhadores!
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {winners.map((winner, index) => (
-                <Card key={winner.id} className="p-4 bg-wedding-primary hover:bg-wedding-primary/90 transition-all">
-                  <div className="flex items-start gap-4">
-                    <div className="shrink-0">
-                      <Trophy className="w-8 h-8 text-wedding-gold animate-bounce" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-lg md:text-xl font-bold text-wedding-gold mb-2">
-                        {index + 1}º Prêmio
-                      </p>
-                      <div className="space-y-1">
-                        <p className="text-base md:text-lg text-slate-50">
-                          <span className="text-slate-50/70">Número:</span>{' '}
-                          <span className="font-semibold">{winner.number}</span>
-                        </p>
-                        <p className="text-base md:text-lg text-slate-50">
-                          <span className="text-slate-50/70">Ganhador:</span>{' '}
-                          <span className="font-semibold">{winner.guestName}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </Card>
-        )}
+        </Card>
 
         <div className="flex flex-col md:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
           <div className="flex-1 space-y-3 md:space-y-0 md:flex md:gap-4">
@@ -406,6 +566,86 @@ const AdminRaffle: React.FC = () => {
           </Button>
         </div>
 
+        {winners.length > 0 && (
+          <Card className="p-3 md:p-6 bg-wedding-primary mb-4 md:mb-6 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-wedding-gold/5 via-transparent to-wedding-gold/5" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-wedding-gold via-yellow-500 to-wedding-gold" />
+            
+            <div className="relative">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <div className="text-center md:text-left">
+                  <h2 className="text-2xl md:text-3xl font-bold text-wedding-gold mb-2">
+                    🎉 Ganhadores da Rifa! 🎉
+                  </h2>
+                  <p className="text-slate-50/80 text-lg">
+                    Parabéns aos nossos ganhadores!
+                  </p>
+                </div>
+                <div className="w-full md:w-auto">
+                  <div className="bg-wedding-gold/10 rounded-lg p-3 text-center">
+                    <p className="text-sm text-slate-50/70 mb-1">Próximo Prêmio</p>
+                    <p className="text-2xl font-bold text-wedding-gold">
+                      {currentPrize}º
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {winners.map((winner, index) => {
+                  if (!winner || !winner.winningPrize) return null;
+                  
+                  return (
+                    <Card 
+                      key={`winner-${winner.id}-${index}`}
+                      className="p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-wedding-gold/5 via-transparent to-wedding-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-wedding-gold via-yellow-500 to-wedding-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                      
+                      <div className="flex items-start gap-4">
+                        <div className="shrink-0">
+                          <div className="w-16 h-16 rounded-full bg-wedding-gold/20 flex items-center justify-center group-hover:bg-wedding-gold/30 transition-colors duration-300">
+                            <Trophy className="w-8 h-8 text-wedding-gold animate-bounce" />
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-3">
+                            <span className="text-3xl font-bold text-wedding-gold">
+                              {winner.winningPrize}º
+                            </span>
+                            <span className="text-sm text-slate-50/70">Prêmio</span>
+                          </div>
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-xs text-slate-50/70 mb-1">Número da Sorte</p>
+                              <p className="text-2xl font-bold text-slate-50 bg-wedding-gold/10 rounded-lg p-2 text-center">
+                                {winner.number || ''}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-50/70 mb-1">Ganhador</p>
+                              <p className="text-lg font-medium text-slate-50">
+                                {winner.guestName || ''}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-50/70 mb-1">Data do Sorteio</p>
+                              <p className="text-sm text-slate-50">
+                                {winner.purchasedAt?.toLocaleDateString() || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
+        )}
+
         <Card className="p-3 md:p-6 bg-wedding-primary">
           <h2 className="text-lg md:text-xl font-semibold text-slate-50 mb-4">Lista de Números Vendidos</h2>
           {loading ? (
@@ -414,77 +654,45 @@ const AdminRaffle: React.FC = () => {
             <div className="text-center text-slate-50">Nenhum número encontrado.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-              {filteredTickets.map(ticket => (
-                <Card key={ticket.id} className="p-3 md:p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30 transition-colors">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="text-lg md:text-xl font-bold text-wedding-gold">
-                      Nº {ticket.number}
-                    </p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      ticket.paymentStatus === 'confirmed' 
-                        ? 'bg-green-500/20 text-green-500' 
-                        : ticket.paymentStatus === 'under_review'
-                          ? 'bg-yellow-500/20 text-yellow-500'
-                          : 'bg-red-500/20 text-red-500'
-                    }`}>
-                      {ticket.paymentStatus === 'confirmed' ? '✅ Confirmado' : 
-                       ticket.paymentStatus === 'under_review' ? '⏳ Em Análise' : 
-                       '❌ Pendente'}
-                    </span>
-                  </div>
-                  <p className="text-sm md:text-base font-medium text-slate-50">{ticket.guestName}</p>
-                  <p className="text-xs text-slate-50/70 mb-2">{ticket.purchasedAt.toLocaleDateString()}</p>
-                  
-                  {ticket.paymentStatus !== 'confirmed' && (
-                    <Button
-                      onClick={() => confirmPayment(ticket.id)}
-                      className="w-full h-9 bg-green-600 hover:bg-green-700 text-white text-sm"
-                    >
-                      Confirmar Pagamento
-                    </Button>
-                  )}
-                </Card>
-              ))}
+              {paginatedTickets.map(ticket => {
+                if (!ticket) return null;
+                
+                return (
+                  <Card key={ticket.id} className="p-3 md:p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-lg md:text-xl font-bold text-wedding-gold">
+                        Nº {ticket.number || ''}
+                      </p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        ticket.paymentStatus === 'confirmed' 
+                          ? 'bg-green-500/20 text-green-500' 
+                          : ticket.paymentStatus === 'under_review'
+                            ? 'bg-yellow-500/20 text-yellow-500'
+                            : 'bg-red-500/20 text-red-500'
+                      }`}>
+                        {ticket.paymentStatus === 'confirmed' ? '✅ Confirmado' : 
+                         ticket.paymentStatus === 'under_review' ? '⏳ Em Análise' : 
+                         '❌ Pendente'}
+                      </span>
+                    </div>
+                    <p className="text-sm md:text-base font-medium text-slate-50">{ticket.guestName || ''}</p>
+                    <p className="text-xs text-slate-50/70 mb-2">{ticket.purchasedAt?.toLocaleDateString() || ''}</p>
+                    
+                    {ticket.paymentStatus !== 'confirmed' && (
+                      <Button
+                        onClick={() => handleConfirmPayment(ticket.id)}
+                        className="w-full h-9 bg-green-600 hover:bg-green-700 text-white text-sm"
+                      >
+                        Confirmar Pagamento
+                      </Button>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </Card>
-
-        <Dialog open={showDrawDialog} onOpenChange={setShowDrawDialog}>
-          <DialogContent className="bg-wedding-primary text-slate-50 w-[90vw] max-w-md mx-auto">
-            <DialogHeader>
-              <DialogTitle className="text-center text-xl md:text-2xl font-elegant">
-                🎉 Ganhadores da Rifa! 🎉
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6 py-4">
-              {winners.map((winner, index) => (
-                <div key={winner.id} className="text-center space-y-3 md:space-y-4">
-                  <div className="animate-bounce mb-4">
-                    <Trophy className="w-12 h-12 md:w-16 md:h-16 text-wedding-gold mx-auto" />
-                  </div>
-                  <p className="text-lg md:text-xl font-bold text-wedding-gold">
-                    {index + 1}º Prêmio
-                  </p>
-                  <p className="text-2xl md:text-3xl font-bold text-wedding-gold">
-                    Número {winner.number}
-                  </p>
-                  <p className="text-lg md:text-xl text-slate-50">
-                    {winner.guestName}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <Button 
-              onClick={() => setShowDrawDialog(false)}
-              className="w-full h-10 text-black bg-wedding-secondary hover:bg-wedding-gold font-semibold"
-            >
-              Fechar
-            </Button>
-          </DialogContent>
-        </Dialog>
-      </Card>
+      </div>
     </div>
   );
 };
