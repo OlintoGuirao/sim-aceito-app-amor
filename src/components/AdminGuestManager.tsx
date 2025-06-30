@@ -22,7 +22,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest, getGifts, addGift } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import type { Gift as GiftType } from '@/lib/firestore';
 import PartyQRCode from './PartyQRCode';
@@ -345,6 +345,46 @@ export function AdminGuestManager() {
     }
   };
 
+  const handleSendSaveTheDate = async (guest: Guest) => {
+    if (!guest.phone) {
+      toast.error('Este convidado não possui telefone cadastrado');
+      return;
+    }
+
+    try {
+      // Formata o número de telefone para o WhatsApp
+      const formattedPhone = guest.phone
+        .replace(/\D/g, '') // Remove tudo que não é número
+        .replace(/^0/, '') // Remove o 0 do início se houver
+        .replace(/^(\d{2})/, '55$1'); // Adiciona o código do país (55)
+
+      const baseUrl = window.location.origin;
+      const saveTheDateUrl = `${baseUrl}/save-the-date/${guest.id}`;
+      
+      const message = ` \n\n` +
+        `Queridos amigos e familiares,\n\n` +
+        `É oficial: vamos dizer "sim!"\n\n` +
+        `Reserve esta data especial: 25 de abril de 2026\n\n` +
+        `Sim, ainda falta um tempinho... mas já estamos tão animados que não conseguimos guardar segredo!\n\n` +
+        `Prepare o look, a dança, o coração e, é claro, o estômago — porque vai ter amor, festa e muita comida boa!\n\n` +
+        `O convite oficial vem depois, mas por enquanto, marque na agenda, cole um post-it na geladeira ou tatue na memória:\n\n` +
+        `📅 25/04/2026\n` +
+        `📍 [Local será revelado em breve… suspense faz parte!]\n\n` +
+        `Contamos com você para celebrar esse dia inesquecível ao nosso lado!\n\n` +
+        `Salve a data em seu calendário:\n` +
+        `${saveTheDateUrl}\n\n` +
+        `Com carinho,\nFabíola e Juninho 💑`;
+
+      const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+
+      toast.success(`Save the Date enviado com sucesso para ${guest.name}`);
+    } catch (error) {
+      console.error('Erro ao enviar Save the Date:', error);
+      toast.error('Erro ao enviar Save the Date');
+    }
+  };
+
   // Agrupar convidados por groupId e separar os sem grupo
   const { groupedGuests, ungroupedGuests } = guests.reduce((acc, guest) => {
     if (guest.groupId) {
@@ -642,14 +682,24 @@ export function AdminGuestManager() {
                         ))}
                       </div>
                       <div className="px-8 pb-6 pt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => handleSendInvite(groupMembers[0])}
-                          className="w-full sm:w-auto rounded-full bg-wedding-marsala text-white hover:bg-wedding-primary px-6 py-2 border-none"
-                        >
-                          <Share2 className="h-4 w-4 mr-2" />
-                          <span className="whitespace-nowrap">Enviar Convite</span>
-                        </Button>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            onClick={() => handleSendInvite(groupMembers[0])}
+                            className="w-full sm:w-auto rounded-full bg-wedding-marsala text-white hover:bg-wedding-primary px-6 py-2 border-none"
+                          >
+                            <Share2 className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Enviar Convite</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleSendSaveTheDate(groupMembers[0])}
+                            className="w-full sm:w-auto rounded-full bg-blue-500 text-white hover:bg-blue-600 px-6 py-2 border-none"
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            <span className="whitespace-nowrap">Save the Date</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -727,6 +777,16 @@ export function AdminGuestManager() {
                             >
                               <Share2 className="h-4 w-4 mr-2" />
                               <span className="whitespace-nowrap">Enviar Convite</span>
+                            </Button>
+                          )}
+                          {guest.phone && (
+                            <Button 
+                              variant="outline" 
+                              onClick={() => handleSendSaveTheDate(guest)} 
+                              className="flex-1 sm:flex-none bg-blue-500 text-white hover:bg-blue-600"
+                            >
+                              <Calendar className="h-4 w-4 mr-2" />
+                              <span className="whitespace-nowrap">Save the Date</span>
                             </Button>
                           )}
                           <Button 

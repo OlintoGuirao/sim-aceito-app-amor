@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import Index from './pages/Index';
 import AdminPage from './pages/AdminPage';
 import { ConfirmPage } from './pages/confirm';
+import { SaveTheDatePage } from './pages/SaveTheDate';
 import AdminRaffle from '@/pages/AdminRaffle';
 import AdminLogin from './pages/AdminLogin';
 import PadrinhoPage from './pages/PadrinhoPage';
@@ -77,6 +78,7 @@ function App() {
         {/* ===== ROTAS PÚBLICAS ===== */}
         <Route path="/" element={<Index />} />
         <Route path="/confirm/:guestId" element={<ConfirmPage />} />
+        <Route path="/save-the-date/:guestId" element={<SaveTheDatePage />} />
         <Route path="/login" element={<AdminLogin />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/party-gallery/:userId" element={<PartyGallery />} />

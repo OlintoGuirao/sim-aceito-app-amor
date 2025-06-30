@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { getAnalytics } from 'firebase/analytics';
+import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getStorage } from 'firebase/storage';
 
 // Suas configurações do Firebase aqui
@@ -18,8 +18,13 @@ const firebaseConfig = {
 // Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 
-// Inicializa o Analytics
-const analytics = getAnalytics(app);
+// Inicializa o Analytics de forma condicional
+let analytics = null;
+isSupported().then(yes => yes ? getAnalytics(app) : null).then(analyticsInstance => {
+  analytics = analyticsInstance;
+}).catch(() => {
+  console.log('Analytics não suportado neste ambiente');
+});
 
 // Inicializa o Firestore
 export const db = getFirestore(app);
