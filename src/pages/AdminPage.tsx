@@ -1,38 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { toast } from 'sonner';
-import { Camera, Upload, Heart, MessageCircle, ChevronLeft, ChevronRight, QrCode, X, Check, Trash2, Download } from 'lucide-react';
-import { collection, addDoc, query, orderBy, limit, startAfter, getDocs, updateDoc, doc, increment, arrayUnion, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { uploadImage } from '@/lib/cloudinary';
-import useEmblaCarousel from 'embla-carousel-react';
-import { useCallback } from 'react';
-import { useAuth } from '@/lib/auth';
-import PartyQRCode from '@/components/PartyQRCode';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AdminGuestManager } from '@/components/AdminGuestManager';
 
 const AdminPage: React.FC = () => {
-  // ... existing code ...
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState('');
 
-  return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <h1 className="text-3xl font-elegant font-semibold text-slate-50 mb-8">Painel Administrativo</h1>
+  const handleLogin = () => {
+    // Aqui você pode implementar uma verificação mais segura
+    if (password === 'admin123') {
+      setIsAuthenticated(true);
+    } else {
+      alert('Senha incorreta');
+    }
+  };
 
-      {/* QR Code para compartilhar fotos */}
-      <Card className="p-6 mb-8 bg-wedding-primary">
-        <h2 className="text-2xl font-elegant font-semibold text-slate-50 mb-4">QR Code para Compartilhar Fotos</h2>
-        <p className="text-slate-50 mb-4">
-          Use este QR code no dia da festa para que os convidados possam compartilhar suas fotos.
-        </p>
-        <div className="flex justify-center">
-          <PartyQRCode />
-        </div>
-      </Card>
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-center">Área Administrativa</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Input
+                type="password"
+                placeholder="Digite a senha"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <Button 
+                onClick={handleLogin} 
+                className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90"
+              >
+                Entrar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-      {/* ... rest of the JSX ... */}
-    </div>
-  );
+  return <AdminGuestManager />;
 };
 
 export default AdminPage; 

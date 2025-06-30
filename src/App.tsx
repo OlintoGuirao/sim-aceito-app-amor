@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Index from './pages/Index';
-import AdminPage from './pages/admin';
+import AdminPage from './pages/AdminPage';
 import { ConfirmPage } from './pages/confirm';
 import AdminRaffle from '@/pages/AdminRaffle';
 import AdminLogin from './pages/AdminLogin';
@@ -78,6 +78,7 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/confirm/:guestId" element={<ConfirmPage />} />
         <Route path="/login" element={<AdminLogin />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/party-gallery/:userId" element={<PartyGallery />} />
 
         {/* ===== ROTAS DA RIFA (ADMIN) ===== */}
