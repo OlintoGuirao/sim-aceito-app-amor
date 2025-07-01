@@ -8,6 +8,7 @@ import PhotoGallery from '@/components/PhotoGallery';
 import PartyGallery from '@/components/PartyGallery';
 import MessageBoard from '@/components/MessageBoard';
 import Raffle from '@/components/Raffle';
+import GuestManual from '@/components/GuestManual';
 import { Toaster } from 'sonner';
 import { useAuth } from '@/lib/auth';
 
@@ -46,6 +47,8 @@ const Index = () => {
         return <MessageBoard />;
       case 'raffle':
         return <Raffle />;
+      case 'manual':
+        return <GuestManual onSectionChange={setActiveSection} />;
       default:
         return null;
     }

@@ -10,7 +10,8 @@ import {
   orderBy,
   onSnapshot,
   Timestamp,
-  where 
+  where,
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,7 @@ import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Us
 import { useNavigate } from 'react-router-dom';
 import type { Gift as GiftType } from '@/lib/firestore';
 import PartyQRCode from './PartyQRCode';
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface Message {
   id: string;
@@ -57,6 +59,7 @@ export function AdminGuestManager() {
     image: '',
     link: ''
   });
+  const [openModal, setOpenModal] = useState<null | 'confirmed' | 'pending' | 'declined'>(null);
 
   // Configurar listener em tempo real para convidados
   useEffect(() => {
@@ -65,10 +68,19 @@ export function AdminGuestManager() {
     
     // Criar listener em tempo real
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const guestsList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Guest[];
+      const guestsList = snapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log('Dados do convidado:', data); // Debug
+        return {
+          id: doc.id,
+          ...data,
+          // Converter Timestamps para Date se existirem
+          confirmedAt: data.confirmedAt ? data.confirmedAt.toDate().toISOString() : undefined,
+          declinedAt: data.declinedAt ? data.declinedAt.toDate().toISOString() : undefined,
+          createdAt: data.createdAt ? data.createdAt.toDate() : new Date(),
+          updatedAt: data.updatedAt ? data.updatedAt.toDate() : new Date()
+        };
+      }) as Guest[];
       
       setGuests(guestsList);
       setLoading(false);
@@ -195,6 +207,50 @@ export function AdminGuestManager() {
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
       toast.error('Erro ao atualizar status');
+    }
+  };
+
+  const handleDeclineAllPending = async () => {
+    const pendingGuests = guests.filter(g => g.status === 'pending');
+    
+    if (pendingGuests.length === 0) {
+      toast.error('Não há convidados pendentes para declinar');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Tem certeza que deseja declinar TODOS os ${pendingGuests.length} convidados pendentes?\n\nEsta ação não pode ser desfeita.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const batch = writeBatch(db);
+      
+      pendingGuests.forEach(guest => {
+        const guestRef = doc(db, 'guests', guest.id!);
+        batch.update(guestRef, {
+          status: 'declined',
+          updatedAt: Timestamp.now(),
+          declinedAt: Timestamp.now()
+        });
+      });
+
+      await batch.commit();
+      
+      // Atualiza o estado local
+      setGuests(prev => prev.map(guest => 
+        guest.status === 'pending' 
+          ? { ...guest, status: 'declined', declinedAt: new Date().toISOString() }
+          : guest
+      ));
+
+      toast.success(`${pendingGuests.length} convidados pendentes foram declinados com sucesso`);
+    } catch (error) {
+      console.error('Erro ao declinar convidados pendentes:', error);
+      toast.error('Erro ao declinar convidados pendentes');
     }
   };
 
@@ -416,9 +472,9 @@ export function AdminGuestManager() {
     )
   );
 
-  const confirmedCount = guests.filter(g => g.status === 'confirmed').length;
-  const pendingCount = guests.filter(g => g.status === 'pending').length;
-  const declinedCount = guests.filter(g => g.status === 'declined').length;
+  const confirmedGuests = guests.filter(g => g.status === 'confirmed');
+  const pendingGuests = guests.filter(g => g.status === 'pending');
+  const declinedGuests = guests.filter(g => g.status === 'declined');
 
   const handleApproveMessage = async (messageId: string) => {
     try {
@@ -497,31 +553,222 @@ export function AdminGuestManager() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card 
+          className="cursor-pointer hover:shadow-lg transition" 
+          onClick={() => setOpenModal('confirmed')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-wedding-secondary">
             <CardTitle className="text-sm font-medium text-black">Confirmados</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold bg-transparent text-black">{guests.filter(g => g.status === 'confirmed').length}</div>
+            <div className="text-2xl font-bold bg-transparent text-black">{confirmedGuests.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card 
+          className="cursor-pointer hover:shadow-lg transition" 
+          onClick={() => setOpenModal('pending')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-wedding-secondary">
             <CardTitle className="text-sm font-medium text-black">Pendentes</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold text-black">{guests.filter(g => g.status === 'pending').length}</div>
+            <div className="text-2xl font-bold text-black">{pendingGuests.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        
+        <Card 
+          className="cursor-pointer hover:shadow-lg transition" 
+          onClick={() => setOpenModal('declined')}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 bg-wedding-secondary">
             <CardTitle className="text-sm font-medium text-black">Declinados</CardTitle>
           </CardHeader>
           <CardContent className="bg-wedding-secondary">
-            <div className="text-2xl font-bold text-black">{guests.filter(g => g.status === 'declined').length}</div>
+            <div className="text-2xl font-bold text-black">{declinedGuests.length}</div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Modais */}
+      <Dialog open={openModal === 'confirmed'} onOpenChange={(open) => !open && setOpenModal(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-elegant text-wedding-primary">
+              <div className="flex items-center gap-2">
+                <Check className="w-5 h-5 text-green-600" />
+                Convidados Confirmados
+              </div>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Total de {confirmedGuests.length} convidado(s) confirmado(s)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto mt-4">
+            {confirmedGuests.length === 0 ? (
+              <div className="text-center py-8">
+                <Check className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500">Nenhum convidado confirmado ainda.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {confirmedGuests.map(g => (
+                  <div key={g.id} className="bg-green-50 border border-green-200 rounded-lg p-3 hover:bg-green-100 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-green-800">{g.name}</h4>
+                        {g.email && (
+                          <p className="text-sm text-green-600 mt-1">{g.email}</p>
+                        )}
+                        {g.phone && (
+                          <p className="text-xs text-green-500 mt-1">{g.phone}</p>
+                        )}
+                        {g.companions > 0 && (
+                          <p className="text-xs text-green-600 mt-1">
+                            +{g.companions} acompanhante(s)
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-green-100 text-green-700 border-green-300">
+                          <Check className="w-3 h-3 mr-1" />
+                          Confirmado
+                        </Badge>
+                      </div>
+                    </div>
+                    {g.confirmedAt && (
+                      <p className="text-xs text-green-500 mt-2">
+                        Confirmado em: {(() => {
+                          try {
+                            let date: Date;
+                            if (typeof g.confirmedAt === 'string') {
+                              date = new Date(g.confirmedAt);
+                            } else if (g.confirmedAt && typeof g.confirmedAt === 'object' && 'toDate' in g.confirmedAt) {
+                              date = (g.confirmedAt as any).toDate();
+                            } else {
+                              return '';
+                            }
+                            return isNaN(date.getTime()) ? '' : date.toLocaleDateString('pt-BR');
+                          } catch {
+                            return '';
+                          }
+                        })()}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openModal === 'pending'} onOpenChange={(open) => !open && setOpenModal(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-elegant text-wedding-primary">
+              <div className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-yellow-600" />
+                Convidados Pendentes
+              </div>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Total de {pendingGuests.length} convidado(s) aguardando confirmação
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto mt-4">
+            {pendingGuests.length === 0 ? (
+              <div className="text-center py-8">
+                <Clock className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500">Nenhum convidado pendente.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {pendingGuests.map(g => (
+                  <div key={g.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:bg-yellow-100 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-yellow-800">{g.name}</h4>
+                        {g.email && (
+                          <p className="text-sm text-yellow-600 mt-1">{g.email}</p>
+                        )}
+                        {g.phone && (
+                          <p className="text-xs text-yellow-500 mt-1">{g.phone}</p>
+                        )}
+                        {g.companions > 0 && (
+                          <p className="text-xs text-yellow-600 mt-1">
+                            +{g.companions} acompanhante(s)
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">
+                          <Clock className="w-3 h-3 mr-1" />
+                          Pendente
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openModal === 'declined'} onOpenChange={(open) => !open && setOpenModal(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-elegant text-wedding-primary">
+              <div className="flex items-center gap-2">
+                <X className="w-5 h-5 text-red-600" />
+                Convidados Declinados
+              </div>
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Total de {declinedGuests.length} convidado(s) que não poderão comparecer
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto mt-4">
+            {declinedGuests.length === 0 ? (
+              <div className="text-center py-8">
+                <X className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500">Nenhum convidado declinado.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {declinedGuests.map(g => (
+                  <div key={g.id} className="bg-red-50 border border-red-200 rounded-lg p-3 hover:bg-red-100 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-red-800">{g.name}</h4>
+                        {g.email && (
+                          <p className="text-sm text-red-600 mt-1">{g.email}</p>
+                        )}
+                        {g.phone && (
+                          <p className="text-xs text-red-500 mt-1">{g.phone}</p>
+                        )}
+                        {g.companions > 0 && (
+                          <p className="text-xs text-red-600 mt-1">
+                            +{g.companions} acompanhante(s)
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge className="bg-red-100 text-red-700 border-red-300">
+                          <X className="w-3 h-3 mr-1" />
+                          Declinado
+                        </Badge>
+                      </div>
+                    </div>
+
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-60">
@@ -604,6 +851,18 @@ export function AdminGuestManager() {
                     />
                   </div>
                 </div>
+                
+                {/* Botão para declinar todos os pendentes */}
+                <div className="flex justify-center">
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeclineAllPending}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg shadow-md"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Declinar Todos os Pendentes
+                  </Button>
+                </div>
                 <div className="space-y-4">
                   {/* Convidados Agrupados */}
                   {filteredGroupedGuests.map(([groupId, groupMembers]) => (
@@ -646,11 +905,23 @@ export function AdminGuestManager() {
                             {guest.message && (
                               <p className="text-xs text-gray-400 italic">"{guest.message}"</p>
                             )}
-                            {guest.confirmedAt && (
-                              <p className="text-xs text-gray-400">Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}</p>
+                            {guest.status === 'confirmed' && guest.confirmedAt && (
+                              <p className="text-xs text-gray-400">Confirmado em: {(() => {
+                                try {
+                                  return new Date(guest.confirmedAt).toLocaleDateString('pt-BR');
+                                } catch (error) {
+                                  return 'Data não disponível';
+                                }
+                              })()}</p>
                             )}
-                            {guest.declinedAt && (
-                              <p className="text-xs text-gray-400">Declinou em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}</p>
+                            {guest.status === 'declined' && guest.declinedAt && (
+                              <p className="text-xs text-gray-400">Declinou em: {(() => {
+                                try {
+                                  return new Date(guest.declinedAt).toLocaleDateString('pt-BR');
+                                } catch (error) {
+                                  return 'Data não disponível';
+                                }
+                              })()}</p>
                             )}
                             <div className="flex flex-wrap gap-2 mt-2">
                               <Button
@@ -738,14 +1009,26 @@ export function AdminGuestManager() {
                             "{guest.message}"
                           </p>
                         )}
-                        {guest.confirmedAt && (
+                        {guest.status === 'confirmed' && guest.confirmedAt && (
                           <p className="text-xs text-gray-500 mb-1">
-                            Confirmado em: {new Date(guest.confirmedAt).toLocaleDateString('pt-BR')}
+                            Confirmado em: {(() => {
+                              try {
+                                return new Date(guest.confirmedAt).toLocaleDateString('pt-BR');
+                              } catch (error) {
+                                return 'Data não disponível';
+                              }
+                            })()}
                           </p>
                         )}
-                        {guest.declinedAt && (
+                        {guest.status === 'declined' && guest.declinedAt && (
                           <p className="text-xs text-gray-500">
-                            Declinado em: {new Date(guest.declinedAt).toLocaleDateString('pt-BR')}
+                            Declinado em: {(() => {
+                              try {
+                                return new Date(guest.declinedAt).toLocaleDateString('pt-BR');
+                              } catch (error) {
+                                return 'Data não disponível';
+                              }
+                            })()}
                           </p>
                         )}
                         <div className="flex flex-wrap gap-2">

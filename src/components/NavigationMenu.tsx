@@ -47,11 +47,15 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     id: 'raffle',
     label: 'Rifa',
     icon: '🎫'
+  }, {
+    id: 'manual',
+    label: 'Manual dos Convidados',
+    icon: '📋'
   }];
 
   return (
     <Card className="p-4 mb-8 glass-effect bg-wedding-palha/20">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
         {menuItems.map(item => (
           <button
             key={item.id}

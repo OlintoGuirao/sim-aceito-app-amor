@@ -9,6 +9,8 @@ export function SaveTheDatePage() {
   const { guestId } = useParams();
   const navigate = useNavigate();
 
+  console.log('SaveTheDatePage renderizando, guestId:', guestId);
+
   // Informações do casamento
   const weddingInfo = {
     title: "Casamento de Fabíola & Juninho",
