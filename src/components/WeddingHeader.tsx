@@ -14,7 +14,7 @@ const WeddingHeader: React.FC = () => {
       <div className="space-y-2 animate-fade-in" style={{
         animationDelay: '0.2s'
       }}>
-        <h2 className="font-elegant text-2xl text-white md:text-3xl">FabÍola & Juninho</h2>
+        <h2 className="font-elegant text-2xl text-white md:text-3xl">Fabíola & Juninho</h2>
         <p className="text-lg text-white">
           25 de Abril de 2026
         </p>
