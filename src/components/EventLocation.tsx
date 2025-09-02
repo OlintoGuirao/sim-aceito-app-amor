@@ -31,8 +31,13 @@ const EventLocation: React.FC = () => {
     });
   }, [api]);
 
-  const openInMaps = (address: string) => {
-    const encodedAddress = encodeURIComponent(address);
+  const openInMaps = (addressOrUrl: string) => {
+    // Se já for um link completo, abre diretamente. Caso contrário, busca pelo endereço.
+    if (addressOrUrl.startsWith('http')) {
+      window.open(addressOrUrl, '_blank');
+      return;
+    }
+    const encodedAddress = encodeURIComponent(addressOrUrl);
     window.open(`https://www.google.com/maps/search/${encodedAddress}`, '_blank');
   };
 
@@ -73,24 +78,13 @@ const EventLocation: React.FC = () => {
 
   const locations = [
     {
-      id: 'ceremony',
-      icon: '⛪',
-      title: 'Cerimônia',
-      name: 'Igreja São José',
-      address: 'Rua das Flores, 123\nCentro - São Paulo/SP',
-      time: '16:00h',
-      arrival: '15:30h',
-      mapAddress: 'Igreja São José, Rua das Flores, 123, Centro, São Paulo, SP'
-    },
-    {
       id: 'party',
-      icon: '🎉',
-      title: 'Festa',
-      name: 'Salão Crystal',
-      address: 'Av. dos Noivos, 456\nJardim das Rosas - São Paulo/SP',
-      time: '19:00h',
-      description: 'Jantar seguido de festa',
-      mapAddress: 'Salão Crystal, Av. dos Noivos, 456, Jardim das Rosas, São Paulo, SP'
+      icon: '💍',
+      title: 'Cerimônia/Festa',
+      name: 'Espaço Cascata',
+      address: 'R. Santa Catarina, 762-1142\nSão Joaquim da Barra - SP, 14600-000',
+      time: '16:30h',
+      mapAddress: 'https://maps.app.goo.gl/EVRT6FwXfxsrss639'
     },
     {
       id: 'menu',
@@ -117,7 +111,7 @@ const EventLocation: React.FC = () => {
               <Card className="p-6 bg-wedding-primary h-full">
                 <div className="text-center mb-4">
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-wedding-secondary/20 mb-4">
-                    <span className="text-2xl">{location.icon}</span>
+                    <span className="text-4xl">{location.icon}</span>
                   </div>
                   <h3 className="text-xl font-semibold text-slate-50">{location.title}</h3>
                 </div>
@@ -134,8 +128,8 @@ const EventLocation: React.FC = () => {
                       
                       <div>
                         <p className="text-sm text-slate-50"><strong>Horário:</strong> {location.time}</p>
-                        {location.arrival && (
-                          <p className="text-sm text-slate-50">Chegada dos convidados: {location.arrival}</p>
+                        {'arrival' in location && (location as any).arrival && (
+                          <p className="text-sm text-slate-50">Chegada dos convidados: {(location as any).arrival}</p>
                         )}
                         {location.description && (
                           <p className="text-sm text-slate-50">{location.description}</p>
@@ -204,7 +198,7 @@ const EventLocation: React.FC = () => {
               />
             ))}
           </div>
-          <CarouselNext className="bg-wedding-secondary hover:bg-wedding-gold text-zinc-950" />
+          
         </div>
       </Carousel>
 
@@ -215,7 +209,7 @@ const EventLocation: React.FC = () => {
           <div>
             <h4 className="font-medium mb-2 text-slate-50">🚗 Estacionamento</h4>
             <p className="text-sm mb-4 text-slate-50">
-              Estacionamento gratuito disponível em ambos os locais.
+              Estacionamento gratuito disponível.
             </p>
             
             <h4 className="font-medium mb-2 text-slate-50">👔 Dress Code</h4>
@@ -227,13 +221,9 @@ const EventLocation: React.FC = () => {
           <div>
             <h4 className="font-medium mb-2 text-slate-50">🏨 Hospedagem</h4>
             <p className="text-sm mb-4 text-slate-50">
-              Hotel Flores (2km) - (11) 3333-4444<br />
-              Pousada das Rosas (1,5km) - (11) 2222-5555
-            </p>
-            
-            <h4 className="font-medium mb-2 text-slate-50">🚌 Transporte</h4>
-            <p className="text-sm text-slate-50">
-              Ônibus disponível saindo da igreja direto para o salão.
+              Hotel da Barra - (16) 3818-0101<br />
+              Mauad Plaza Hotel - (16) 3818-3100<br />
+              São Jorge Hotel - (16) 3811-0900
             </p>
           </div>
         </div>

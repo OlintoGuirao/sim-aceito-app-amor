@@ -62,12 +62,11 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
         <CardContent className="space-y-4">
           <div className="bg-gradient-to-br from-wedding-gold/20 to-wedding-marsala/10 p-6 rounded-xl border-l-4 border-wedding-marsala">
             <p className="text-2xl font-bold text-wedding-marsala mb-3">
-              Cerimônia: 16h em ponto
+              Cerimônia: 16:30h
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
-              Pedimos que chegue com, pelo menos, 30 minutos de antecedência, para que 
-              tudo ocorra com tranquilidade e você não perca nenhum detalhe especial do 
-              início da cerimônia.
+              Chegue com tranquilidade e programe-se para estar no local no horário da 
+              cerimônia, assim você aproveita cada momento desde o início.
             </p>
           </div>
         </CardContent>
@@ -88,7 +87,7 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
         <CardContent className="space-y-4">
           <div className="bg-gradient-to-br from-wedding-gold/20 to-wedding-marsala/10 p-6 rounded-xl border-l-4 border-wedding-marsala">
             <p className="text-2xl font-bold text-wedding-marsala mb-3">
-              Palácio dos Ypês – São Joaquim da Barra (SP)
+              Espaço Cascata – São Joaquim da Barra (SP)
             </p>
             <p className="text-lg text-gray-700 mb-3 leading-relaxed">
               Um lugar lindo, ao ar livre e com clima de conto de fadas.

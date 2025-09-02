@@ -19,39 +19,16 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
   const location = useLocation();
   const isHomePage = location.pathname === '/';
 
-  const menuItems = [{
-    id: 'countdown',
-    label: 'Contagem Regressiva',
-    icon: '⏰'
-  }, {
-    id: 'gifts',
-    label: 'Lista de Presentes',
-    icon: '🎁'
-  }, {
-    id: 'location',
-    label: 'Local',
-    icon: '📍'
-  }, {
-    id: 'gallery',
-    label: 'Galeria',
-    icon: '📸'
-  }, {
-    id: 'party',
-    label: 'Hora da Festa',
-    icon: '🎉'
-  }, {
-    id: 'messages',
-    label: 'Recados',
-    icon: '💌'
-  }, {
-    id: 'raffle',
-    label: 'Rifa',
-    icon: '🎫'
-  }, {
-    id: 'manual',
-    label: 'Manual dos Convidados',
-    icon: '📋'
-  }];
+  const menuItems = [
+    { id: 'countdown', label: 'Contagem Regressiva', icon: '⏰' },
+    { id: 'gallery', label: 'Nossa História', icon: '📖' },
+    { id: 'location', label: 'Local', icon: '📍' },
+    { id: 'party', label: 'Hora da Festa', icon: '🎉' },
+    { id: 'messages', label: 'Recados', icon: '💌' },
+    { id: 'manual', label: 'Manual dos Convidados', icon: '📋' },
+    { id: 'raffle', label: 'Rifa', icon: '🎫' },
+    { id: 'gifts', label: 'Lista de Presentes', icon: '🎁' }
+  ];
 
   return (
     <Card className="p-4 mb-8 glass-effect bg-wedding-palha/20">

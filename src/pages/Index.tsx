@@ -17,7 +17,7 @@ const Index = () => {
   const { user, isAdmin } = useAuth();
   
   // Data do casamento - ajuste conforme necessário
-  const weddingDate = new Date('2026-04-25T17:30:00');
+  const weddingDate = new Date('2026-04-25T16:30:00');
 
   // Efeito para verificar autenticação ao montar o componente
   useEffect(() => {
@@ -29,7 +29,7 @@ const Index = () => {
       case 'countdown':
         return (
           <div className="text-center">
-            <h2 className="text-3xl font-elegant font-semibold mb-8 text-foreground">
+            <h2 className="text-3xl font-elegant font-semibold mb-4 text-foreground">
               Faltam apenas...
             </h2>
             <CountdownTimer targetDate={weddingDate} />
@@ -57,10 +57,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-wedding-primary to-wedding-secondary">
       <Toaster position="top-center" richColors />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-4 pb-16">
         <WeddingHeader />
         <NavigationMenu activeSection={activeSection} onSectionChange={setActiveSection} />
-        <main className="mt-8">
+        <main className="mt-0 pb-6">
           {renderSection()}
         </main>
       </div>
