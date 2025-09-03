@@ -327,9 +327,9 @@ export function AdminGuestManager() {
         message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n`;
       }
 
-      message += `📅 Data: 15 de Dezembro de 2024\n` +
-        `⏰ Horário: 19:00\n` +
-        `📍 Local: Espaço de Eventos\n\n`;
+      message += `📅 Data: 25 de abril de 2026\n` +
+        `⏰ Horário: 16:30\n` +
+        `📍 Local: Espaço Cascata\n\n`;
 
       if (groupMembers.length > 1) {
         message += `Para confirmar suas presenças, acessem os links abaixo:\n\n`;
@@ -340,7 +340,7 @@ export function AdminGuestManager() {
         message += `Para confirmar sua presença, acesse:\n${baseUrl}/confirm/${guest.id}\n\n`;
       }
 
-      message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! 💑\n` +
+      message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! 💕\n` +
         `Fabii e Xuniim`;
 
       // Usa o formato correto do link do WhatsApp
@@ -381,7 +381,7 @@ export function AdminGuestManager() {
         const message = `Olá ${guest.name}! 🎉\n\n` +
           `Aqui está o link para acessar o site do nosso casamento:\n` +
           `${baseUrl}/confirm/${guest.id}\n\n` +
-          `Contamos com sua presença! 💑\n` +
+          `Contamos com sua presença! 💕\n` +
           `Fabii e Xuniim`;
 
         const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
@@ -425,11 +425,10 @@ export function AdminGuestManager() {
         `Prepare o look, a dança, o coração e, é claro, o estômago — porque vai ter amor, festa e muita comida boa!\n\n` +
         `O convite oficial vem depois, mas por enquanto, marque na agenda, cole um post-it na geladeira ou tatue na memória:\n\n` +
         `📅 25/04/2026\n` +
-        `📍 [Local será revelado em breve… suspense faz parte!]\n\n` +
         `Contamos com você para celebrar esse dia inesquecível ao nosso lado!\n\n` +
         `Salve a data em seu calendário:\n` +
         `${saveTheDateUrl}\n\n` +
-        `Com carinho,\nFabíola e Juninho 💑`;
+        `Com carinho,\nFabíola e Juninho 💕`;
 
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');

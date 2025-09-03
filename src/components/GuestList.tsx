@@ -79,12 +79,12 @@ export function GuestList() {
 
   const handleSendInvite = (guest: Guest) => {
     const message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n` +
-      `📅 Data: 15 de Dezembro de 2024\n` +
-      `⏰ Horário: 19:00\n` +
-      `📍 Local: Espaço de Eventos\n\n` +
+      `📅 Data: 25 de abril de 2026\n` +
+      `⏰ Horário: 16:30\n` +
+      `📍 Local: Espaço Cascata\n\n` +
       `Para confirmar sua presença, acesse:\n` +
       `https://sim-aceito.com.br/confirmar/${guest.id}\n\n` +
-      `Contamos com sua presença! 💑\n` +
+      `Contamos com sua presença! 💕\n` +
       `Fabii e Xuniim`;
 
     const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
