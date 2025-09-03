@@ -85,7 +85,7 @@ export function GuestList() {
       `Para confirmar sua presença, acesse:\n` +
       `https://sim-aceito.com.br/confirmar/${guest.id}\n\n` +
       `Contamos com sua presença! 💕\n` +
-      `Fabii e Xuniim`;
+      `Fabíola e Juninho`;
 
     const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

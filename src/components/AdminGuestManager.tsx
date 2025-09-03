@@ -341,7 +341,7 @@ export function AdminGuestManager() {
       }
 
       message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! 💕\n` +
-        `Fabii e Xuniim`;
+        `Fabíola e Juninho`;
 
       // Usa o formato correto do link do WhatsApp
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
@@ -382,7 +382,7 @@ export function AdminGuestManager() {
           `Aqui está o link para acessar o site do nosso casamento:\n` +
           `${baseUrl}/confirm/${guest.id}\n\n` +
           `Contamos com sua presença! 💕\n` +
-          `Fabii e Xuniim`;
+          `Fabíola e Juninho `;
 
         const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
