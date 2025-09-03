@@ -15,8 +15,8 @@ export function SaveTheDatePage() {
   const weddingInfo = {
     title: "Casamento de Fabíola & Juninho",
     date: "2026-04-25",
-    time: "19:00",
-    location: "Local será revelado em breve",
+    time: "16:30",
+    location: "Espaço Cascata",
     address: "Suspense faz parte!",
     city: "Em breve...",
     description: "Queridos amigos e familiares, é oficial: vamos dizer 'sim!' Reserve esta data especial: 25 de abril de 2026. Sim, ainda falta um tempinho... mas já estamos tão animados que não conseguimos guardar segredo! Prepare o look, a dança, o coração e, é claro, o estômago — porque vai ter amor, festa e muita comida boa!",
@@ -25,7 +25,7 @@ export function SaveTheDatePage() {
 
   const generateCalendarEvent = (calendarType: 'google' | 'outlook' | 'ics') => {
     const eventDate = new Date(weddingInfo.date + 'T' + weddingInfo.time);
-    const endDate = new Date(eventDate.getTime() + (4 * 60 * 60 * 1000)); // 4 horas de duração
+    const endDate = new Date(eventDate.getTime() + (6 * 60 * 60 * 1000)); // 6 horas de duração
     
     const eventData = {
       title: weddingInfo.title,
@@ -146,7 +146,7 @@ export function SaveTheDatePage() {
               </div>
             </div>
 
-            {/* Location */}
+            {/* Location 
             <div className="flex items-start gap-4 text-wedding-primary bg-wedding-primary/5 p-4 rounded-lg border border-wedding-primary/10">
               <div className="flex-shrink-0">
                 <MapPin className="w-7 h-7 text-wedding-gold mt-0.5" />
@@ -157,6 +157,7 @@ export function SaveTheDatePage() {
                 <p className="text-wedding-primary/80 font-medium">{weddingInfo.city}</p>
               </div>
             </div>
+            */}
 
             {/* Description */}
             <div className="text-center text-wedding-primary bg-gradient-to-r from-wedding-primary/10 to-wedding-gold/10 p-6 rounded-lg border border-wedding-gold/20">
