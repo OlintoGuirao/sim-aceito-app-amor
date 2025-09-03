@@ -205,7 +205,7 @@ export function SaveTheDatePage() {
         <div className="text-center mt-8 animate-fade-in" style={{ animationDelay: '0.6s' }}>
           <div className="bg-wedding-secondary/10 backdrop-blur-sm rounded-lg p-4 border border-wedding-palha/20">
             <p className="text-wedding-palha/90 text-sm">
-              Com carinho, <span className="text-wedding-gold font-semibold">Fabíola e Juninho</span> 💑
+              Com carinho, <span className="text-wedding-gold font-semibold">Fabíola e Juninho</span> 💕
             </p>
           </div>
         </div>
