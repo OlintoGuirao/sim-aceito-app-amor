@@ -557,7 +557,7 @@ const PadrinhoPage: React.FC = () => {
                       className={`flex ${message.userId === user?.uid ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
+                        className={`max-w-[70%] rounded-lg p-3 bg-wedding-gold text-black break-words ${
                           message.userId === user?.uid
                             ? 'bg-wedding-gold text-black'
                             : 'bg-wedding-secondary/20 text-slate-50'

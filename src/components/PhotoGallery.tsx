@@ -69,18 +69,7 @@ const PhotoGallery: React.FC = () => {
           </Card>
         ))}
       </div>
-
-      <Card className="p-6 text-center bg-wedding-blush/20 bg-wedding-primary">
-        <h4 className="text-lg font-semibold mb-2 text-slate-50">Compartilhe Conosco!</h4>
-        <p className="text-sm mb-4 text-slate-50">
-          Após o casamento, você poderá enviar suas fotos da festa para completar nossa galeria.
-        </p>
-        <div className="text-sm text-muted-foreground">
-          <p className="text-slate-50">📧 fotos@simaceito.com</p>
-          <p className="text-slate-50">📱 #SimAceitoFabii&amp;Xuniim</p>
-        </div>
-      </Card>
-
+      
       {selectedPhoto !== null && (
         <div 
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" 

@@ -204,7 +204,7 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
         <CardContent className="space-y-6">
           <div className="bg-gradient-to-br from-wedding-gold/20 to-wedding-marsala/10 p-6 rounded-xl border-l-4 border-wedding-marsala space-y-4">
             <p className="text-lg font-bold text-wedding-marsala">
-              Confirme sua presença até o dia 01 de setembro de 2025.
+              Confirme sua presença até o dia 16 de janeiro de 2026.
             </p>
 
             <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-md">

@@ -395,7 +395,10 @@ const PartyGallery: React.FC = () => {
       <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Hora da Festa</h3>
         <p className="text-slate-50">
-          Compartilhe seus momentos especiais do nosso casamento!
+          Compartilhe seus momentos especiais do nosso casamento. Iremos adorar ver sua visão da festa.
+        </p>
+        <p className="text-slate-50">
+          Caso decida compartilhar este momento no instagram, não se esqueça de nos mencionar @fabii.ferreira e @juninhoguirao
         </p>
       </Card>
 
