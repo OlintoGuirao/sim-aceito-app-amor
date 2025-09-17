@@ -103,17 +103,17 @@ export function ConfirmPage() {
           {guest.status === 'pending' ? (
             <div className="space-y-4">
               <p className="text-center text-gray-600 mb-4">
-                Por favor, confirme sua presença no nosso casamento
+                   Podemos contar com a sua presença?
               </p>
               <div className="flex gap-4">
                 <Button 
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-black hover:text-black"
                   onClick={handleConfirm}
                 >
                   Confirmar Presença
                 </Button>
                 <Button 
-                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-black hover:text-black "
                   onClick={handleDecline}
                 >
                   Não Poderei Ir
