@@ -322,9 +322,9 @@ export function AdminGuestManager() {
       // Se tiver mais de um membro no grupo
       if (groupMembers.length > 1) {
         const memberNames = groupMembers.map(g => g.name).join(' e ');
-        message = `Olá ${memberNames}! 🎉\n\nVocês estão convidados para o nosso casamento!\n\n`;
+        message = `Olá ${memberNames}! \n\nNem conseguimos acreditar, mas é real, o grande momento está cada vez mais perto.\n\n`;
       } else {
-        message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n`;
+        message = `Olá ${guest.name}! \n\nNem conseguimos acreditar, mas é real, o grande momento está cada vez mais perto.\n\n`;
       }
 
       message += `📅 Data: 25 de abril de 2026\n` +
@@ -339,9 +339,11 @@ export function AdminGuestManager() {
       } else {
         message += `Para confirmar sua presença, acesse:\n${baseUrl}/confirm/${guest.id}\n\n`;
       }
-
-      message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! 💕\n` +
-        `Fabíola e Juninho`;
+      message += `Lembrete: o convite é intransferível, e precisamos que confirme a presença individualmente até a data de 16/01/2026.\n\n`;
+      message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! \n\n`;
+      message += `"Deus mudou o teu caminho até juntares com o meu e guardou a tua vida separando-a para mim. Para onde fores, irei; onde tu repousares, repousarei." - Rute 1:16-18\n\n`;
+      message += `Fabíola e Juninho  👰🏼‍♀️🤵🏻\n`;
+    
 
       // Usa o formato correto do link do WhatsApp
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
