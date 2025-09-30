@@ -23,7 +23,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest, getGifts, addGift } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar, Download } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import type { Gift as GiftType } from '@/lib/firestore';
 import PartyQRCode from './PartyQRCode';
@@ -260,6 +260,50 @@ export function AdminGuestManager() {
       setGuests(prev => prev.filter(g => g.id !== guestId));
     } catch (error) {
       console.error('Erro ao deletar convidado:', error);
+    }
+  };
+
+  const exportGuestsToPDF = (list: Guest[], title: string) => {
+    try {
+      const rows = list.map(g => ({ name: g.name || '', phone: g.phone || '' }));
+      const w = window.open('', '_blank');
+      if (!w) {
+        toast.error('Não foi possível abrir a janela de impressão');
+        return;
+      }
+      const html = `<!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>${title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 24px; }
+              h1 { font-size: 18px; margin: 0 0 16px; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+              th { background: #f3f3f3; text-align: left; }
+            </style>
+          </head>
+          <body>
+            <h1>${title}</h1>
+            <table>
+              <thead>
+                <tr><th>Nome</th><th>Telefone</th></tr>
+              </thead>
+              <tbody>
+                ${rows.map(r => `<tr><td>${(r.name || '').replace(/</g, '&lt;')}</td><td>${(r.phone || '').replace(/</g, '&lt;')}</td></tr>`).join('')}
+              </tbody>
+            </table>
+            <script>window.onload = function(){ window.print(); }<\/script>
+          </body>
+        </html>`;
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      toast.error('Erro ao exportar PDF');
     }
   };
 
@@ -604,6 +648,15 @@ export function AdminGuestManager() {
             <DialogDescription className="text-sm text-gray-600">
               Total de {confirmedGuests.length} convidado(s) confirmado(s)
             </DialogDescription>
+            <div className="flex justify-end mt-2">
+              <Button
+                onClick={() => exportGuestsToPDF(confirmedGuests, 'Confirmados')}
+                className="bg-wedding-primary text-white hover:bg-wedding-secondary"
+                size="sm"
+              >
+                <Download className="w-4 h-4 mr-2" /> Exportar PDF
+              </Button>
+            </div>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto mt-4">
             {confirmedGuests.length === 0 ? (
@@ -676,6 +729,15 @@ export function AdminGuestManager() {
             <DialogDescription className="text-sm text-gray-600">
               Total de {pendingGuests.length} convidado(s) aguardando confirmação
             </DialogDescription>
+            <div className="flex justify-end mt-2">
+              <Button
+                onClick={() => exportGuestsToPDF(pendingGuests, 'Pendentes')}
+                className="bg-wedding-primary text-white hover:bg-wedding-secondary"
+                size="sm"
+              >
+                <Download className="w-4 h-4 mr-2" /> Exportar PDF
+              </Button>
+            </div>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto mt-4">
             {pendingGuests.length === 0 ? (
@@ -729,6 +791,15 @@ export function AdminGuestManager() {
             <DialogDescription className="text-sm text-gray-600">
               Total de {declinedGuests.length} convidado(s) que não poderão comparecer
             </DialogDescription>
+            <div className="flex justify-end mt-2">
+              <Button
+                onClick={() => exportGuestsToPDF(declinedGuests, 'Declinados')}
+                className="bg-wedding-primary text-white hover:bg-wedding-secondary"
+                size="sm"
+              >
+                <Download className="w-4 h-4 mr-2" /> Exportar PDF
+              </Button>
+            </div>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto mt-4">
             {declinedGuests.length === 0 ? (
@@ -1158,7 +1229,7 @@ export function AdminGuestManager() {
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <Button
-                onClick={() => navigate('/raffle')}
+                onClick={() => navigate('/admin/raffle')}
                 className="w-full bg-wedding-primary text-white hover:bg-wedding-secondary"
               >
                 <Ticket className="h-4 w-4 mr-2" />

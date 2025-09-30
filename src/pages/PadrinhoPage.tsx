@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/lib/auth';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Send, Music, Plus, ThumbsUp, ThumbsDown, Heart, Camera, Clock, Gift } from 'lucide-react';
-import { collection, query, orderBy, addDoc, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, getDoc, serverTimestamp, setDoc, runTransaction } from 'firebase/firestore';
+import { LogOut, Send, Music, Plus, ThumbsUp, ThumbsDown, Heart, Camera, Clock, Gift, Play, Pause, Volume2, VolumeX } from 'lucide-react';
+import { collection, query, orderBy, addDoc, onSnapshot, updateDoc, doc, arrayUnion, arrayRemove, getDoc, serverTimestamp, setDoc, runTransaction, Bytes } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
@@ -19,6 +19,11 @@ interface Message {
   userId: string;
   userName: string;
   createdAt: Date;
+  // Campos opcionais para imagens armazenadas como blob no Firestore
+  imageBytes?: unknown;
+  imageMimeType?: string;
+  // URL criada localmente para exibir a imagem
+  imageUrl?: string;
 }
 
 interface ChecklistItem {
@@ -29,8 +34,8 @@ interface ChecklistItem {
 
 interface SuggestedMusic {
   id: string;
-  title: string;
-  artist: string;
+  title?: string;
+  link: string;
   suggestedBy: string;
   userId: string;
   likes: string[];
@@ -44,10 +49,16 @@ const PadrinhoPage: React.FC = () => {
   const [newMessage, setNewMessage] = useState('');
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [musicTitle, setMusicTitle] = useState('');
-  const [artist, setArtist] = useState('');
+  const [musicLink, setMusicLink] = useState('');
   const [suggestedMusics, setSuggestedMusics] = useState<SuggestedMusic[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const youtubeIframeRef = useRef<HTMLIFrameElement | null>(null);
+  const [currentPlay, setCurrentPlay] = useState<{ type: 'audio' | 'youtube'; url: string } | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
 
   const dresscodeImages = [
     'https://img.ltwebstatic.com/images3_pi/2025/01/07/82/17362321262a1b76b66ac9c105912006bd9a006254_thumbnail_405x.webp',
@@ -76,11 +87,33 @@ const PadrinhoPage: React.FC = () => {
     const q = query(messagesRef, orderBy('createdAt', 'asc'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const newMessages = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        createdAt: doc.data().createdAt?.toDate()
-      })) as Message[];
+      // Revoga URLs anteriores para evitar vazamento de memória
+      try {
+        messages.forEach(m => {
+          if (m.imageUrl) URL.revokeObjectURL(m.imageUrl);
+        });
+      } catch {}
+
+      const newMessages = snapshot.docs.map(d => {
+        const data = d.data() as any;
+        const base: Message = {
+          id: d.id,
+          ...data,
+          createdAt: data.createdAt?.toDate()
+        };
+
+        if (data.imageBytes) {
+          // `Bytes` do Firestore possui `toUint8Array()`
+          const bytesObj = data.imageBytes as { toUint8Array?: () => Uint8Array } | Uint8Array;
+          const uint8 = (bytesObj && typeof (bytesObj as any).toUint8Array === 'function')
+            ? (bytesObj as any).toUint8Array()
+            : new Uint8Array(bytesObj as Uint8Array);
+          const blob = new Blob([uint8], { type: data.imageMimeType || 'application/octet-stream' });
+          const url = URL.createObjectURL(blob);
+          return { ...base, imageUrl: url } as Message;
+        }
+        return base;
+      });
       
       setMessages(newMessages);
     });
@@ -155,6 +188,13 @@ const PadrinhoPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emblaApi]);
 
+  // Rolar para a última mensagem quando a lista de mensagens mudar
+  useEffect(() => {
+    try {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } catch {}
+  }, [messages]);
+
   // Funções de manipulação
   const handleLogout = async () => {
     try {
@@ -180,6 +220,32 @@ const PadrinhoPage: React.FC = () => {
       setNewMessage('');
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+    }
+  };
+
+  const handleOpenFileDialog = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    try {
+      const buffer = await file.arrayBuffer();
+      const bytes = Bytes.fromUint8Array(new Uint8Array(buffer));
+      await addDoc(collection(db, 'padrinhosChat'), {
+        userId: user.uid,
+        userName: user.email,
+        createdAt: serverTimestamp(),
+        imageBytes: bytes,
+        imageMimeType: file.type || 'application/octet-stream',
+      });
+      // limpa o input pra permitir re-seleção do mesmo arquivo
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      toast.success('Imagem enviada!');
+    } catch (error) {
+      console.error('Erro ao enviar imagem:', error);
+      toast.error('Não foi possível enviar a imagem.');
     }
   };
 
@@ -220,12 +286,12 @@ const PadrinhoPage: React.FC = () => {
 
   const handleMusicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!musicTitle.trim() || !artist.trim() || !user) return;
+    if (!musicTitle.trim() || !musicLink.trim() || !user) return;
 
     try {
       await addDoc(collection(db, 'suggestedMusics'), {
         title: musicTitle,
-        artist,
+        link: musicLink,
         suggestedBy: user.email,
         userId: user.uid,
         likes: [],
@@ -233,7 +299,7 @@ const PadrinhoPage: React.FC = () => {
       });
 
       setMusicTitle('');
-      setArtist('');
+      setMusicLink('');
     } catch (error) {
       console.error('Erro ao sugerir música:', error);
     }
@@ -275,6 +341,78 @@ const PadrinhoPage: React.FC = () => {
       console.error('Erro ao votar:', error);
     }
   };
+
+  // Helpers para player
+  const parseMusicLink = (url: string): { type: 'audio' | 'youtube' | 'unsupported'; embedUrl?: string } => {
+    try {
+      const u = new URL(url);
+      // áudio direto
+      if (/\.(mp3|ogg|wav)(\?|#|$)/i.test(u.pathname)) {
+        return { type: 'audio', embedUrl: url };
+      }
+      // YouTube
+      if (u.hostname.includes('youtube.com') || u.hostname.includes('youtu.be')) {
+        let videoId = '';
+        if (u.hostname.includes('youtu.be')) {
+          videoId = u.pathname.replace('/', '');
+        } else {
+          videoId = u.searchParams.get('v') || '';
+        }
+        if (videoId) {
+          const embed = `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&enablejsapi=1`;
+          return { type: 'youtube', embedUrl: embed };
+        }
+      }
+    } catch {}
+    return { type: 'unsupported' };
+  };
+
+  const handlePlay = (link: string) => {
+    const parsed = parseMusicLink(link);
+    if (parsed.type === 'unsupported') {
+      window.open(link, '_blank');
+      return;
+    }
+    setCurrentPlay(parsed.type === 'audio' ? { type: 'audio', url: parsed.embedUrl as string } : { type: 'youtube', url: parsed.embedUrl as string });
+    setIsMuted(false);
+  };
+
+  const handleStop = () => {
+    if (currentPlay?.type === 'audio' && audioRef.current) {
+      try {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } catch {}
+    }
+    setCurrentPlay(null);
+  };
+
+  const toggleMute = () => {
+    if (!currentPlay) return;
+    if (currentPlay.type === 'youtube' && youtubeIframeRef.current?.contentWindow) {
+      const willMute = !isMuted;
+      try {
+        youtubeIframeRef.current.contentWindow.postMessage(
+          JSON.stringify({ event: 'command', func: willMute ? 'mute' : 'unMute', args: [] }),
+          '*'
+        );
+      } catch {}
+      setIsMuted(willMute);
+      return;
+    }
+    setIsMuted((prev) => !prev);
+  };
+
+  useEffect(() => {
+    // aplicar mute no áudio direto
+    if (currentPlay?.type === 'audio' && audioRef.current) {
+      audioRef.current.muted = isMuted;
+      if (!audioRef.current.src) {
+        audioRef.current.src = currentPlay.url;
+      }
+      audioRef.current.play().catch(() => {});
+    }
+  }, [currentPlay, isMuted]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-wedding-primary/5 to-wedding-secondary/5 py-8">
@@ -357,29 +495,7 @@ const PadrinhoPage: React.FC = () => {
                       <li>Sapatos sociais escuros para padrinhos</li>
                     </ul>
                   </div>
-                  <div className="bg-wedding-secondary/10 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-3">Lojas Sugeridas</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <a
-                        href="https://br.shein.com/ark/3715?goods_id=52661242&test=5051&url_from=adhub1194581989&scene=1&pf=google&ad_type=DPA&language=pt-br&siteuid=br&landing_page_id=3715&ad_test_id=9800&requestId=olw-4qexi4abracw&gad_source=1&skucode=I54vr06nq35g&coloration=1&onelink=0/googlefeed_br&gad_campaignid=22215650136&gclid=CjwKCAjwl_XBBhAUEiwAWK2hznSHm0M-WwYkr6G3OaZ4GKJk7S5MLbpFPCMksE_mk0u16SWZY4FxuhoC-DEQAvD_BwE&gbraid=0AAAAADm0yO6b-vhJONRXrjTcimfjh5ZoR&currency=BRL&lang=pt"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-wedding-gold hover:underline hover:text-wedding-gold/80 transition-colors"
-                      >
-                        <Gift className="w-4 h-4" />
-                        Loja 1 - Camisa
-                      </a>
-                      <a
-                        href="https://br.shein.com/EVER-PRETTYVestidodeDamadeHonraFormalPretocomDecoteProfundoeFendaLateral,VestidodeConvidadodeCasamento-p-29542985-cat-3091.html?share_from=null&url_from=GM71101396375&ref=www&rep=dir&ret=br"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 text-wedding-gold hover:underline hover:text-wedding-gold/80 transition-colors"
-                      >
-                        <Gift className="w-4 h-4" />
-                        Loja 2 - Vestidos
-                      </a>
-                    </div>
-                  </div>
+                  
                 </div>
               </Card>
             </motion.div>
@@ -394,7 +510,7 @@ const PadrinhoPage: React.FC = () => {
                 <div className="flex items-center gap-3 mb-6">
                   <Music className="w-6 h-6 text-wedding-gold" />
                   <h2 className="text-2xl font-elegant font-semibold text-slate-50">
-                    Sugestões de Músicas
+                    Sugestões de Músicas (por link)
                   </h2>
                 </div>
                 <form onSubmit={handleMusicSubmit} className="mb-6 space-y-4">
@@ -407,9 +523,10 @@ const PadrinhoPage: React.FC = () => {
                         className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
                       />
                       <Input
-                        value={artist}
-                        onChange={(e) => setArtist(e.target.value)}
-                        placeholder="Artista"
+                        type="url"
+                        value={musicLink}
+                        onChange={(e) => setMusicLink(e.target.value)}
+                        placeholder="Link da música (YouTube ou .mp3/.ogg/.wav)"
                         className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
                       />
                     </div>
@@ -418,7 +535,7 @@ const PadrinhoPage: React.FC = () => {
                       className="w-full bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      Sugerir Música
+                      Enviar Link
                     </Button>
                   </div>
                 </form>
@@ -431,43 +548,80 @@ const PadrinhoPage: React.FC = () => {
                       className="transform hover:-translate-y-1 transition-all"
                     >
                       <Card className="p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30">
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-3 min-w-0">
+                          <div className="flex-1 min-w-0 w-0 max-w-[65%]">
+                            <div className="flex items-center gap-2 min-w-0">
                               <Music className="w-4 h-4 text-wedding-gold" />
-                              <h3 className="font-semibold text-slate-50">{music.title}</h3>
+                              <h3 className="font-semibold text-slate-50 truncate max-w-full">
+                                {music.title || 'Sugestão'}
+                              </h3>
                             </div>
-                            <p className="text-sm text-slate-50/70">{music.artist}</p>
-                            <p className="text-xs text-slate-50/50 mt-1">
-                              Sugerido por: {formatPadrinhosNames(music.suggestedBy)}
+                            <p className="text-xs text-slate-50/70 mt-1 w-full truncate">
+                              <a href={music.link} target="_blank" rel="noreferrer" className="hover:underline block truncate max-w-full" title={music.link}>{music.link}</a>
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                          <div className="flex-none flex flex-row flex-nowrap items-center gap-1 justify-end">
+                            {currentPlay && currentPlay.url && parseMusicLink(music.link).type !== 'unsupported' && currentPlay.url === parseMusicLink(music.link).embedUrl ? (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleStop}
+                                className="hover:bg-wedding-secondary/20 text-slate-50 w-8 h-8 p-0 justify-center"
+                                title="Parar"
+                              >
+                                <Pause className="w-4 h-4" />
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handlePlay(music.link)}
+                                className="hover:bg-wedding-secondary/20 text-slate-50 w-8 h-8 p-0 justify-center"
+                                title="Reproduzir"
+                              >
+                                <Play className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {parseMusicLink(music.link).type !== 'unsupported' && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={toggleMute}
+                                className={`hover:bg-wedding-secondary/20 ${isMuted ? 'text-red-400' : 'text-slate-50'} w-8 h-8 p-0 justify-center`}
+                                title={isMuted ? 'Ativar som' : 'Silenciar'}
+                              >
+                                {isMuted ? (
+                                  <VolumeX className="w-4 h-4" />
+                                ) : (
+                                  <Volume2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               onClick={() => handleMusicVote(music.id, 'like')}
-                              className={`hover:bg-wedding-secondary/20 ${
+                              className={`hover:bg-wedding-secondary/20 w-8 h-8 p-0 justify-center ${
                                 music.likes.includes(user?.uid || '')
                                   ? 'text-green-500'
                                   : 'text-slate-50'
                               }`}
+                              title="Curtir"
                             >
-                              <ThumbsUp className="w-4 h-4 mr-1" />
-                              {music.likes.length}
+                              <ThumbsUp className="w-4 h-4 shrink-0" />
                             </Button>
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon"
                               onClick={() => handleMusicVote(music.id, 'dislike')}
-                              className={`hover:bg-wedding-secondary/20 ${
+                              className={`hover:bg-wedding-secondary/20 w-8 h-8 p-0 justify-center ${
                                 music.dislikes.includes(user?.uid || '')
                                   ? 'text-red-500'
                                   : 'text-slate-50'
                               }`}
+                              title="Não curtir"
                             >
-                              <ThumbsDown className="w-4 h-4 mr-1" />
-                              {music.dislikes.length}
+                              <ThumbsDown className="w-4 h-4 shrink-0" />
                             </Button>
                           </div>
                         </div>
@@ -475,6 +629,23 @@ const PadrinhoPage: React.FC = () => {
                     </motion.div>
                   ))}
                 </div>
+                {/* Player */}
+                {currentPlay?.type === 'audio' && (
+                  <audio ref={audioRef} src={currentPlay.url} className="w-full mt-3" controls />
+                )}
+                {currentPlay?.type === 'youtube' && (
+                  <div className="aspect-video mt-3">
+                    <iframe
+                      ref={youtubeIframeRef}
+                      key={currentPlay.url}
+                      src={currentPlay.url}
+                      className="w-full h-full rounded-md"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                      title="YouTube player"
+                    />
+                  </div>
+                )}
               </Card>
             </motion.div>
           </div>
@@ -566,13 +737,18 @@ const PadrinhoPage: React.FC = () => {
                         <div className="text-sm font-medium mb-1">
                           {message.userId === user?.uid ? 'Você' : formatPadrinhosNames(message.userName)}
                         </div>
-                        <div>{message.text}</div>
+                        {message.imageUrl ? (
+                          <img src={message.imageUrl} alt="Imagem enviada" className="rounded-md max-w-full h-auto" />
+                        ) : (
+                          <div>{message.text}</div>
+                        )}
                         <div className="text-xs mt-1 opacity-70">
                           {message.createdAt?.toLocaleTimeString()}
                         </div>
                       </div>
                     </motion.div>
                   ))}
+                  <div ref={messagesEndRef} />
                 </div>
                 <form onSubmit={sendMessage} className="flex gap-2">
                   <Input
@@ -581,6 +757,21 @@ const PadrinhoPage: React.FC = () => {
                     placeholder="Digite sua mensagem..."
                     className="bg-wedding-secondary/20 text-slate-50 border-wedding-secondary/30 focus:border-wedding-gold"
                   />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelected}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleOpenFileDialog}
+                    className="bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"
+                    title="Enviar imagem"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
                   <Button
                     type="submit"
                     className="bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"

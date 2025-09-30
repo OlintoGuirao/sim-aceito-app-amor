@@ -10,7 +10,7 @@ import PadrinhoPage from './pages/PadrinhoPage';
 import PartyGallery from '@/components/PartyGallery';
 import { useAuth } from './lib/auth';
 
-// Componente para rota protegida da rifa (admin)
+// Componente para rota protegida da rifa (permitir usuários autenticados)
 const RaffleRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAdmin, loading } = useAuth();
 
@@ -27,10 +27,7 @@ const RaffleRoute = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Se não for admin, redireciona para área de padrinhos
-  if (!isAdmin) {
-    return <Navigate to="/padrinhos" replace />;
-  }
+  // Permite acesso a qualquer usuário autenticado (admin ou padrinho)
 
   return <>{children}</>;
 };
@@ -84,17 +81,9 @@ function App() {
         <Route path="/party-gallery/:userId" element={<PartyGallery />} />
 
         {/* ===== ROTAS DA RIFA (ADMIN) ===== */}
-        <Route path="/raffle" element={
-          <RaffleRoute>
-            <AdminRaffle />
-          </RaffleRoute>
-        } />
+        <Route path="/raffle" element={<AdminRaffle />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/admin/raffle" element={
-          <RaffleRoute>
-            <AdminRaffle />
-          </RaffleRoute>
-        } />
+        <Route path="/admin/raffle" element={<AdminRaffle />} />
 
         {/* ===== ROTAS DOS PADRINHOS ===== */}
         <Route path="/padrinhos" element={
