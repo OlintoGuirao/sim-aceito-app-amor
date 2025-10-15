@@ -141,11 +141,11 @@ export function SaveTheDatePage() {
           <CardContent className="space-y-6 px-6 pb-6">
             {/* Photo */}
             <div className="w-full">
-              <div className="relative w-full overflow-hidden rounded-lg border border-wedding-gold/20 shadow-md bg-wedding-palha/5">
+              <div className="relative w-full overflow-hidden rounded-lg border border-wedding-gold/20 shadow-md bg-wedding-palha/5 flex items-center justify-center">
                 <img
                   src={saveTheDatePhotoUrl}
                   alt="Foto do casal - Save the Date"
-                  className="w-full h-64 md:h-80 object-cover"
+                  className="w-full h-auto max-h-96 md:max-h-[32rem] object-contain"
                 />
               </div>
             </div>
@@ -165,21 +165,7 @@ export function SaveTheDatePage() {
               <p className="leading-relaxed font-medium">{weddingInfo.description}</p>
             </div>
 
-            {/* WhatsApp Share */}
-            <div className="flex justify-center">
-              <Button
-                asChild
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent('Save the Date! Veja os detalhes: ' + window.location.origin + '/save-the-date.html')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Compartilhar no WhatsApp
-                </a>
-              </Button>
-            </div>
+            
           </CardContent>
         </Card>
 
