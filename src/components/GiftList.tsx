@@ -38,6 +38,7 @@ const GiftList: React.FC = () => {
   const [selectedGift, setSelectedGift] = useState<GiftItem | null>(null);
   const [gifts, setGifts] = useState<GiftItem[]>([]);
   const [loadingGifts, setLoadingGifts] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const categories = [
     { id: 'all', name: 'Todos' },
@@ -137,6 +138,54 @@ const GiftList: React.FC = () => {
 
         <TabsContent value="gifts">
           <div className="space-y-6">
+            {/* Link destacado para a lista oficial (sem iframe, pois o site bloqueia incorporação) */}
+            <Card className="bg-gradient-to-r from-wedding-gold/20 via-wedding-secondary/20 to-wedding-gold/20 border-wedding-gold/40 shadow-2xl ring-1 ring-wedding-gold/30">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-wedding-primary text-2xl font-elegant">
+                    Lista Oficial (Quero de Casamento)
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="max-w-2xl">
+                    <p className="text-wedding-primary font-medium">
+                      Para presentear, acesse nossa lista oficial. Ela abre em uma nova aba.
+                    </p>
+                    <p className="text-wedding-primary/80 text-sm mt-1">
+                      Preferimos que as compras sejam feitas por lá para facilitar o controle.
+                    </p>
+                  </div>
+                  <Button
+                    className="bg-wedding-primary text-white hover:bg-wedding-primary/90 shadow-lg hover:shadow-xl px-6 py-3 text-base"
+                    onClick={() => window.open('https://www.querodecasamento.com.br/lista-de-casamento/olinto-guirao-junior--fabiola-ferreira-do-nascimento', '_blank')}
+                  >
+                    Abrir Lista Oficial
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-gradient-to-r from-wedding-gold/15 via-wedding-secondary/20 to-wedding-gold/15 border-wedding-gold/40 shadow-xl ring-1 ring-wedding-gold/30">
+              <CardContent className="py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-3">
+                  <Gift className="w-5 h-5 text-wedding-primary" />
+                  <p className="text-wedding-primary font-semibold">
+                    Caso queira mais sugestões, ao lado temos algumas opções. Basta clicar em "Mostrar sugestões"
+                  </p>
+                </div>
+                <Button
+                  className="bg-wedding-gold text-black hover:bg-wedding-gold/80 shadow-lg"
+                  onClick={() => setShowSuggestions(prev => !prev)}
+                  aria-expanded={showSuggestions}
+                  aria-controls="gift-suggestions-section"
+                >
+                  {showSuggestions ? 'Esconder sugestões' : 'Mostrar sugestões'}
+                </Button>
+              </CardContent>
+            </Card>
+            
+            {showSuggestions && (
             <div className="flex flex-wrap gap-2">
               {categories.map(category => (
                 <Button
@@ -149,8 +198,10 @@ const GiftList: React.FC = () => {
                 </Button>
               ))}
             </div>
+            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {showSuggestions && (
+            <div id="gift-suggestions-section" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {loadingGifts ? (
                 <div className="col-span-full text-center text-wedding-secondary">Carregando presentes...</div>
               ) : gifts
@@ -179,7 +230,7 @@ const GiftList: React.FC = () => {
                         {gift.status === 'reserved' && gift.reservedBy ? (
                           <div className="text-wedding-gold font-semibold">Reservado por: {gift.reservedBy}</div>
                         ) : null}
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <Button
                             variant="outline"
                             className="flex-1 bg-wedding-primary text-white hover:bg-wedding-primary/90"
@@ -187,47 +238,20 @@ const GiftList: React.FC = () => {
                           >
                             Ver na Loja
                           </Button>
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className="flex-1 bg-wedding-primary text-white hover:bg-wedding-primary/90"
-                                disabled={gift.status !== 'available'}
-                              >
-                                Reservar
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Reservar Presente</DialogTitle>
-                              </DialogHeader>
-                              <div className="space-y-4 py-4">
-                                <Input
-                                  placeholder="Seu nome"
-                                  value={reservationName}
-                                  onChange={(e) => setReservationName(e.target.value)}
-                                />
-                                <Input
-                                  placeholder="Seu email"
-                                  type="email"
-                                  value={reservationEmail}
-                                  onChange={(e) => setReservationEmail(e.target.value)}
-                                />
-                                <Button
-                                  className="w-full bg-wedding-primary text-white"
-                                  onClick={() => handleReserveGift(gift)}
-                                >
-                                  Confirmar Reserva
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
+                          <Button
+                            variant="outline"
+                            className="flex-1 bg-wedding-secondary text-black hover:bg-wedding-primary hover:text-white"
+                            onClick={() => window.open('https://www.querodecasamento.com.br/lista-de-casamento/olinto-guirao-junior--fabiola-ferreira-do-nascimento', '_blank')}
+                          >
+                            Presentear na Lista Oficial
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
             </div>
+            )}
           </div>
         </TabsContent>
 

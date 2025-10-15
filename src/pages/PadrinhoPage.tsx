@@ -55,17 +55,23 @@ const PadrinhoPage: React.FC = () => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const youtubeIframeRef = useRef<HTMLIFrameElement | null>(null);
   const [currentPlay, setCurrentPlay] = useState<{ type: 'audio' | 'youtube'; url: string } | null>(null);
   const [isMuted, setIsMuted] = useState(false);
 
+  // Imagens do Dresscode vindas da pasta public. 
+  // Coloque seus arquivos em public/dresscode/ e liste aqui os nomes.
+  const assetBaseUrl = (import.meta as any)?.env?.BASE_URL || '/';
   const dresscodeImages = [
-    'https://img.ltwebstatic.com/images3_pi/2025/01/07/82/17362321262a1b76b66ac9c105912006bd9a006254_thumbnail_405x.webp',
-    'https://img.ltwebstatic.com/images3_pi/2025/01/07/c5/1736232128d9cb88e830eed010850ea40dc429da17_thumbnail_560x.webp',
-    'https://img.ltwebstatic.com/images3_pi/2024/01/24/da/1706063409dfa5184aa50df866ba90c32a92094bf8_wk_1746698871_thumbnail_900x.webp',
-    'https://img.ltwebstatic.com/images3_pi/2024/01/24/af/1706063405e2ad54118a292d0edaa0bc17a662ac68_wk_1746698870_thumbnail_900x.webp',
-  ];
+    'Padrinhos (1).jpg',
+    'Padrinhos (2).jpg',
+    'Padrinhos (3).jpg',
+    'Padrinhos (4).jpg',
+    'Padrinhos (5).jpg',
+    'Padrinhos (6).jpg'
+  ].map((fileName) => `${assetBaseUrl}${encodeURIComponent(fileName)}`);
 
   // Função para formatar o nome dos padrinhos
   const formatPadrinhosNames = (email: string | undefined) => {
@@ -188,10 +194,12 @@ const PadrinhoPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [emblaApi]);
 
-  // Rolar para a última mensagem quando a lista de mensagens mudar
+  // Rolar apenas o container do chat para a última mensagem quando a lista mudar (sem mover a página)
   useEffect(() => {
+    const el = chatContainerRef.current;
+    if (!el) return;
     try {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
     } catch {}
   }, [messages]);
 
@@ -460,15 +468,15 @@ const PadrinhoPage: React.FC = () => {
                   </h2>
                 </div>
                 <div className="space-y-6 text-slate-50">
-                  <div className="aspect-video bg-wedding-secondary/20 rounded-xl overflow-hidden flex items-center justify-center md:h-[500px] max-w-xl md:max-w-2xl mx-auto transform hover:scale-[1.02] transition-transform">
-                    <div className="overflow-hidden w-full h-full" ref={emblaRef}>
-                      <div className="flex h-full">
+                  <div className="aspect-video w-full bg-wedding-secondary/20 rounded-xl overflow-hidden flex items-center justify-center md:max-h-[500px] max-w-xl md:max-w-2xl mx-auto transform hover:scale-[1.02] transition-transform">
+                    <div className="overflow-hidden w-full h-full min-w-0 min-h-0" ref={emblaRef}>
+                      <div className="flex h-full min-w-0">
                         {dresscodeImages.map((src, idx) => (
                           <img
                             key={src}
                             src={src}
                             alt={`Exemplo de Dresscode ${idx + 1}`}
-                            className="w-full h-full object-contain flex-[0_0_100%] min-w-0 bg-white"
+                            className="w-full h-full object-contain flex-[0_0_100%] min-w-0 min-h-0 shrink-0 bg-white"
                           />
                         ))}
                       </div>
@@ -719,7 +727,10 @@ const PadrinhoPage: React.FC = () => {
                     Chat dos Padrinhos
                   </h2>
                 </div>
-                <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2 custom-scrollbar">
+                <div
+                  className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2 custom-scrollbar"
+                  ref={chatContainerRef}
+                >
                   {messages.map((message) => (
                     <motion.div
                       key={message.id}

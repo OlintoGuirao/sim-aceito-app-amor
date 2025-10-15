@@ -78,7 +78,7 @@ const AdminLogin: React.FC = () => {
                 placeholder="seu@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-wedding-secondary"
+                className="bg-wedding-secondary placeholder:text-transparent focus:placeholder:text-transparent"
                 required
               />
             </div>
@@ -92,7 +92,7 @@ const AdminLogin: React.FC = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-wedding-secondary"
+                className="bg-wedding-secondary placeholder:text-transparent focus:placeholder:text-transparent"
                 required
               />
             </div>
