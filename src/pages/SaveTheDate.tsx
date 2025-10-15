@@ -80,6 +80,10 @@ export function SaveTheDatePage() {
     day: 'numeric'
   });
 
+  // Em produção (ex.: GitHub Pages) o app pode estar em um subcaminho; use a BASE_URL e evite cache
+  const baseUrlForAssets = (import.meta as any)?.env?.BASE_URL || '/';
+  const saveTheDatePhotoUrl = `${baseUrlForAssets}SaveTheDate.jpg?v=1`;
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-wedding-primary via-wedding-darkMarsala to-wedding-primary">
       {/* Decorative background elements */}
@@ -135,6 +139,16 @@ export function SaveTheDatePage() {
           </CardHeader>
           
           <CardContent className="space-y-6 px-6 pb-6">
+            {/* Photo */}
+            <div className="w-full">
+              <div className="relative w-full overflow-hidden rounded-lg border border-wedding-gold/20 shadow-md bg-wedding-palha/5">
+                <img
+                  src={saveTheDatePhotoUrl}
+                  alt="Foto do casal - Save the Date"
+                  className="w-full h-64 md:h-80 object-cover"
+                />
+              </div>
+            </div>
             {/* Date & Time */}
             <div className="flex items-center gap-4 text-wedding-primary bg-wedding-primary/5 p-4 rounded-lg border border-wedding-primary/10">
               <div className="flex-shrink-0">
@@ -146,22 +160,25 @@ export function SaveTheDatePage() {
               </div>
             </div>
 
-            {/* Location 
-            <div className="flex items-start gap-4 text-wedding-primary bg-wedding-primary/5 p-4 rounded-lg border border-wedding-primary/10">
-              <div className="flex-shrink-0">
-                <MapPin className="w-7 h-7 text-wedding-gold mt-0.5" />
-              </div>
-              <div>
-                <p className="font-elegant font-semibold text-xl text-wedding-primary">{weddingInfo.location}</p>
-                <p className="text-wedding-primary/80 font-medium">{weddingInfo.address}</p>
-                <p className="text-wedding-primary/80 font-medium">{weddingInfo.city}</p>
-              </div>
-            </div>
-            */}
-
             {/* Description */}
             <div className="text-center text-wedding-primary bg-gradient-to-r from-wedding-primary/10 to-wedding-gold/10 p-6 rounded-lg border border-wedding-gold/20">
               <p className="leading-relaxed font-medium">{weddingInfo.description}</p>
+            </div>
+
+            {/* WhatsApp Share */}
+            <div className="flex justify-center">
+              <Button
+                asChild
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent('Save the Date! Veja os detalhes: ' + window.location.origin + '/save-the-date.html')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Compartilhar no WhatsApp
+                </a>
+              </Button>
             </div>
           </CardContent>
         </Card>
