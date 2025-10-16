@@ -3,42 +3,35 @@ import { Card } from '@/components/ui/card';
 
 const PhotoGallery: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
-  const photos = [{
-    id: 1,
-    src: '/Foto1.jpg',
-    
-  }, {
-    id: 2,
-    src: '/Foto2.jpg',
-    
-  }, {
-    id: 3,
-    src: '/Foto3.jpg',
-    
-  }, {
-    id: 4,
-    src: '/Foto4.jpg',
-   
-  }, {
-    id: 5,
-    src: '/foto5.jpg',
-    
-  }, {
-    id: 6,
-    src: '/Foto6.jpg',
-   
-  }, {
-    id: 7,
-    src: '/Foto7.jpg',
-   
-  }, {
-    id: 8,
-    src: '/Foto8.jpg',
-   
-  }, {
-    id: 9,
-    src: '/Foto9.jpg',
-  }];
+  const photos = [
+  { id: 2, src:  '/Foto2.jpg',            },  
+  { id: 4, src:  '/Foto4.jpg',            }, 
+  { id: 5, src:  '/foto5.jpg',            },
+  { id: 8, src:  '/Foto8.jpg',            }, 
+  { id: 9, src:  '/Foto9.jpg',            }, 
+  { id: 10, src: '/FotoHistoria (1).webp',},
+  { id: 11, src: '/FotoHistoria (2).jpg' ,},
+  { id: 12, src: '/FotoHistoria (3).jpg' ,},
+  { id: 13, src: '/FotoHistoria (4).jpg' ,},
+  { id: 14, src: '/FotoHistoria (5).jpg' ,},
+  { id: 15, src: '/FotoHistoria (6).jpg' ,},
+  { id: 17, src: '/FotoHistoria (8).jpg' ,},
+  { id: 18, src: '/FotoHistoria (9).jpg' ,},
+  { id: 19, src: '/FotoHistoria (10).jpg',},
+  { id: 20, src: '/FotoHistoria (11).jpg',},
+  { id: 21, src: '/FotoHistoria (12).jpg',},
+  { id: 22, src: '/FotoHistoria (13).jpg',},
+  { id: 23, src: '/FotoHistoria (14).jpg',},
+  { id: 24, src: '/FotoHistoria (15).jpg',},
+  { id: 25, src: '/FotoHistoria (16).jpg',},
+  { id: 26, src: '/FotoHistoria (17).jpg',},
+  { id: 27, src: '/FotoHistoria (18).jpg',},
+  { id: 28, src: '/FotoHistoria (19).jpg',},
+  { id: 30, src: '/FotoHistoria (21).jpg',},
+  { id: 31, src: '/FotoHistoria (22).jpg',},
+  { id: 32, src: '/FotoHistoria (23).jpg',},
+  { id: 33, src: '/FotoHistoria (24).jpg',}
+];
 
   return (
     <div className="space-y-6">
