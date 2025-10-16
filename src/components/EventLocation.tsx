@@ -45,33 +45,60 @@ const EventLocation: React.FC = () => {
     {
       category: "Entradas",
       items: [
-        "Salada Caesar com Frango Grelhado",
-        "Carpaccio de Filé Mignon",
-        "Bruschettas Variadas"
+        "Torrada com Pate",
+        "Amendoin",
+      ]
+    },
+    {
+      category: "Mesa de Frios",
+      items: [
+        "Salame",
+        "Presunto",
+        "Peito de peru",
+        "Queijo Mussarela",
+        "Calabresa Acebolada",
+        "Maionese com Barquete"
       ]
     },
     {
       category: "Pratos Principais",
       items: [
-        "Filé Mignon ao Molho de Vinho",
-        "Peixe Grelhado com Molho de Ervas",
-        "Risoto de Cogumelos"
+        "Arroz",
+        "Feijão Gordo",
+        "Churrasco De Panela",
+        "Parmegiana de Frango",
+        "Salada Verde",
+        "Maionese",
+        "Salada Marroquina"
       ]
     },
-    {
-      category: "Acompanhamentos",
-      items: [
-        "Arroz com Brócolis",
-        "Purê de Batatas",
-        "Legumes Grelhados"
-      ]
-    },
+    
     {
       category: "Sobremesas",
       items: [
-        "Petit Gateau",
-        "Mousse de Chocolate",
-        "Torta de Frutas Vermelhas"
+        "Bolo De Floresta Negra",
+        "Sorvete",
+        
+      ]
+    },
+    {
+      category: "Mesa de Café",
+      items: [
+        "Café",
+        "Bolacha",
+        "Queijo Fresco",
+        "Doce de Leite",
+      ]
+    },
+    {
+      category: "Bebidas",
+      items: [
+        "Refrigerante",
+        "Água sem gás",
+        "Suco",
+        "Chopp",
+        "Cachaça",
+        "Batidas",
       ]
     }
   ];
@@ -155,19 +182,19 @@ const EventLocation: React.FC = () => {
                             Ver Cardápio
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-wedding-primary text-slate-50 max-w-2xl">
+                        <DialogContent className="w-[92vw] sm:max-w-lg md:max-w-2xl text-slate-50 bg-gradient-to-br from-wedding-primary/95 to-wedding-primary/90 sm:rounded-2xl border border-wedding-secondary/20 shadow-xl supports-[backdrop-filter]:backdrop-blur-md max-h-[85vh] overflow-y-auto p-4 sm:p-6">
                           <DialogHeader>
-                            <DialogTitle className="text-2xl font-elegant text-center text-slate-50">
+                            <DialogTitle className="text-xl sm:text-2xl font-elegant text-center text-slate-50">
                               Nosso Cardápio
                             </DialogTitle>
                           </DialogHeader>
                           <div className="grid md:grid-cols-2 gap-6 py-4">
                             {menuItems.map((section, index) => (
-                              <div key={index} className="space-y-2">
+                              <div key={index} className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3 sm:p-4 shadow-sm transition-colors hover:bg-white/10">
                                 <h4 className="text-lg font-semibold text-wedding-secondary">
                                   {section.category}
                                 </h4>
-                                <ul className="space-y-1">
+                                <ul className="space-y-1.5">
                                   {section.items.map((item, itemIndex) => (
                                     <li key={itemIndex} className="text-sm text-slate-50">
                                       {item}
