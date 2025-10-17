@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { QRCodeSVG } from 'qrcode.react';
 import { Gift, CreditCard, QrCode } from 'lucide-react';
 import { getGifts, reserveGift, Gift as FirestoreGift } from '@/lib/firestore';
 
@@ -271,9 +270,12 @@ const GiftList: React.FC = () => {
                     </h3>
                     <div className="flex justify-center mb-6">
                       <div className="bg-white p-4 rounded-lg shadow-lg">
-                        <QRCodeSVG 
-                          value={`PIX: ${pixData.key}`}
-                          size={200}
+                        <img
+                          src="/Qrcode.jpg"
+                          alt="QR Code para pagamento via PIX"
+                          width={200}
+                          height={200}
+                          className="w-[200px] h-[200px] object-contain"
                         />
                       </div>
                     </div>
