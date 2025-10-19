@@ -43,13 +43,6 @@ const EventLocation: React.FC = () => {
 
   const menuItems = [
     {
-      category: "Entradas",
-      items: [
-        "Torrada com Pate",
-        "Amendoin",
-      ]
-    },
-    {
       category: "Mesa de Frios",
       items: [
         "Salame",
@@ -57,7 +50,15 @@ const EventLocation: React.FC = () => {
         "Peito de peru",
         "Queijo Mussarela",
         "Calabresa Acebolada",
-        "Maionese com Barquete"
+        "Maionese com Barquete",
+        "Quibe Crú",
+        "Azeitona",
+        "Torresmo",
+        "Batata Frita",
+        "Carne Louca",
+        "Mini Filão",
+        "Frango Frito",
+        "Ovo de Codorna"
       ]
     },
     {
@@ -69,7 +70,9 @@ const EventLocation: React.FC = () => {
         "Parmegiana de Frango",
         "Salada Verde",
         "Maionese",
-        "Salada Marroquina"
+        "Salada Marroquina",
+        "Farofa",
+        "Tabule"
       ]
     },
     
@@ -87,7 +90,7 @@ const EventLocation: React.FC = () => {
         "Café",
         "Bolacha",
         "Queijo Fresco",
-        "Doce de Leite",
+        "Doce de Leite"
       ]
     },
     {

@@ -164,26 +164,7 @@ const GiftList: React.FC = () => {
                   </Button>
                 </div>
               </CardContent>
-            </Card>
-            <Card className="bg-gradient-to-r from-wedding-gold/15 via-wedding-secondary/20 to-wedding-gold/15 border-wedding-gold/40 shadow-xl ring-1 ring-wedding-gold/30">
-              <CardContent className="py-5 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-3">
-                  <Gift className="w-5 h-5 text-wedding-primary" />
-                  <p className="text-wedding-primary font-semibold">
-                    Caso queira mais sugestões, ao lado temos algumas opções. Basta clicar em "Mostrar sugestões"
-                  </p>
-                </div>
-                <Button
-                  className="bg-wedding-gold text-black hover:bg-wedding-gold/80 shadow-lg"
-                  onClick={() => setShowSuggestions(prev => !prev)}
-                  aria-expanded={showSuggestions}
-                  aria-controls="gift-suggestions-section"
-                >
-                  {showSuggestions ? 'Esconder sugestões' : 'Mostrar sugestões'}
-                </Button>
-              </CardContent>
-            </Card>
-            
+            </Card>            
             {showSuggestions && (
             <div className="flex flex-wrap gap-2">
               {categories.map(category => (
