@@ -557,15 +557,31 @@ const PadrinhoPage: React.FC = () => {
                     >
                       <Card className="p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30">
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 md:gap-3 min-w-0">
-                          <div className="flex-1 min-w-0 w-0 max-w-[65%]">
+                        <div className="flex-1 w-full md:max-w-[65%] min-w-0">
+                            {/* Título */}
                             <div className="flex items-center gap-2 min-w-0">
-                              <Music className="w-4 h-4 text-wedding-gold" />
-                              <h3 className="font-semibold text-slate-50 truncate max-w-full">
+                              <Music className="w-4 h-4 text-wedding-gold shrink-0" />
+                              <h3
+                                className="font-semibold text-slate-50 truncate"
+                                style={{ maxWidth: '100%' }}
+                                title={music.title || 'Sugestão'}
+                              >
                                 {music.title || 'Sugestão'}
                               </h3>
                             </div>
-                            <p className="text-xs text-slate-50/70 mt-1 w-full truncate">
-                              <a href={music.link} target="_blank" rel="noreferrer" className="hover:underline block truncate max-w-full" title={music.link}>{music.link}</a>
+
+                            {/* Link */}
+                            <p className="text-xs text-slate-50/70 mt-1 min-w-0">
+                              <a
+                                href={music.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="hover:underline block truncate"
+                                style={{ maxWidth: '100%' }}
+                                title={music.link}
+                              >
+                                {music.link}
+                              </a>
                             </p>
                           </div>
                           <div className="flex-none flex flex-row flex-nowrap items-center gap-1 justify-end">
@@ -775,6 +791,7 @@ const PadrinhoPage: React.FC = () => {
                     onChange={handleImageSelected}
                     className="hidden"
                   />
+                  {/*
                   <Button
                     type="button"
                     onClick={handleOpenFileDialog}
@@ -783,6 +800,7 @@ const PadrinhoPage: React.FC = () => {
                   >
                     <Camera className="w-4 h-4" />
                   </Button>
+                  */}
                   <Button
                     type="submit"
                     className="bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"
