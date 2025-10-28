@@ -7,7 +7,7 @@ export const initializePadrinhoChecklist = async (userId: string) => {
   
   const defaultChecklist = {
     items: [
-      { id: '1', label: 'Terno/vestido comprado', checked: false },
+      { id: '1', label: 'Roupa/vestido comprado', checked: false },
       { id: '2', label: 'Presença confirmada', checked: false },
       { id: '3', label: 'Música enviada', checked: false },
       { id: '4', label: 'Acessórios escolhidos', checked: false }

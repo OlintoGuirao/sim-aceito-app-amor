@@ -138,7 +138,7 @@ const PadrinhoPage: React.FC = () => {
       if (snapshot.empty) {
         // Se não houver itens, criar os itens padrão
         const defaultItems = [
-          { id: '1', label: 'Terno/vestido comprado', checked: false },
+          { id: '1', label: 'Roupa/vestido comprado', checked: false },
           { id: '2', label: 'Presença confirmada', checked: false },
           { id: '3', label: 'Música enviada', checked: false },
           { id: '4', label: 'Acessórios escolhidos', checked: false }
@@ -498,7 +498,7 @@ const PadrinhoPage: React.FC = () => {
                       Orientações
                     </h3>
                     <ul className="list-disc space-y-3 marker:text-wedding-gold">
-                      <li>Padrinhos: Traje esporte fino na cor preta</li>
+                      <li>Padrinhos: Traje esporte fino na cor preta (Sem terno) </li>
                       <li>Madrinhas: Vestido longo na cor preta</li>
                       <li>Sapatos sociais escuros para padrinhos</li>
                     </ul>
