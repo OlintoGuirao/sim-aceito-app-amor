@@ -567,7 +567,8 @@ const PadrinhoPage: React.FC = () => {
                                 title={music.title || 'Sugestão'}
                               >
                                 {music.title || 'Sugestão'}
-                              </h3>
+                              </h3>git status
+
                             </div>
 
                             {/* Link */}
