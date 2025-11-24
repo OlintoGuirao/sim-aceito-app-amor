@@ -62,6 +62,7 @@ const PartyGallery: React.FC = () => {
   const [tempCaption, setTempCaption] = useState('');
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchPhotos();
@@ -77,6 +78,15 @@ const PartyGallery: React.FC = () => {
       emblaApi.off('select', onSelect);
     };
   }, [emblaApi]);
+
+  // Função para otimizar URL do Firebase Storage
+  // Nota: Firebase Storage não suporta parâmetros de query para compressão
+  // Mas podemos garantir que a URL está correta e usar outras otimizações
+  const optimizeImageUrl = (url: string): string => {
+    if (!url) return url;
+    // Retorna a URL original - otimizações são feitas via lazy loading e preload
+    return url;
+  };
 
   // Função para verificar se a URL da imagem é válida
   const checkImageUrl = async (url: string): Promise<boolean> => {
@@ -122,7 +132,19 @@ const PartyGallery: React.FC = () => {
       );
 
       // Filtrar fotos nulas e atualizar o estado
-      setPhotos(validPhotos.filter((photo): photo is PartyPhoto => photo !== null));
+      const validPhotosList = validPhotos.filter((photo): photo is PartyPhoto => photo !== null);
+      setPhotos(validPhotosList);
+      
+      // Preload da primeira imagem para carregamento mais rápido
+      if (validPhotosList.length > 0) {
+        const firstPhoto = validPhotosList[0];
+        const optimizedUrl = optimizeImageUrl(firstPhoto.url);
+        const preloadImg = new Image();
+        preloadImg.src = optimizedUrl;
+        preloadImg.onload = () => {
+          setLoadedImages(prev => new Set(prev).add(firstPhoto.id));
+        };
+      }
     } catch (error) {
       console.error('Erro ao buscar fotos:', error);
       toast.error('Erro ao carregar fotos');
@@ -414,14 +436,35 @@ const PartyGallery: React.FC = () => {
       {loading ? <div className="text-center text-slate-50">Carregando fotos...</div> : <div className="relative">
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
-              {photos.map((photo, index) => (
+              {photos.map((photo, index) => {
+                const optimizedUrl = optimizeImageUrl(photo.url);
+                const isLoaded = loadedImages.has(photo.id);
+                
+                return (
                 <div key={photo.id} className="flex-[0_0_100%] min-w-0 relative">
                   <Card className="mx-4 overflow-hidden bg-wedding-secondary">
                     <div className="relative group overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl">
+                      {/* Placeholder enquanto carrega */}
+                      {!isLoaded && (
+                        <div className="w-full h-[400px] bg-gradient-to-br from-wedding-primary/20 to-wedding-secondary/20 animate-pulse flex items-center justify-center">
+                          <div className="text-slate-50/50">Carregando...</div>
+                        </div>
+                      )}
                       <img
-                        src={photo.url}
+                        src={optimizedUrl}
                         alt={photo.caption}
-                        className="w-full h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+                        className={`w-full h-[400px] object-cover transition-all duration-500 group-hover:scale-105 ${
+                          isLoaded ? 'opacity-100' : 'opacity-0 absolute'
+                        }`}
+                        loading={index === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={index === 0 ? 'high' : 'auto'}
+                        decoding="async"
+                        onLoad={() => {
+                          setLoadedImages(prev => new Set(prev).add(photo.id));
+                        }}
+                        onError={() => {
+                          console.error('Erro ao carregar imagem:', photo.id);
+                        }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4">
                         <p className="text-white font-medium text-lg mb-1">{photo.caption}</p>
@@ -446,7 +489,8 @@ const PartyGallery: React.FC = () => {
                     </div>
                   </Card>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -597,9 +641,10 @@ const PartyGallery: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="relative aspect-[4/3]">
                 <img
-                  src={photos[selectedPhoto].url}
+                  src={optimizeImageUrl(photos[selectedPhoto].url)}
                   alt={photos[selectedPhoto].caption}
                   className="w-full h-full object-contain"
+                  loading="eager"
                 />
               </div>
               <div className="p-6 bg-gradient-to-t from-black/80 to-transparent overflow-y-auto max-h-[80vh]">
