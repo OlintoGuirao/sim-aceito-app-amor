@@ -42,6 +42,8 @@ const AdminRaffle: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [ticketsPerPage, setTicketsPerPage] = useState(10);
+  const [showConfirmedModal, setShowConfirmedModal] = useState(false);
+  const [showPendingModal, setShowPendingModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -330,11 +332,11 @@ const AdminRaffle: React.FC = () => {
   const handleRejectPayment = async (ticketId: string) => {
     try {
       const ticketRef = doc(db, 'raffle_tickets', ticketId);
-      await updateDoc(ticketRef, { paymentStatus: 'pending' });
-      toast.success('Pagamento rejeitado com sucesso!');
+      await deleteDoc(ticketRef);
+      toast.success('Pagamento declinado e ticket removido com sucesso!');
     } catch (error) {
-      console.error('Erro ao rejeitar pagamento:', error);
-      toast.error('Erro ao rejeitar pagamento');
+      console.error('Erro ao declinar pagamento:', error);
+      toast.error('Erro ao declinar pagamento');
     }
   };
 
@@ -461,7 +463,10 @@ const AdminRaffle: React.FC = () => {
               </div>
             </Card>
 
-            <Card className="p-4 bg-wedding-secondary/20">
+            <Card 
+              className="p-4 bg-wedding-secondary/20 cursor-pointer hover:bg-wedding-secondary/30 transition-colors"
+              onClick={() => setShowConfirmedModal(true)}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-50/70">Confirmados</p>
@@ -471,7 +476,10 @@ const AdminRaffle: React.FC = () => {
               </div>
             </Card>
 
-            <Card className="p-4 bg-wedding-secondary/20">
+            <Card 
+              className="p-4 bg-wedding-secondary/20 cursor-pointer hover:bg-wedding-secondary/30 transition-colors"
+              onClick={() => setShowPendingModal(true)}
+            >
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-slate-50/70">Pendentes</p>
@@ -654,7 +662,7 @@ const AdminRaffle: React.FC = () => {
             <div className="text-center text-slate-50">Nenhum número encontrado.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-              {paginatedTickets.map(ticket => {
+              {filteredTickets.map(ticket => {
                 if (!ticket) return null;
                 
                 return (
@@ -692,6 +700,99 @@ const AdminRaffle: React.FC = () => {
             </div>
           )}
         </Card>
+
+        {/* Modal de Confirmados */}
+        <Dialog open={showConfirmedModal} onOpenChange={setShowConfirmedModal}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-wedding-primary">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-elegant text-slate-50 flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                Números Confirmados
+              </DialogTitle>
+              <DialogDescription className="text-slate-50/70">
+                Total de {confirmedCount} número(s) confirmado(s)
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 mt-4">
+              {tickets
+                .filter(t => t.paymentStatus === 'confirmed')
+                .map(ticket => (
+                  <Card key={ticket.id} className="p-3 md:p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-lg md:text-xl font-bold text-wedding-gold">
+                        Nº {ticket.number || ''}
+                      </p>
+                      <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-500">
+                        ✅ Confirmado
+                      </span>
+                    </div>
+                    <p className="text-sm md:text-base font-medium text-slate-50">{ticket.guestName || ''}</p>
+                    <p className="text-xs text-slate-50/70 mb-2">{ticket.purchasedAt?.toLocaleDateString() || ''}</p>
+                    {ticket.guestEmail && (
+                      <p className="text-xs text-slate-50/60">{ticket.guestEmail}</p>
+                    )}
+                  </Card>
+                ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Pendentes */}
+        <Dialog open={showPendingModal} onOpenChange={setShowPendingModal}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-wedding-primary">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-elegant text-slate-50 flex items-center gap-2">
+                <Clock className="w-6 h-6 text-yellow-500" />
+                Números Pendentes
+              </DialogTitle>
+              <DialogDescription className="text-slate-50/70">
+                Total de {pendingCount} número(s) pendente(s) - Confirme ou decline os pagamentos
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 mt-4">
+              {tickets
+                .filter(t => t.paymentStatus === 'pending')
+                .map(ticket => (
+                  <Card key={ticket.id} className="p-3 md:p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30 transition-colors">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-lg md:text-xl font-bold text-wedding-gold">
+                        Nº {ticket.number || ''}
+                      </p>
+                      <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-500">
+                        ❌ Pendente
+                      </span>
+                    </div>
+                    <p className="text-sm md:text-base font-medium text-slate-50">{ticket.guestName || ''}</p>
+                    <p className="text-xs text-slate-50/70 mb-2">{ticket.purchasedAt?.toLocaleDateString() || ''}</p>
+                    {ticket.guestEmail && (
+                      <p className="text-xs text-slate-50/60 mb-3">{ticket.guestEmail}</p>
+                    )}
+                    <div className="flex flex-col gap-2 mt-3">
+                      <Button
+                        onClick={() => {
+                          handleConfirmPayment(ticket.id);
+                        }}
+                        className="w-full h-9 bg-green-600 hover:bg-green-700 text-white text-sm"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Confirmar
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          handleRejectPayment(ticket.id);
+                        }}
+                        variant="destructive"
+                        className="w-full h-9 bg-red-600 hover:bg-red-700 text-white text-sm"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Declinar
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

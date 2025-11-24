@@ -39,7 +39,8 @@ const PartyGallery: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
   const [photos, setPhotos] = useState<PartyPhoto[]>([]);
   const [newCaption, setNewCaption] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [newComment, setNewComment] = useState('');
@@ -61,7 +62,6 @@ const PartyGallery: React.FC = () => {
   const [tempCaption, setTempCaption] = useState('');
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPhotos();
@@ -132,22 +132,25 @@ const PartyGallery: React.FC = () => {
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      // Criar URL para preview
-      const imageUrl = URL.createObjectURL(file);
-      setPreviewUrl(imageUrl);
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      setSelectedFiles(fileArray);
+      // Criar URLs para preview de todas as imagens
+      const urls = fileArray.map(file => URL.createObjectURL(file));
+      setPreviewUrls(urls);
     }
+    // Limpar o input para permitir selecionar os mesmos arquivos novamente
+    event.target.value = '';
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error('Selecione uma foto primeiro');
+    if (selectedFiles.length === 0) {
+      toast.error('Selecione pelo menos uma foto primeiro');
       return;
     }
     if (!newCaption) {
-      toast.error('Adicione uma legenda para a foto');
+      toast.error('Adicione uma legenda para as fotos');
       return;
     }
     if (!uploaderName) {
@@ -158,30 +161,34 @@ const PartyGallery: React.FC = () => {
     try {
       setUploading(true);
 
-      // Upload da imagem para o Firebase Storage
-      const imageUrl = await uploadFile(selectedFile, 'party_photos');
+      // Upload de todas as imagens
+      const uploadPromises = selectedFiles.map(async (file) => {
+        // Upload da imagem para o Firebase Storage
+        const imageUrl = await uploadFile(file, 'party_photos');
 
-      // Salvar informações no Firestore
-      const photoData = {
-        url: imageUrl,
-        caption: newCaption,
-        uploadedBy: uploaderName,
-        uploadedAt: new Date(),
-        likes: 0,
-        comments: []
-      };
-      await addDoc(collection(db, 'party_photos'), photoData);
-      toast.success('Foto enviada com sucesso!');
+        // Salvar informações no Firestore
+        const photoData = {
+          url: imageUrl,
+          caption: newCaption,
+          uploadedBy: uploaderName,
+          uploadedAt: new Date(),
+          likes: 0,
+          comments: []
+        };
+        return addDoc(collection(db, 'party_photos'), photoData);
+      });
+
+      await Promise.all(uploadPromises);
+      toast.success(`${selectedFiles.length} foto(s) enviada(s) com sucesso!`);
       setNewCaption('');
-      setSelectedFile(null);
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-        setPreviewUrl(null);
-      }
+      setSelectedFiles([]);
+      // Limpar todas as URLs de preview
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      setPreviewUrls([]);
       fetchPhotos(); // Recarrega as fotos
     } catch (error) {
-      console.error('Erro ao enviar foto:', error);
-      toast.error('Erro ao enviar foto');
+      console.error('Erro ao enviar fotos:', error);
+      toast.error('Erro ao enviar fotos');
     } finally {
       setUploading(false);
     }
@@ -312,7 +319,10 @@ const PartyGallery: React.FC = () => {
           const file = new File([blob], `foto-${Date.now()}.jpg`, {
             type: 'image/jpeg'
           });
-          setSelectedFile(file);
+          // Adicionar à lista de arquivos ao invés de substituir
+          setSelectedFiles(prev => [...prev, file]);
+          const imageUrl = URL.createObjectURL(file);
+          setPreviewUrls(prev => [...prev, imageUrl]);
           stopCamera();
         }
       }, 'image/jpeg', 0.95);
@@ -385,11 +395,10 @@ const PartyGallery: React.FC = () => {
 
   useEffect(() => {
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      // Limpar todas as URLs de preview quando o componente for desmontado
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [previewUrl]);
+  }, [previewUrls]);
 
   return <div className="space-y-6">
       <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
@@ -457,29 +466,52 @@ const PartyGallery: React.FC = () => {
       <Card className="p-6 bg-wedding-secondary/20">
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Compartilhe Suas Fotos</h4>
         <div className="space-y-4">
-          {selectedFile ? (
+          {selectedFiles.length > 0 ? (
             <div className="space-y-4">
-              <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black/20">
-                <img
-                  src={previewUrl || ''}
-                  alt="Preview"
-                  className="w-full h-full object-contain"
-                />
-                <button
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="relative w-full aspect-square rounded-lg overflow-hidden bg-black/20 group">
+                    <img
+                      src={previewUrls[index] || ''}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => {
+                        const newFiles = selectedFiles.filter((_, i) => i !== index);
+                        const newUrls = previewUrls.filter((_, i) => i !== index);
+                        URL.revokeObjectURL(previewUrls[index]);
+                        setSelectedFiles(newFiles);
+                        setPreviewUrls(newUrls);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
+                      Foto {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 text-sm text-slate-50/70">
+                <span>{selectedFiles.length} foto(s) selecionada(s)</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
-                    setSelectedFile(null);
-                    if (previewUrl) {
-                      URL.revokeObjectURL(previewUrl);
-                      setPreviewUrl(null);
-                    }
+                    previewUrls.forEach(url => URL.revokeObjectURL(url));
+                    setSelectedFiles([]);
+                    setPreviewUrls([]);
                   }}
-                  className="absolute top-2 right-2 p-1.5 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                  className="text-red-400 hover:text-red-500 hover:bg-red-500/10"
                 >
-                  <X className="w-4 h-4" />
-                </button>
+                  <X className="w-4 h-4 mr-1" />
+                  Limpar todas
+                </Button>
               </div>
               <Input 
-                placeholder="Adicione uma legenda para sua foto" 
+                placeholder="Adicione uma legenda para suas fotos" 
                 value={newCaption} 
                 onChange={e => setNewCaption(e.target.value)} 
                 className="bg-wedding-primary/20 text-slate-50 placeholder:text-slate-300 border-wedding-primary/30 focus:border-wedding-primary" 
@@ -488,10 +520,10 @@ const PartyGallery: React.FC = () => {
               <Button 
                 className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90" 
                 onClick={handleUpload} 
-                disabled={!selectedFile || !newCaption || uploading}
+                disabled={selectedFiles.length === 0 || !newCaption || uploading}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {uploading ? 'Enviando...' : 'Enviar Foto'}
+                {uploading ? `Enviando ${selectedFiles.length} foto(s)...` : `Enviar ${selectedFiles.length} Foto(s)`}
               </Button>
             </div>
           ) : (
@@ -514,7 +546,7 @@ const PartyGallery: React.FC = () => {
                 <Camera className="w-4 h-4 mr-2" />
                 {uploading ? 'Enviando...' : 'Tirar Foto'}
               </Button>
-              <input id="photo-upload" type="file" accept="image/*" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+              <input id="photo-upload" type="file" accept="image/*" multiple className="hidden" onChange={handleFileSelect} disabled={uploading} />
               <input id="camera-capture" type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} disabled={uploading} />
             </div>
           )}
