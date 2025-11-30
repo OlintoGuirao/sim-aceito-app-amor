@@ -38,7 +38,7 @@ const Raffle: React.FC = () => {
 
   const totalNumbers = 200; // Total de números disponíveis
   const pricePerTicket = 10; // Preço por número
-  const pixKey = '234.553.987.08'; // Chave PIX (email)
+  const pixKey = '23455397808'; // Chave PIX (email)
 
   useEffect(() => {
     // Configurar listener em tempo real para atualizações
@@ -154,9 +154,25 @@ const Raffle: React.FC = () => {
     }
   };
 
-  const copyPixKey = () => {
-    navigator.clipboard.writeText(pixKey);
-    toast.success('Chave PIX copiada!');
+  const copyPixKey = async () => {
+    try {
+      await navigator.clipboard.writeText(pixKey);
+      toast.success('Chave PIX copiada!');
+    } catch (error) {
+      console.error('Erro ao copiar chave PIX:', error);
+      // Fallback para navegadores que não suportam clipboard API
+      const input = document.createElement('input');
+      input.value = pixKey;
+      document.body.appendChild(input);
+      input.select();
+      try {
+        document.execCommand('copy');
+        toast.success('Chave PIX copiada!');
+      } catch (err) {
+        toast.error('Não foi possível copiar a chave PIX. Por favor, copie manualmente.');
+      }
+      document.body.removeChild(input);
+    }
   };
 
   const availableNumbers = Array.from({ length: totalNumbers }, (_, i) => i + 1)
@@ -397,11 +413,10 @@ const Raffle: React.FC = () => {
                 />
                 <Button
                   onClick={copyPixKey}
-                  variant="outline"
                   size="icon"
-                  className="shrink-0"
+                  className="shrink-0 bg-wedding-secondary/20 hover:bg-wedding-secondary/30 border border-wedding-secondary/30 text-black"
                 >
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-4 h-4 text-black" style={{ stroke: 'black' }} />
                 </Button>
               </div>
             </div>

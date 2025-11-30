@@ -101,7 +101,7 @@ const GiftList: React.FC = () => {
   };
 
   const pixData = {
-    key: '234.553.978.08',
+    key: '23455397808',
     name: 'Fabíola e Juninho',
     bank: 'Nubank',
     agency: '1234',
