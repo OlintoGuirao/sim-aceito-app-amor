@@ -687,7 +687,7 @@ export function AdminGuestManager() {
                       }
                       
                       const message = encodeURIComponent(
-                        'Olá!\n\nFicamos muito felizes com a sua confirmação para o nosso grande dia! Antes de celebrarmos juntos, gostaríamos de lembrar que preparamos o nosso site do casamento com muito carinho. Lá você encontra nossa história e várias informações importantes.\n\nTambém criamos um Manual do Convidado, que é essencial para que tudo aconteça da melhor forma possível. Se puder dar uma olhadinha, isso nos ajudará bastante.\n\nAh, e no site temos também uma área de rifa — uma brincadeira especial que faremos no casamento. Se quiser participar, ficaremos muito felizes!\n\nObrigada!'
+                        'Olá!\n\nFicamos muito felizes com a sua confirmação para o nosso grande dia! Antes de celebrarmos juntos, gostaríamos de lembrar que preparamos o nosso site do casamento com muito carinho. Lá você encontra nossa história e várias informações importantes.\n\nTambém criamos um Manual do Convidado, que é essencial para que tudo aconteça da melhor forma possível. Se puder dar uma olhadinha, isso nos ajudará bastante.\n\nAh, e no site temos também uma área de rifa — uma brincadeira especial que faremos no casamento. Se quiser participar, ficaremos muito felizes!\n\nObrigada!\n\nhttps://simaceito.com.br/'
                       );
                       
                       // Remove caracteres não numéricos do telefone
