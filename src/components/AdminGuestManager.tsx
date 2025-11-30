@@ -826,7 +826,7 @@ export function AdminGuestManager() {
                       }
                       
                       const message = encodeURIComponent(
-                        'Olá! Passando para lembrar que falta apenas 10 dias para encerrar a confirmação. Estamos aguardando sua confirmação!'
+                        'Olá! Passando para lembrar que falta apenas 10 dias para encerrar a confirmação. Estamos aguardando sua confirmação!\n\n*Lembrando: precisamos que confirmem a presença, caso tenham interesse em ir, pois sem ela não conseguimos liberar a entrada na festa*'
                       );
                       
                       // Remove caracteres não numéricos do telefone
