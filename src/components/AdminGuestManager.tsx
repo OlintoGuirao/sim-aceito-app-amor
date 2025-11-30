@@ -659,60 +659,84 @@ export function AdminGuestManager() {
             </div>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto mt-4">
-            {confirmedGuests.length === 0 ? (
-              <div className="text-center py-8">
-                <Check className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">Nenhum convidado confirmado ainda.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {confirmedGuests.map(g => (
-                  <div key={g.id} className="bg-green-50 border border-green-200 rounded-lg p-3 hover:bg-green-100 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-green-800">{g.name}</h4>
-                        {g.email && (
-                          <p className="text-sm text-green-600 mt-1">{g.email}</p>
-                        )}
-                        {g.phone && (
-                          <p className="text-xs text-green-500 mt-1">{g.phone}</p>
-                        )}
-                        {g.companions > 0 && (
-                          <p className="text-xs text-green-600 mt-1">
-                            +{g.companions} acompanhante(s)
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-green-100 text-green-700 border-green-300">
-                          <Check className="w-3 h-3 mr-1" />
-                          Confirmado
+            {(() => {
+              // Agrupar convidados confirmados por número de telefone
+              const groupedByPhone = confirmedGuests.reduce((acc, guest) => {
+                const phone = guest.phone || 'sem-telefone';
+                if (!acc[phone]) {
+                  acc[phone] = [];
+                }
+                acc[phone].push(guest);
+                return acc;
+              }, {} as Record<string, Guest[]>);
+
+              const groupedEntries = Object.entries(groupedByPhone);
+
+              return groupedEntries.length === 0 ? (
+                <div className="text-center py-8">
+                  <Check className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500">Nenhum convidado confirmado ainda.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {groupedEntries.map(([phone, guests]) => (
+                    <div key={phone} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-green-200">
+                        <Users className="w-4 h-4 text-green-600" />
+                        <span className="font-semibold text-green-800">
+                          {phone !== 'sem-telefone' ? phone : 'Sem telefone'}
+                        </span>
+                        <Badge className="bg-green-100 text-green-700 border-green-300 ml-auto">
+                          {guests.length} {guests.length === 1 ? 'convidado' : 'convidados'}
                         </Badge>
                       </div>
+                      <div className="space-y-2">
+                        {guests.map(g => (
+                          <div key={g.id} className="bg-white rounded p-2 hover:bg-green-50 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-green-800">{g.name}</h4>
+                                {g.email && (
+                                  <p className="text-xs text-green-600 mt-1">{g.email}</p>
+                                )}
+                                {g.companions > 0 && (
+                                  <p className="text-xs text-green-600 mt-1">
+                                    +{g.companions} acompanhante(s)
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-green-100 text-green-700 border-green-300">
+                                <Check className="w-3 h-3 mr-1" />
+                                Confirmado
+                              </Badge>
+                            </div>
+                            {g.confirmedAt && (
+                              <p className="text-xs text-green-500 mt-2">
+                                Confirmado em: {(() => {
+                                  try {
+                                    let date: Date;
+                                    if (typeof g.confirmedAt === 'string') {
+                                      date = new Date(g.confirmedAt);
+                                    } else if (g.confirmedAt && typeof g.confirmedAt === 'object' && 'toDate' in g.confirmedAt) {
+                                      date = (g.confirmedAt as any).toDate();
+                                    } else {
+                                      return '';
+                                    }
+                                    return isNaN(date.getTime()) ? '' : date.toLocaleDateString('pt-BR');
+                                  } catch {
+                                    return '';
+                                  }
+                                })()}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    {g.confirmedAt && (
-                      <p className="text-xs text-green-500 mt-2">
-                        Confirmado em: {(() => {
-                          try {
-                            let date: Date;
-                            if (typeof g.confirmedAt === 'string') {
-                              date = new Date(g.confirmedAt);
-                            } else if (g.confirmedAt && typeof g.confirmedAt === 'object' && 'toDate' in g.confirmedAt) {
-                              date = (g.confirmedAt as any).toDate();
-                            } else {
-                              return '';
-                            }
-                            return isNaN(date.getTime()) ? '' : date.toLocaleDateString('pt-BR');
-                          } catch {
-                            return '';
-                          }
-                        })()}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
@@ -740,41 +764,99 @@ export function AdminGuestManager() {
             </div>
           </DialogHeader>
           <div className="max-h-96 overflow-y-auto mt-4">
-            {pendingGuests.length === 0 ? (
-              <div className="text-center py-8">
-                <Clock className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">Nenhum convidado pendente.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {pendingGuests.map(g => (
-                  <div key={g.id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:bg-yellow-100 transition-colors">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-yellow-800">{g.name}</h4>
-                        {g.email && (
-                          <p className="text-sm text-yellow-600 mt-1">{g.email}</p>
-                        )}
-                        {g.phone && (
-                          <p className="text-xs text-yellow-500 mt-1">{g.phone}</p>
-                        )}
-                        {g.companions > 0 && (
-                          <p className="text-xs text-yellow-600 mt-1">
-                            +{g.companions} acompanhante(s)
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">
-                          <Clock className="w-3 h-3 mr-1" />
-                          Pendente
+            {(() => {
+              // Agrupar convidados pendentes por número de telefone
+              const groupedByPhone = pendingGuests.reduce((acc, guest) => {
+                const phone = guest.phone || 'sem-telefone';
+                if (!acc[phone]) {
+                  acc[phone] = [];
+                }
+                acc[phone].push(guest);
+                return acc;
+              }, {} as Record<string, Guest[]>);
+
+              const groupedEntries = Object.entries(groupedByPhone);
+
+              return groupedEntries.length === 0 ? (
+                <div className="text-center py-8">
+                  <Clock className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                  <p className="text-gray-500">Nenhum convidado pendente.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {groupedEntries.map(([phone, guests]) => {
+                    const sendReminderMessage = () => {
+                      if (phone === 'sem-telefone') {
+                        toast.error('Este grupo não possui número de telefone');
+                        return;
+                      }
+                      
+                      const message = encodeURIComponent(
+                        'Olá! Passando para lembrar que falta apenas 10 dias para encerrar a confirmação. Estamos aguardando sua confirmação!'
+                      );
+                      
+                      // Remove caracteres não numéricos do telefone
+                      const cleanPhone = phone.replace(/\D/g, '');
+                      
+                      // Abre WhatsApp Web com a mensagem
+                      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+                      window.open(whatsappUrl, '_blank');
+                      
+                      toast.success('Abrindo WhatsApp para enviar mensagem');
+                    };
+                    
+                    return (
+                    <div key={phone} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      {phone !== 'sem-telefone' && (
+                        <div className="mb-3">
+                          <Button
+                            onClick={sendReminderMessage}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                            size="sm"
+                          >
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Enviar Lembrete de Confirmação
+                          </Button>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 mb-3 pb-2 border-b border-yellow-200">
+                        <Users className="w-4 h-4 text-yellow-600" />
+                        <span className="font-semibold text-yellow-800">
+                          {phone !== 'sem-telefone' ? phone : 'Sem telefone'}
+                        </span>
+                        <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300 ml-auto">
+                          {guests.length} {guests.length === 1 ? 'convidado' : 'convidados'}
                         </Badge>
                       </div>
+                      <div className="space-y-2">
+                        {guests.map(g => (
+                          <div key={g.id} className="bg-white rounded p-2 hover:bg-yellow-50 transition-colors">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-yellow-800">{g.name}</h4>
+                                {g.email && (
+                                  <p className="text-xs text-yellow-600 mt-1">{g.email}</p>
+                                )}
+                                {g.companions > 0 && (
+                                  <p className="text-xs text-yellow-600 mt-1">
+                                    +{g.companions} acompanhante(s)
+                                  </p>
+                                )}
+                              </div>
+                              <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">
+                                <Clock className="w-3 h-3 mr-1" />
+                                Pendente
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </DialogContent>
       </Dialog>
