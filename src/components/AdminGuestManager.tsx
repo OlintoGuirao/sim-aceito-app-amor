@@ -679,8 +679,41 @@ export function AdminGuestManager() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {groupedEntries.map(([phone, guests]) => (
+                  {groupedEntries.map(([phone, guests]) => {
+                    const sendThankYouMessage = () => {
+                      if (phone === 'sem-telefone') {
+                        toast.error('Este grupo não possui número de telefone');
+                        return;
+                      }
+                      
+                      const message = encodeURIComponent(
+                        'Olá!\n\nFicamos muito felizes com a sua confirmação para o nosso grande dia! Antes de celebrarmos juntos, gostaríamos de lembrar que preparamos o nosso site do casamento com muito carinho. Lá você encontra nossa história e várias informações importantes.\n\nTambém criamos um Manual do Convidado, que é essencial para que tudo aconteça da melhor forma possível. Se puder dar uma olhadinha, isso nos ajudará bastante.\n\nAh, e no site temos também uma área de rifa — uma brincadeira especial que faremos no casamento. Se quiser participar, ficaremos muito felizes!\n\nObrigada!'
+                      );
+                      
+                      // Remove caracteres não numéricos do telefone
+                      const cleanPhone = phone.replace(/\D/g, '');
+                      
+                      // Abre WhatsApp Web com a mensagem
+                      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+                      window.open(whatsappUrl, '_blank');
+                      
+                      toast.success('Abrindo WhatsApp para enviar mensagem');
+                    };
+                    
+                    return (
                     <div key={phone} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      {phone !== 'sem-telefone' && (
+                        <div className="mb-3">
+                          <Button
+                            onClick={sendThankYouMessage}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                            size="sm"
+                          >
+                            <MessageCircle className="w-4 h-4 mr-2" />
+                            Enviar Mensagem de Agradecimento
+                          </Button>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-green-200">
                         <Users className="w-4 h-4 text-green-600" />
                         <span className="font-semibold text-green-800">
@@ -733,7 +766,8 @@ export function AdminGuestManager() {
                         ))}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               );
             })()}
