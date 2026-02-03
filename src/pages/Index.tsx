@@ -11,13 +11,25 @@ import Raffle from '@/components/Raffle';
 import GuestManual from '@/components/GuestManual';
 import { Toaster } from 'sonner';
 import { useAuth } from '@/lib/auth';
+import { useSearchParams } from 'react-router-dom';
 
 const Index = () => {
-  const [activeSection, setActiveSection] = useState('countdown');
+  const [searchParams] = useSearchParams();
+  const sectionFromUrl = searchParams.get('section');
+  const [activeSection, setActiveSection] = useState(
+    sectionFromUrl === 'raffle' ? 'raffle' : 'countdown'
+  );
   const { user, isAdmin } = useAuth();
   
   // Data do casamento - ajuste conforme necessário
   const weddingDate = new Date('2026-04-25T16:30:00');
+
+  // Abrir seção da rifa quando a URL tiver ?section=raffle
+  useEffect(() => {
+    if (sectionFromUrl === 'raffle') {
+      setActiveSection('raffle');
+    }
+  }, [sectionFromUrl]);
 
   // Efeito para verificar autenticação ao montar o componente
   useEffect(() => {

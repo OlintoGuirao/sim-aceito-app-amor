@@ -2,7 +2,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { MessageCircle, Ticket } from 'lucide-react';
 
 interface NavigationMenuProps {
@@ -33,20 +33,37 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
   return (
     <Card className="p-4 mb-8 glass-effect bg-wedding-palha/20">
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
-        {menuItems.map(item => (
-          <button
-            key={item.id}
-            onClick={() => onSectionChange(item.id)}
-            className={`p-3 rounded-lg text-center transition-all hover:scale-105 ${
-              activeSection === item.id 
-                ? 'bg-wedding-marsala text-wedding-cream shadow-lg' 
-                : 'bg-white/50 hover:bg-wedding-secondary/60'
-            }`}
-          >
-            <div className="text-xl mb-1">{item.icon}</div>
-            <div className="text-black text-xs font-medium bg-transparent">{item.label}</div>
-          </button>
-        ))}
+        {menuItems.map(item => {
+          const isRaffle = item.id === 'raffle';
+          const linkClass = `p-3 rounded-lg text-center transition-all hover:scale-105 block w-full ${
+            activeSection === item.id
+              ? 'bg-wedding-marsala text-wedding-cream shadow-lg'
+              : 'bg-white/50 hover:bg-wedding-secondary/60'
+          }`;
+          if (isRaffle) {
+            return (
+              <Link
+                key={item.id}
+                to="/?section=raffle"
+                className={linkClass}
+                onClick={isHomePage ? () => onSectionChange('raffle') : undefined}
+              >
+                <div className="text-xl mb-1">{item.icon}</div>
+                <div className="text-black text-xs font-medium bg-transparent">{item.label}</div>
+              </Link>
+            );
+          }
+          return (
+            <button
+              key={item.id}
+              onClick={() => onSectionChange(item.id)}
+              className={linkClass}
+            >
+              <div className="text-xl mb-1">{item.icon}</div>
+              <div className="text-black text-xs font-medium bg-transparent">{item.label}</div>
+            </button>
+          );
+        })}
       </div>
 
       {isAdmin && !isHomePage && (
