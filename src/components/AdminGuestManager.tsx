@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { QRCodeSVG } from 'qrcode.react';
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest, getGifts, addGift } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
@@ -970,7 +969,7 @@ export function AdminGuestManager() {
             Lista de Convidados
           </TabsTrigger>
           <TabsTrigger value="qrcode" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
-            QR Code
+            Link da Galeria
           </TabsTrigger>
           <TabsTrigger value="messages" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
             <MessageCircle className="w-4 h-4 mr-2" />
@@ -1281,7 +1280,7 @@ export function AdminGuestManager() {
         <TabsContent value="qrcode">
           <Card>
             <CardHeader className="bg-wedding-secondary">
-              <CardTitle className="text-black">QR Code para Compartilhar Fotos</CardTitle>
+              <CardTitle className="text-black">Link para Compartilhar Fotos</CardTitle>
             </CardHeader>
             <CardContent className="bg-wedding-secondary">
               <div className="flex justify-center">
