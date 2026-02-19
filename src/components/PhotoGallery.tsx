@@ -1,36 +1,39 @@
 import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 
+const ABOVE_THE_FOLD_COUNT = 6; // primeiras imagens com loading eager
+
 const PhotoGallery: React.FC = () => {
   const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+  const [loadedIds, setLoadedIds] = useState<Set<number>>(new Set());
   const photos = [
-  { id: 2, src:  '/Foto2.jpg',            },  
-  { id: 4, src:  '/Foto4.jpg',            }, 
-  { id: 5, src:  '/foto5.jpg',            },
-  { id: 8, src:  '/Foto8.jpg',            }, 
-  { id: 9, src:  '/Foto9.jpg',            }, 
-  { id: 10, src: '/FotoHistoria (1).webp',},
-  { id: 11, src: '/FotoHistoria (2).jpg' ,},
-  { id: 12, src: '/FotoHistoria (3).jpg' ,},
-  { id: 13, src: '/FotoHistoria (4).jpg' ,},
-  { id: 14, src: '/FotoHistoria (5).jpg' ,},
-  { id: 15, src: '/FotoHistoria (6).jpg' ,},
-  { id: 17, src: '/FotoHistoria (8).jpg' ,},
-  { id: 18, src: '/FotoHistoria (9).jpg' ,},
-  { id: 19, src: '/FotoHistoria (10).jpg',},
-  { id: 20, src: '/FotoHistoria (11).jpg',},
-  { id: 21, src: '/FotoHistoria (12).jpg',},
-  { id: 22, src: '/FotoHistoria (13).jpg',},
-  { id: 23, src: '/FotoHistoria (14).jpg',},
-  { id: 24, src: '/FotoHistoria (15).jpg',},
-  { id: 25, src: '/FotoHistoria (16).jpg',},
-  { id: 26, src: '/FotoHistoria (17).jpg',},
-  { id: 27, src: '/FotoHistoria (18).jpg',},
-  { id: 28, src: '/FotoHistoria (19).jpg',},
-  { id: 30, src: '/FotoHistoria (21).jpg',},
-  { id: 31, src: '/FotoHistoria (22).jpg',},
-  { id: 32, src: '/FotoHistoria (23).jpg',},
-  { id: 33, src: '/FotoHistoria (24).jpg',}
+  { id: 2, src:  '/Foto2.webp',            },
+  { id: 4, src:  '/Foto4.webp',            },
+  { id: 5, src:  '/foto5.webp',            },
+  { id: 8, src:  '/Foto8.webp',            },
+  { id: 9, src:  '/Foto9.webp',            },
+  { id: 10, src: '/FotoHistoria (1).webp', },
+  { id: 11, src: '/FotoHistoria (2).webp', },
+  { id: 12, src: '/FotoHistoria (3).webp', },
+  { id: 13, src: '/FotoHistoria (4).webp', },
+  { id: 14, src: '/FotoHistoria (5).webp', },
+  { id: 15, src: '/FotoHistoria (6).webp', },
+  { id: 17, src: '/FotoHistoria (8).webp', },
+  { id: 18, src: '/FotoHistoria (9).webp', },
+  { id: 19, src: '/FotoHistoria (10).webp',},
+  { id: 20, src: '/FotoHistoria (11).webp',},
+  { id: 21, src: '/FotoHistoria (12).webp',},
+  { id: 22, src: '/FotoHistoria (13).webp',},
+  { id: 23, src: '/FotoHistoria (14).webp',},
+  { id: 24, src: '/FotoHistoria (15).webp',},
+  { id: 25, src: '/FotoHistoria (16).webp',},
+  { id: 26, src: '/FotoHistoria (17).webp',},
+  { id: 27, src: '/FotoHistoria (18).webp',},
+  { id: 28, src: '/FotoHistoria (19).webp',},
+  { id: 30, src: '/FotoHistoria (21).webp',},
+  { id: 31, src: '/FotoHistoria (22).webp',},
+  { id: 32, src: '/FotoHistoria (23).webp',},
+  { id: 33, src: '/FotoHistoria (24).webp',}
 ];
 
   return (
@@ -54,24 +57,40 @@ const PhotoGallery: React.FC = () => {
     </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {photos.map((photo, index) => (
-          <Card 
-            key={photo.id} 
-            onClick={() => setSelectedPhoto(index)} 
-            className="overflow-hidden cursor-pointer hover:shadow-lg transition-all transform hover:scale-105 bg-wedding-secondary"
-          >
-            <div className="aspect-square relative">
-              <img
-                src={photo.src}
-                
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="p-3 bg-wedding-palha">
-              <p className="text-sm font-medium text-center text-gray-950"></p>
-            </div>
-          </Card>
-        ))}
+        {photos.map((photo, index) => {
+          const isAboveFold = index < ABOVE_THE_FOLD_COUNT;
+          const isLoaded = loadedIds.has(photo.id);
+          return (
+            <Card
+              key={photo.id}
+              onClick={() => setSelectedPhoto(index)}
+              className="overflow-hidden cursor-pointer hover:shadow-lg transition-all transform hover:scale-105 bg-wedding-secondary"
+            >
+              <div className="aspect-square relative bg-wedding-primary/10">
+                {!isLoaded && (
+                  <div
+                    className="absolute inset-0 bg-gradient-to-br from-wedding-primary/15 to-wedding-secondary/15 animate-pulse"
+                    aria-hidden
+                  />
+                )}
+                <img
+                  src={photo.src}
+                  alt=""
+                  className={`w-full h-full object-cover transition-opacity duration-300 ${
+                    isLoaded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  loading={isAboveFold ? 'eager' : 'lazy'}
+                  decoding="async"
+                  fetchPriority={isAboveFold ? 'high' : 'auto'}
+                  onLoad={() => setLoadedIds((prev) => new Set(prev).add(photo.id))}
+                />
+              </div>
+              <div className="p-3 bg-wedding-palha">
+                <p className="text-sm font-medium text-center text-gray-950"></p>
+              </div>
+            </Card>
+          );
+        })}
       </div>
       
       {selectedPhoto !== null && (
@@ -84,8 +103,10 @@ const PhotoGallery: React.FC = () => {
               <div className="relative aspect-square w-full max-w-2xl mx-auto mb-4">
                 <img
                   src={photos[selectedPhoto].src}
-                  
+                  alt=""
                   className="w-full h-full object-contain rounded"
+                  loading="eager"
+                  decoding="async"
                 />
               </div>
               <p className="text-center font-medium"></p>

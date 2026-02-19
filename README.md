@@ -66,6 +66,16 @@ src/
   └── styles/        # Estilos globais
 ```
 
+## Redução de custo (Firebase Storage / processamento)
+
+O app já está preparado para reduzir tráfego e custo:
+
+- **Cache**: As imagens da galeria da festa são enviadas com header `Cache-Control: public, max-age=31536000` (1 ano). Navegador e CDN armazenam em cache e evitam novo download.
+- **Preview + original**: No carrossel é exibida uma versão preview (1200px, WebP 0.78); a versão “full” (1920px, 0.85) só é baixada quando o usuário abre a foto no lightbox. Menos dados trafegados na listagem.
+- **Compressão**: Todas as fotos enviadas são convertidas para WebP e limitadas a 1920px de largura, reduzindo tamanho (ex.: ~3 MB → ~1 MB ou menos).
+
+**CDN**: Se o site estiver no **Firebase Hosting**, o conteúdo já é servido pela CDN do Google. Para ainda mais cache na borda, você pode colocar um proxy (ex.: **Cloudflare**) na frente do domínio e ativar cache para as URLs do Storage.
+
 ## Contribuição
 
 1. Faça um fork do projeto

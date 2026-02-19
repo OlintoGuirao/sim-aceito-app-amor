@@ -5,14 +5,24 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { Camera, Upload, Heart, MessageCircle, ChevronLeft, ChevronRight, QrCode, X, Check, Trash2 } from 'lucide-react';
 import { collection, addDoc, query, orderBy, limit, startAfter, getDocs, updateDoc, doc, increment, arrayUnion, deleteDoc } from 'firebase/firestore';
+import type { DocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { uploadFile } from '@/lib/storage';
+import { uploadPartyPhoto } from '@/lib/storage';
+import {
+  resizeToWebP,
+  PREVIEW_MAX_WIDTH,
+  PREVIEW_QUALITY,
+  FULL_MAX_WIDTH,
+  FULL_QUALITY
+} from '@/lib/imageUtils';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback } from 'react';
 
 interface PartyPhoto {
   id: string;
   url: string;
+  previewUrl?: string;
+  thumbUrl?: string;
   caption: string;
   uploadedBy: string;
   uploadedAt: Date;
@@ -63,9 +73,17 @@ const PartyGallery: React.FC = () => {
   const [showMessagesModal, setShowMessagesModal] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [lastDoc, setLastDoc] = useState<DocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const PAGE_SIZE = 20;
+  const CACHE_KEY = 'party_gallery_cache';
+  const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 
   useEffect(() => {
-    fetchPhotos();
+    loadFirstPage();
   }, []);
 
   useEffect(() => {
@@ -79,77 +97,111 @@ const PartyGallery: React.FC = () => {
     };
   }, [emblaApi]);
 
-  // Função para otimizar URL do Firebase Storage
-  // Nota: Firebase Storage não suporta parâmetros de query para compressão
-  // Mas podemos garantir que a URL está correta e usar outras otimizações
-  const optimizeImageUrl = (url: string): string => {
-    if (!url) return url;
-    // Retorna a URL original - otimizações são feitas via lazy loading e preload
-    return url;
+  const parsePhotoDoc = (d: DocumentSnapshot): PartyPhoto => {
+    const data = d.data()!;
+    return {
+      id: d.id,
+      ...data,
+      uploadedAt: (data.uploadedAt as { toDate: () => Date }).toDate(),
+      comments: (data.comments as Comment[]) ?? []
+    } as PartyPhoto;
   };
 
-  // Função para verificar se a URL da imagem é válida
-  const checkImageUrl = async (url: string): Promise<boolean> => {
+  const loadFirstPage = async () => {
     try {
-      const img = new Image();
-      return new Promise((resolve) => {
-        img.onload = () => resolve(true);
-        img.onerror = () => resolve(false);
-        img.src = url;
-      });
-    } catch (error) {
-      console.error('Erro ao verificar URL da imagem:', error);
-      return false;
-    }
-  };
-
-  const fetchPhotos = async () => {
-    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        try {
+          const { photos: cachedPhotos, ts } = JSON.parse(cached);
+          if (Array.isArray(cachedPhotos) && Date.now() - (ts || 0) < CACHE_TTL_MS) {
+            const withDates = cachedPhotos.map((p: PartyPhoto & { uploadedAt?: string }) => ({
+              ...p,
+              uploadedAt: p.uploadedAt instanceof Date ? p.uploadedAt : new Date(p.uploadedAt || 0)
+            }));
+            setPhotos(withDates);
+            setLoading(false);
+          }
+        } catch {
+          // ignore invalid cache
+        }
+      }
       setLoading(true);
       const photosRef = collection(db, 'party_photos');
-      const q = query(photosRef, orderBy('uploadedAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      const fetchedPhotos = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        uploadedAt: doc.data().uploadedAt.toDate()
-      })) as PartyPhoto[];
-
-      // Verificar URLs válidas e filtrar fotos inválidas
-      const validPhotos = await Promise.all(
-        fetchedPhotos.map(async (photo) => {
-          const isValid = await checkImageUrl(photo.url);
-          if (!isValid) {
-            // Se a foto não é válida, deletar do Firestore
-            try {
-              await deleteDoc(doc(db, 'party_photos', photo.id));
-            } catch (error) {
-              console.error('Erro ao deletar foto inválida:', error);
-            }
-          }
-          return isValid ? photo : null;
-        })
-      );
-
-      // Filtrar fotos nulas e atualizar o estado
-      const validPhotosList = validPhotos.filter((photo): photo is PartyPhoto => photo !== null);
-      setPhotos(validPhotosList);
-      
-      // Preload da primeira imagem para carregamento mais rápido
-      if (validPhotosList.length > 0) {
-        const firstPhoto = validPhotosList[0];
-        const optimizedUrl = optimizeImageUrl(firstPhoto.url);
-        const preloadImg = new Image();
-        preloadImg.src = optimizedUrl;
-        preloadImg.onload = () => {
-          setLoadedImages(prev => new Set(prev).add(firstPhoto.id));
-        };
+      const q = query(photosRef, orderBy('uploadedAt', 'desc'), limit(PAGE_SIZE));
+      const snapshot = await getDocs(q);
+      const list = snapshot.docs.map((d) => parsePhotoDoc(d));
+      setPhotos(list);
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1] ?? null);
+      setHasMore(snapshot.docs.length === PAGE_SIZE);
+      try {
+        sessionStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            photos: list.map((p) => ({ ...p, uploadedAt: p.uploadedAt.toISOString() })),
+            ts: Date.now()
+          })
+        );
+      } catch {
+        // ignore quota
+      }
+      if (list.length > 0) {
+        const first = list[0];
+        const url = first.previewUrl || first.thumbUrl || first.url;
+        const img = new Image();
+        img.src = url;
+        img.onload = () => setLoadedImages((prev) => new Set(prev).add(first.id));
       }
     } catch (error) {
       console.error('Erro ao buscar fotos:', error);
       toast.error('Erro ao carregar fotos');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRemoveBrokenPhoto = async (photoId: string) => {
+    try {
+      await deleteDoc(doc(db, 'party_photos', photoId));
+      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      setFailedImages((prev) => {
+        const next = new Set(prev);
+        next.delete(photoId);
+        return next;
+      });
+      if (selectedPhoto !== null && photos[selectedPhoto]?.id === photoId) setSelectedPhoto(null);
+      try {
+        sessionStorage.removeItem(CACHE_KEY);
+      } catch {
+        // ignore
+      }
+      toast.success('Foto removida da galeria.');
+    } catch (error) {
+      console.error('Erro ao remover foto:', error);
+      toast.error('Erro ao remover foto');
+    }
+  };
+
+  const loadMore = async () => {
+    if (!lastDoc || !hasMore || loadingMore) return;
+    try {
+      setLoadingMore(true);
+      const photosRef = collection(db, 'party_photos');
+      const q = query(
+        photosRef,
+        orderBy('uploadedAt', 'desc'),
+        limit(PAGE_SIZE),
+        startAfter(lastDoc)
+      );
+      const snapshot = await getDocs(q);
+      const list = snapshot.docs.map((d) => parsePhotoDoc(d));
+      setPhotos((prev) => [...prev, ...list]);
+      setLastDoc(snapshot.docs[snapshot.docs.length - 1] ?? null);
+      setHasMore(snapshot.docs.length === PAGE_SIZE);
+    } catch (error) {
+      console.error('Erro ao carregar mais fotos:', error);
+      toast.error('Erro ao carregar mais fotos');
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -183,14 +235,15 @@ const PartyGallery: React.FC = () => {
     try {
       setUploading(true);
 
-      // Upload de todas as imagens
-      const uploadPromises = selectedFiles.map(async (file) => {
-        // Upload da imagem para o Firebase Storage
-        const imageUrl = await uploadFile(file, 'party_photos');
-
-        // Salvar informações no Firestore
+      const uploadPromises = selectedFiles.map(async (file, index) => {
+        const [previewBlob, fullBlob] = await Promise.all([
+          resizeToWebP(file, PREVIEW_MAX_WIDTH, PREVIEW_QUALITY),
+          resizeToWebP(file, FULL_MAX_WIDTH, FULL_QUALITY)
+        ]);
+        const { url, previewUrl } = await uploadPartyPhoto(previewBlob, fullBlob, index);
         const photoData = {
-          url: imageUrl,
+          url,
+          previewUrl,
           caption: newCaption,
           uploadedBy: uploaderName,
           uploadedAt: new Date(),
@@ -204,10 +257,9 @@ const PartyGallery: React.FC = () => {
       toast.success(`${selectedFiles.length} foto(s) enviada(s) com sucesso!`);
       setNewCaption('');
       setSelectedFiles([]);
-      // Limpar todas as URLs de preview
-      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      previewUrls.forEach((url) => URL.revokeObjectURL(url));
       setPreviewUrls([]);
-      fetchPhotos(); // Recarrega as fotos
+      loadFirstPage();
     } catch (error) {
       console.error('Erro ao enviar fotos:', error);
       toast.error('Erro ao enviar fotos');
@@ -437,21 +489,44 @@ const PartyGallery: React.FC = () => {
           <div className="overflow-hidden" ref={emblaRef}>
             <div className="flex">
               {photos.map((photo, index) => {
-                const optimizedUrl = optimizeImageUrl(photo.url);
+                const thumbOrUrl = photo.previewUrl || photo.thumbUrl || photo.url;
                 const isLoaded = loadedImages.has(photo.id);
-                
+                const isFailed = failedImages.has(photo.id);
+
+                if (isFailed) {
+                  return (
+                    <div key={photo.id} className="flex-[0_0_100%] min-w-0 relative">
+                      <Card className="mx-4 overflow-hidden bg-wedding-secondary">
+                        <div className="relative flex flex-col items-center justify-center rounded-lg shadow-lg min-h-[400px] bg-gradient-to-br from-wedding-primary/20 to-wedding-secondary/20 p-6 text-center">
+                          <p className="text-slate-50/90 font-medium mb-1">{photo.caption}</p>
+                          <p className="text-slate-50/70 text-sm mb-4">Por: {photo.uploadedBy}</p>
+                          <p className="text-slate-50/60 text-sm mb-6">Esta foto não está mais disponível.</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRemoveBrokenPhoto(photo.id)}
+                            className="bg-red-500/20 text-white border-red-500/50 hover:bg-red-500/30"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Remover da galeria
+                          </Button>
+                        </div>
+                      </Card>
+                    </div>
+                  );
+                }
+
                 return (
                 <div key={photo.id} className="flex-[0_0_100%] min-w-0 relative">
                   <Card className="mx-4 overflow-hidden bg-wedding-secondary">
                     <div className="relative group overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl">
-                      {/* Placeholder enquanto carrega */}
                       {!isLoaded && (
                         <div className="w-full h-[400px] bg-gradient-to-br from-wedding-primary/20 to-wedding-secondary/20 animate-pulse flex items-center justify-center">
                           <div className="text-slate-50/50">Carregando...</div>
                         </div>
                       )}
                       <img
-                        src={optimizedUrl}
+                        src={thumbOrUrl}
                         alt={photo.caption}
                         className={`w-full h-[400px] object-cover transition-all duration-500 group-hover:scale-105 ${
                           isLoaded ? 'opacity-100' : 'opacity-0 absolute'
@@ -463,7 +538,7 @@ const PartyGallery: React.FC = () => {
                           setLoadedImages(prev => new Set(prev).add(photo.id));
                         }}
                         onError={() => {
-                          console.error('Erro ao carregar imagem:', photo.id);
+                          setFailedImages((prev) => new Set(prev).add(photo.id));
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4">
@@ -505,6 +580,18 @@ const PartyGallery: React.FC = () => {
               />
             ))}
           </div>
+          {hasMore && (
+            <div className="flex justify-center mt-4">
+              <Button
+                variant="outline"
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="bg-wedding-primary/20 text-slate-50 border-wedding-primary hover:bg-wedding-primary/30"
+              >
+                {loadingMore ? 'Carregando...' : 'Carregar mais fotos'}
+              </Button>
+            </div>
+          )}
         </div>}
 
       <Card className="p-6 bg-wedding-secondary/20">
@@ -629,7 +716,7 @@ const PartyGallery: React.FC = () => {
           </div>
         </div>}
 
-      {selectedPhoto !== null && (
+      {selectedPhoto !== null && photos[selectedPhoto] && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
           <div className="relative w-full max-w-6xl bg-wedding-secondary rounded-lg overflow-hidden">
             <button
@@ -639,13 +726,32 @@ const PartyGallery: React.FC = () => {
               <X className="w-6 h-6" />
             </button>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <div className="relative aspect-[4/3]">
-                <img
-                  src={optimizeImageUrl(photos[selectedPhoto].url)}
-                  alt={photos[selectedPhoto].caption}
-                  className="w-full h-full object-contain"
-                  loading="eager"
-                />
+              <div className="relative aspect-[4/3] bg-wedding-primary/10 flex items-center justify-center">
+                {failedImages.has(photos[selectedPhoto].id) ? (
+                  <div className="text-center p-6">
+                    <p className="text-slate-50/90 mb-4">Esta foto não está mais disponível.</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        handleRemoveBrokenPhoto(photos[selectedPhoto].id);
+                        setSelectedPhoto(null);
+                      }}
+                      className="bg-red-500/20 text-white border-red-500/50 hover:bg-red-500/30"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remover da galeria
+                    </Button>
+                  </div>
+                ) : (
+                  <img
+                    src={photos[selectedPhoto].url}
+                    alt={photos[selectedPhoto].caption}
+                    className="w-full h-full object-contain"
+                    loading="eager"
+                    onError={() => setFailedImages((prev) => new Set(prev).add(photos[selectedPhoto].id))}
+                  />
+                )}
               </div>
               <div className="p-6 bg-gradient-to-t from-black/80 to-transparent overflow-y-auto max-h-[80vh]">
                 <h3 className="text-white text-xl font-medium mb-2">{photos[selectedPhoto].caption}</h3>
