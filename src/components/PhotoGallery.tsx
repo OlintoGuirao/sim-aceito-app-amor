@@ -81,7 +81,6 @@ const PhotoGallery: React.FC = () => {
                   }`}
                   loading={isAboveFold ? 'eager' : 'lazy'}
                   decoding="async"
-                  fetchPriority={isAboveFold ? 'high' : 'auto'}
                   onLoad={() => setLoadedIds((prev) => new Set(prev).add(photo.id))}
                 />
               </div>

@@ -532,7 +532,6 @@ const PartyGallery: React.FC = () => {
                           isLoaded ? 'opacity-100' : 'opacity-0 absolute'
                         }`}
                         loading={index === 0 ? 'eager' : 'lazy'}
-                        fetchPriority={index === 0 ? 'high' : 'auto'}
                         decoding="async"
                         onLoad={() => {
                           setLoadedImages(prev => new Set(prev).add(photo.id));
