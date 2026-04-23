@@ -120,7 +120,7 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
               Traje: Esporte fino / Passeio completo
             </p>
             <p className="text-lg text-gray-700 mb-3 leading-relaxed">
-              Se inspire em tons suaves e looks elegantes.
+              Prefira tons médios e escuros para um visual elegante.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
               Evite roupas brancas ou off-white — essa cor é reservada para a noiva. 💍
