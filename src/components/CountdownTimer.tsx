@@ -33,50 +33,35 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
     const timer = setInterval(calculateTimeLeft, 1000);
     return () => clearInterval(timer);
   }, [targetDate]);
-  return <div className="flex flex-col items-center space-y-4">
+  const cardClass =
+    'bg-wedding-secondary border-2 border-wedding-olive rounded-2xl p-4 text-center animate-fade-in shadow-md';
+  const numberClass = 'text-3xl md:text-4xl font-bold text-wedding-olive mb-1';
+  const labelClass = 'text-sm font-semibold text-wedding-olive uppercase tracking-wide';
+
+  return (
+    <div className="flex flex-col items-center space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-2xl">
-        <div className="glass-effect rounded-2xl p-4 text-center animate-fade-in">
-          <div className="text-3xl md:text-4xl font-bold text-wedding-palha mb-1">
-            {timeLeft.days}
-          </div>
-          <div className="text-sm font-semibold text-white uppercase tracking-wide bg-transparent">
-            Dias
-          </div>
+        <div className={cardClass}>
+          <div className={numberClass}>{timeLeft.days}</div>
+          <div className={labelClass}>Dias</div>
         </div>
-        
-        <div className="glass-effect rounded-2xl p-4 text-center animate-fade-in" style={{
-        animationDelay: '0.1s'
-      }}>
-          <div className="text-3xl md:text-4xl font-bold text-wedding-palha mb-1">
-            {timeLeft.hours}
-          </div>
-          <div className="text-sm font-semibold text-white uppercase tracking-wide bg-transparent">
-            Horas
-          </div>
+
+        <div className={cardClass} style={{ animationDelay: '0.1s' }}>
+          <div className={numberClass}>{timeLeft.hours}</div>
+          <div className={labelClass}>Horas</div>
         </div>
-        
-        <div className="glass-effect rounded-2xl p-4 text-center animate-fade-in" style={{
-        animationDelay: '0.2s'
-      }}>
-          <div className="text-3xl md:text-4xl font-bold text-wedding-palha mb-1">
-            {timeLeft.minutes}
-          </div>
-          <div className="text-sm font-semibold text-white uppercase tracking-wide bg-transparent">
-            Minutos
-          </div>
+
+        <div className={cardClass} style={{ animationDelay: '0.2s' }}>
+          <div className={numberClass}>{timeLeft.minutes}</div>
+          <div className={labelClass}>Minutos</div>
         </div>
-        
-        <div className="glass-effect rounded-2xl p-4 text-center animate-fade-in" style={{
-        animationDelay: '0.3s'
-      }}>
-          <div className="text-3xl md:text-4xl font-bold text-wedding-palha mb-1">
-            {timeLeft.seconds}
-          </div>
-          <div className="text-sm font-semibold text-white uppercase tracking-wide bg-transparent">
-            Segundos
-          </div>
+
+        <div className={cardClass} style={{ animationDelay: '0.3s' }}>
+          <div className={numberClass}>{timeLeft.seconds}</div>
+          <div className={labelClass}>Segundos</div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default CountdownTimer;

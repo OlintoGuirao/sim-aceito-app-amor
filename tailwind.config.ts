@@ -73,6 +73,7 @@ export default {
 					darkMarsala: '#9A3F2A',
 					lightPalha: '#EEF2EB',
 					gold: '#6B8E6B',
+					olive: '#556B2F',
 					pearl: '#F5F7F2'
 				}
 			},

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { MessageCircle, Ticket } from 'lucide-react';
+import { RAFFLE_ENABLED } from '@/lib/features';
 
 interface NavigationMenuProps {
   activeSection: string;
@@ -26,13 +27,13 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     { id: 'party', label: 'Hora da Festa', icon: '🎉' },
     { id: 'messages', label: 'Recados', icon: '💌' },
     { id: 'manual', label: 'Manual dos Convidados', icon: '📋' },
-    { id: 'raffle', label: 'Rifa', icon: '🎫' },
+    ...(RAFFLE_ENABLED ? [{ id: 'raffle', label: 'Rifa', icon: '🎫' }] : []),
     { id: 'gifts', label: 'Lista de Presentes', icon: '🎁' }
   ];
 
   return (
     <Card className="p-4 mb-8 glass-effect bg-wedding-palha/20">
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+      <div className={`grid grid-cols-2 md:grid-cols-4 gap-2 ${RAFFLE_ENABLED ? 'lg:grid-cols-8' : 'lg:grid-cols-7'}`}>
         {menuItems.map(item => {
           const isRaffle = item.id === 'raffle';
           const isActive = activeSection === item.id;
@@ -79,15 +80,17 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
             <MessageCircle className="w-4 h-4 mr-2" />
             Gerenciar Recados
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/admin/raffle')}
-            className="text-black bg-wedding-secondary hover:bg-wedding-gold"
-          >
-            <Ticket className="w-4 h-4 mr-2" />
-            Gerenciar Rifa
-          </Button>
+          {RAFFLE_ENABLED && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/admin/raffle')}
+              className="text-black bg-wedding-secondary hover:bg-wedding-gold"
+            >
+              <Ticket className="w-4 h-4 mr-2" />
+              Gerenciar Rifa
+            </Button>
+          )}
         </div>
       )}
     </Card>

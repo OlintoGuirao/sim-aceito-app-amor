@@ -33,6 +33,7 @@ module.exports = {
           darkMarsala: "#9A3F2A", // Terracota escuro
           lightPalha: "#EEF2EB",  // Verde sage muito claro
           gold: "#6B8E6B",        // Verde sage para detalhes
+          olive: "#556B2F",      // Verde oliva escuro
           pearl: "#F5F7F2"
         },
         primary: {

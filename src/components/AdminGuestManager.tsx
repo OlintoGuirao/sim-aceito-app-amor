@@ -24,6 +24,7 @@ import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
 import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar, Download, Images } from "lucide-react";
 import { downloadAllStorageImagesAsZip } from '@/lib/storage';
+import { RAFFLE_ENABLED } from '@/lib/features';
 import { useNavigate } from 'react-router-dom';
 import type { Gift as GiftType } from '@/lib/firestore';
 import PartyQRCode from './PartyQRCode';
@@ -1021,10 +1022,12 @@ export function AdminGuestManager() {
             <MessageCircle className="w-4 h-4 mr-2" />
             Recados
           </TabsTrigger>
-          <TabsTrigger value="raffle" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
-            <Ticket className="w-4 h-4 mr-2" />
-            Rifa
-          </TabsTrigger>
+          {RAFFLE_ENABLED && (
+            <TabsTrigger value="raffle" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+              <Ticket className="w-4 h-4 mr-2" />
+              Rifa
+            </TabsTrigger>
+          )}
           <TabsTrigger value="gifts" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             <Gift className="w-4 h-4 mr-2" /> Presentes
           </TabsTrigger>
@@ -1380,22 +1383,24 @@ export function AdminGuestManager() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="raffle">
-          <Card>
-            <CardHeader className="bg-wedding-secondary">
-              <CardTitle className="text-black">Rifa</CardTitle>
-            </CardHeader>
-            <CardContent className="bg-wedding-secondary">
-              <Button
-                onClick={() => navigate('/admin/raffle')}
-                className="w-full bg-wedding-primary text-white hover:bg-wedding-secondary"
-              >
-                <Ticket className="h-4 w-4 mr-2" />
-                Ir para Área da Rifa
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {RAFFLE_ENABLED && (
+          <TabsContent value="raffle">
+            <Card>
+              <CardHeader className="bg-wedding-secondary">
+                <CardTitle className="text-black">Rifa</CardTitle>
+              </CardHeader>
+              <CardContent className="bg-wedding-secondary">
+                <Button
+                  onClick={() => navigate('/admin/raffle')}
+                  className="w-full bg-wedding-primary text-white hover:bg-wedding-secondary"
+                >
+                  <Ticket className="h-4 w-4 mr-2" />
+                  Ir para Área da Rifa
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
 
         <TabsContent value="gifts">
           <Card className="bg-wedding-secondary">
