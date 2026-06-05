@@ -9,7 +9,7 @@ const PhotoGallery: React.FC = () => {
   const photos = [
     { id: 1, src: '/NossaHistoria (1).jpeg' },
     { id: 2, src: '/NossaHistoria (2).jpeg' },
-    { id: 3, src: '/NossaHistoria (3).jpeg' },
+    { id: 3, src: '/NossaHistoria (3).jpeg', objectPosition: 'center top' },
     { id: 4, src: '/NossaHistoria (4).jpeg' },
     { id: 5, src: '/NossaHistoria (5).jpeg' },
   ];
@@ -57,13 +57,15 @@ const PhotoGallery: React.FC = () => {
                   className={`w-full h-full object-cover transition-opacity duration-300 ${
                     isLoaded ? 'opacity-100' : 'opacity-0'
                   }`}
+                  style={
+                    'objectPosition' in photo
+                      ? { objectPosition: photo.objectPosition }
+                      : undefined
+                  }
                   loading={isAboveFold ? 'eager' : 'lazy'}
                   decoding="async"
                   onLoad={() => setLoadedIds((prev) => new Set(prev).add(photo.id))}
                 />
-              </div>
-              <div className="p-3 bg-wedding-palha">
-                <p className="text-sm font-medium text-center text-gray-950"></p>
               </div>
             </Card>
           );
