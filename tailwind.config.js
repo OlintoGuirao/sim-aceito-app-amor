@@ -23,15 +23,17 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         wedding: {
-          primary: "#5f161c",    // Marsala
-          secondary: "#F5EDD7",  // Palha
-          accent: "#902E35",     // Marsala claro
-          marsala: "#5f161c",    // Marsala (mesmo que primary)
-          palha: "#F5EDD7",      // Palha (mesmo que secondary)
-          cream: "#FAF7F0",      // Palha mais claro
-          darkMarsala: "#4a1115", // Marsala mais escuro
-          lightPalha: "#F5EDD7",  // Palha mais claro
-          gold: "#F5EDD7"         // Palha para detalhes
+          primary: "#C45C3A",    // Terracota (principal)
+          secondary: "#E8F0E6",  // Verde sage claro
+          accent: "#5B7B5F",     // Verde sage
+          marsala: "#C45C3A",    // Terracota
+          terracotta: "#C45C3A",
+          palha: "#F5F7F2",      // Creme esverdeado
+          cream: "#FAF8F5",      // Creme
+          darkMarsala: "#9A3F2A", // Terracota escuro
+          lightPalha: "#EEF2EB",  // Verde sage muito claro
+          gold: "#6B8E6B",        // Verde sage para detalhes
+          pearl: "#F5F7F2"
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -107,8 +109,8 @@ module.exports = {
         bounce: 'bounce 1s infinite',
       },
       boxShadow: {
-        'glow': '0 0 10px rgba(245, 237, 215, 0.3)',
-        'glow-lg': '0 0 20px rgba(245, 237, 215, 0.4)',
+        'glow': '0 0 10px rgba(91, 123, 95, 0.3)',
+        'glow-lg': '0 0 20px rgba(91, 123, 95, 0.4)',
       },
     },
   },

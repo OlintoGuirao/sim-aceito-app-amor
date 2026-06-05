@@ -22,7 +22,7 @@ const Index = () => {
   const { user, isAdmin } = useAuth();
   
   // Data do casamento - ajuste conforme necessário
-  const weddingDate = new Date('2026-04-25T16:30:00');
+  const weddingDate = new Date('2026-08-22T18:30:00');
 
   // Abrir seção da rifa quando a URL tiver ?section=raffle
   useEffect(() => {
@@ -67,7 +67,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-wedding-primary to-wedding-secondary">
+    <div className="min-h-screen bg-gradient-to-b from-wedding-primary via-wedding-darkMarsala to-wedding-secondary">
       <Toaster position="top-center" richColors />
       <div className="container mx-auto px-4 pt-4 pb-16">
         <WeddingHeader />
@@ -78,10 +78,10 @@ const Index = () => {
       </div>
       
       {/* Floating decorative elements */}
-      <div className="fixed top-20 left-10 w-4 h-4 bg-wedding-marsala/30 rounded-full animate-float" style={{ animationDelay: '0s' }}></div>
-      <div className="fixed top-32 right-16 w-3 h-3 bg-wedding-palha/30 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
-      <div className="fixed bottom-40 left-20 w-5 h-5 bg-wedding-accent/30 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
-      <div className="fixed bottom-60 right-8 w-2 h-2 bg-wedding-marsala/20 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
+      <div className="fixed top-20 left-10 w-4 h-4 bg-wedding-gold/40 rounded-full animate-float" style={{ animationDelay: '0s' }}></div>
+      <div className="fixed top-32 right-16 w-3 h-3 bg-wedding-palha/40 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
+      <div className="fixed bottom-40 left-20 w-5 h-5 bg-wedding-accent/40 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
+      <div className="fixed bottom-60 right-8 w-2 h-2 bg-wedding-marsala/30 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
     </div>
   );
 };

@@ -19,10 +19,10 @@ export default {
 		},
 		extend: {
 			colors: {
-				border: 'rgb(95 22 28 / var(--tw-border-opacity, 1))',
-				input: 'rgb(95 22 28 / var(--tw-border-opacity, 1))',
-				ring: 'rgb(95 22 28 / var(--tw-ring-opacity, 1))',
-				background: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
+				border: 'rgb(196 92 58 / var(--tw-border-opacity, 1))',
+				input: 'rgb(196 92 58 / var(--tw-border-opacity, 1))',
+				ring: 'rgb(91 123 95 / var(--tw-ring-opacity, 1))',
+				background: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
@@ -45,33 +45,35 @@ export default {
 					foreground: 'hsl(var(--accent-foreground))'
 				},
 				popover: {
-					DEFAULT: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
+					DEFAULT: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))',
 					foreground: 'hsl(var(--popover-foreground))'
 				},
 				card: {
-					DEFAULT: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
+					DEFAULT: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
 				sidebar: {
-					DEFAULT: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))',
+					DEFAULT: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))',
 					foreground: 'hsl(var(--sidebar-foreground))',
 					primary: 'hsl(var(--sidebar-primary))',
 					'primary-foreground': 'hsl(var(--sidebar-primary-foreground))',
 					accent: 'hsl(var(--sidebar-accent))',
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
-					border: 'rgb(95 22 28 / var(--tw-border-opacity, 1))',
-					ring: 'rgb(95 22 28 / var(--tw-ring-opacity, 1))'
+					border: 'rgb(196 92 58 / var(--tw-border-opacity, 1))',
+					ring: 'rgb(91 123 95 / var(--tw-ring-opacity, 1))'
 				},
 				wedding: {
-					primary: '#5f161c',
-					secondary: '#F5EDD7',
-					accent: '#F5EDD7',
-					marsala: '#5f161c',
-					palha: '#F5EDD7',
-					cream: '#FAF7F0',
-					darkMarsala: '#4a1115',
-					lightPalha: '#F5EDD7',
-					gold: '#FFD700'
+					primary: '#C45C3A',
+					secondary: '#E8F0E6',
+					accent: '#5B7B5F',
+					marsala: '#C45C3A',
+					terracotta: '#C45C3A',
+					palha: '#F5F7F2',
+					cream: '#FAF8F5',
+					darkMarsala: '#9A3F2A',
+					lightPalha: '#EEF2EB',
+					gold: '#6B8E6B',
+					pearl: '#F5F7F2'
 				}
 			},
 			borderRadius: {

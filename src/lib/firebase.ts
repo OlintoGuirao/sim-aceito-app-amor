@@ -35,13 +35,5 @@ export const auth = getAuth(app);
 // Inicializa o Storage
 export const storage = getStorage(app);
 
-// Configuração para desenvolvimento local
-if (window.location.hostname === 'localhost') {
-  // Configurações específicas para desenvolvimento
-  const storageRef = getStorage(app);
-  // Adiciona headers CORS para desenvolvimento
-  storageRef.app.options.storageBucket = 'simaceito.appspot.com';
-}
-
 export { analytics };
 export default app; 

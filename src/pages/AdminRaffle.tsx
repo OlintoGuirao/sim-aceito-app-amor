@@ -553,9 +553,9 @@ const AdminRaffle: React.FC = () => {
             disabled={isDrawing || confirmedCount === 0}
             className={`
               relative overflow-hidden
-              bg-gradient-to-r from-wedding-gold via-yellow-500 to-wedding-gold
-              text-black font-semibold
-              hover:from-yellow-500 hover:via-wedding-gold hover:to-yellow-500
+              bg-gradient-to-r from-wedding-gold via-green-600 to-wedding-gold
+              text-white font-semibold
+              hover:from-green-600 hover:via-wedding-gold hover:to-green-600
               transition-all duration-500 ease-in-out
               shadow-lg hover:shadow-xl
               transform hover:-translate-y-1
@@ -577,7 +577,7 @@ const AdminRaffle: React.FC = () => {
         {winners.length > 0 && (
           <Card className="p-3 md:p-6 bg-wedding-primary mb-4 md:mb-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-wedding-gold/5 via-transparent to-wedding-gold/5" />
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-wedding-gold via-yellow-500 to-wedding-gold" />
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-wedding-gold via-green-600 to-wedding-gold" />
             
             <div className="relative">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
@@ -609,7 +609,7 @@ const AdminRaffle: React.FC = () => {
                       className="p-4 bg-wedding-secondary/20 hover:bg-wedding-secondary/30 transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden group"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-wedding-gold/5 via-transparent to-wedding-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-wedding-gold via-yellow-500 to-wedding-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-wedding-gold via-green-600 to-wedding-gold transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
                       
                       <div className="flex items-start gap-4">
                         <div className="shrink-0">

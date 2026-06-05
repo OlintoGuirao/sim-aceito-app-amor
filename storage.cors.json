@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:8080",
+      "http://127.0.0.1:8080",
+      "https://sim-aceito.com.br",
+      "https://www.sim-aceito.com.br"
+    ],
+    "method": ["GET", "HEAD"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type", "Content-Length", "Content-Disposition"]
+  }
+]

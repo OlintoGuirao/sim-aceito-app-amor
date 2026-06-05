@@ -143,7 +143,7 @@
 
 /* Gradientes */
 .gradient-text {
-  background: linear-gradient(45deg, #FFD700, #FFA500);
+  background: linear-gradient(45deg, #C45C3A, #5B7B5F);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -158,7 +158,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 2px;
-  background: linear-gradient(45deg, #FFD700, #FFA500);
+  background: linear-gradient(45deg, #C45C3A, #5B7B5F);
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);

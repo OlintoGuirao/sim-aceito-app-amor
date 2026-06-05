@@ -1,5 +1,5 @@
 {
-  "name": "Sim, Aceito! - Fabíola e Juninho",
+  "name": "Sim, Aceito! - Bruno e Guilherme",
   "short_name": "Sim, Aceito!",
   "description": "Celebre conosco o nosso casamento",
   "icons": [
@@ -14,9 +14,9 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#5f161c",
-  "background_color": "#5f161c",
+  "theme_color": "#C45C3A",
+  "background_color": "#C45C3A",
   "display": "standalone",
   "start_url": "/",
   "lang": "pt-BR"
-} 
+}

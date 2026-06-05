@@ -14,35 +14,35 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 95 22 28;
-    --primary-foreground: 250 247 240;
+    --primary: 196 92 58;
+    --primary-foreground: 245 247 242;
 
-    --secondary: 245 237 215;
-    --secondary-foreground: 95 22 28;
+    --secondary: 232 240 230;
+    --secondary-foreground: 196 92 58;
 
-    --muted: 245 237 215;
-    --muted-foreground: 139 115 85;
+    --muted: 232 240 230;
+    --muted-foreground: 91 123 95;
 
-    --accent: 245 237 215;
-    --accent-foreground: 95 22 28;
+    --accent: 91 123 95;
+    --accent-foreground: 245 247 242;
 
     --destructive: 239 68 68;
     --destructive-foreground: 248 250 252;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 95 22 28;
+    --ring: 91 123 95;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 95 22 28;
-    --sidebar-foreground: 250 247 240;
-    --sidebar-primary: 95 22 28;
-    --sidebar-primary-foreground: 250 247 240;
-    --sidebar-accent: 245 237 215;
-    --sidebar-accent-foreground: 95 22 28;
-    --sidebar-border: 95 22 28;
-    --sidebar-ring: 95 22 28;
+    --sidebar-background: 196 92 58;
+    --sidebar-foreground: 245 247 242;
+    --sidebar-primary: 196 92 58;
+    --sidebar-primary-foreground: 245 247 242;
+    --sidebar-accent: 232 240 230;
+    --sidebar-accent-foreground: 196 92 58;
+    --sidebar-border: 196 92 58;
+    --sidebar-ring: 91 123 95;
   }
 }
 
@@ -58,13 +58,13 @@
 
 @layer components {
   .wedding-gradient {
-    background: linear-gradient(135deg, #5f161c 0%, #F5EDD7 50%, #FAF7F0 100%);
+    background: linear-gradient(135deg, #C45C3A 0%, #9A3F2A 35%, #5B7B5F 65%, #E8F0E6 100%);
   }
   
   .glass-effect {
-    background: rgba(95, 22, 28, 0.25);
+    background: rgba(196, 92, 58, 0.2);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(95, 22, 28, 0.18);
+    border: 1px solid rgba(196, 92, 58, 0.25);
   }
 }
 
@@ -153,7 +153,7 @@
 
 /* Gradientes */
 .gradient-text {
-  background: linear-gradient(45deg, #5f161c, #F5EDD7);
+  background: linear-gradient(45deg, #C45C3A, #5B7B5F);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -168,7 +168,7 @@
   inset: 0;
   border-radius: inherit;
   padding: 2px;
-  background: linear-gradient(45deg, #5f161c, #F5EDD7);
+  background: linear-gradient(45deg, #C45C3A, #5B7B5F);
   -webkit-mask: 
     linear-gradient(#fff 0 0) content-box, 
     linear-gradient(#fff 0 0);

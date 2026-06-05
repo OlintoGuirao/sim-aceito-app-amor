@@ -85,7 +85,7 @@ export function GuestList() {
       `Para confirmar sua presença, acesse:\n` +
       `https://sim-aceito.com.br/confirmar/${guest.id}\n\n` +
       `Contamos com sua presença! 💕\n` +
-      `Fabíola e Juninho`;
+      `Bruno e Guilherme`;
 
     const whatsappUrl = `https://wa.me/${guest.phone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -202,7 +202,7 @@ export function GuestList() {
         </CardContent>
       </Card>
 
-      <Card className="p-6 text-center bg-gradient-to-r from-[#f5e6d3]/20 to-[#5f161c]/20">
+      <Card className="p-6 text-center bg-gradient-to-r from-wedding-secondary/20 to-wedding-primary/20">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-black">Lista de Convidados</h3>
         <p className="text-black">
           Gerencie seus convidados e envie convites

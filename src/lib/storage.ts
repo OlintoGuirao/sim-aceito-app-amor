@@ -1,5 +1,48 @@
+import JSZip from 'jszip';
 import { storage } from './firebase';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+  listAll,
+  type StorageReference,
+} from 'firebase/storage';
+
+const FIREBASE_STORAGE_ORIGIN = 'https://firebasestorage.googleapis.com';
+
+/** Em dev, usa o proxy do Vite (/storage) para evitar bloqueio de CORS no fetch. */
+function toSameOriginStorageUrl(downloadUrl: string): string {
+  if (typeof window === 'undefined') return downloadUrl;
+  if (!downloadUrl.startsWith(FIREBASE_STORAGE_ORIGIN)) return downloadUrl;
+
+  const isLocalhost =
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1';
+
+  if (!isLocalhost) return downloadUrl;
+
+  return `${window.location.origin}/storage${downloadUrl.slice(FIREBASE_STORAGE_ORIGIN.length)}`;
+}
+
+async function fetchStorageBlob(file: StorageImageFile): Promise<Blob> {
+  const downloadUrl = await getDownloadURL(file.storageRef);
+  const response = await fetch(toSameOriginStorageUrl(downloadUrl));
+
+  if (!response.ok) {
+    throw new Error(`Falha ao baixar ${file.fullPath}`);
+  }
+
+  return response.blob();
+}
+
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|bmp|heic|avif)$/i;
+
+export interface StorageImageFile {
+  fullPath: string;
+  name: string;
+  storageRef: StorageReference;
+}
 
 const CORS_METADATA = {
   customMetadata: {
@@ -88,4 +131,56 @@ export const getFileURL = async (path: string): Promise<string> => {
     console.error('Erro ao obter URL do arquivo:', error);
     throw error;
   }
-}; 
+};
+
+/** Lista recursivamente todas as imagens no Firebase Storage. */
+export async function listAllStorageImages(path = ''): Promise<StorageImageFile[]> {
+  const folderRef = ref(storage, path);
+  const result = await listAll(folderRef);
+  const files: StorageImageFile[] = result.items
+    .filter((itemRef) => IMAGE_EXTENSIONS.test(itemRef.name))
+    .map((itemRef) => ({
+      fullPath: itemRef.fullPath,
+      name: itemRef.name,
+      storageRef: itemRef,
+    }));
+
+  for (const prefixRef of result.prefixes) {
+    const nested = await listAllStorageImages(prefixRef.fullPath);
+    files.push(...nested);
+  }
+
+  return files.sort((a, b) => a.fullPath.localeCompare(b.fullPath));
+}
+
+/** Baixa todas as imagens do Storage em um único arquivo ZIP. */
+export async function downloadAllStorageImagesAsZip(
+  onProgress?: (current: number, total: number, filePath: string) => void
+): Promise<{ count: number }> {
+  const files = await listAllStorageImages();
+  if (files.length === 0) {
+    return { count: 0 };
+  }
+
+  const zip = new JSZip();
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    onProgress?.(i + 1, files.length, file.fullPath);
+
+    const blob = await fetchStorageBlob(file);
+    zip.file(file.fullPath, blob);
+  }
+
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const url = URL.createObjectURL(zipBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `firebase-imagens-${new Date().toISOString().slice(0, 10)}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  return { count: files.length };
+}

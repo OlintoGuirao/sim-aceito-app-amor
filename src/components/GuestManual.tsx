@@ -272,7 +272,7 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
           </div>
           <p className="text-xl text-gray-700 mb-3 font-medium">Com amor,</p>
           <p className="text-2xl font-bold text-wedding-marsala font-serif italic tracking-wide">
-            Fabíola & Juninho
+            Bruno & Guilherme
           </p>
           <div className="mt-6">
             <div className="w-16 h-1 bg-wedding-marsala mx-auto rounded-full"></div>

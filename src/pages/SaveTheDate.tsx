@@ -13,14 +13,14 @@ export function SaveTheDatePage() {
 
   // Informações do casamento
   const weddingInfo = {
-    title: "Casamento de Fabíola & Juninho",
+    title: "Casamento de Bruno & Guilherme",
     date: "2026-04-25",
     time: "16:30",
     location: "Espaço Cascata",
     address: "Suspense faz parte!",
     city: "Em breve...",
     description: "Queridos amigos e familiares, é oficial: vamos dizer 'sim!' Reserve esta data especial: 25 de abril de 2026. Sim, ainda falta um tempinho... mas já estamos tão animados que não conseguimos guardar segredo! Prepare o look, a dança, o coração e, é claro, o estômago — porque vai ter amor, festa e muita comida boa!",
-    coupleNames: "Fabíola & Juninho"
+    coupleNames: "Bruno & Guilherme"
   };
 
   const generateCalendarEvent = (calendarType: 'google' | 'outlook' | 'ics') => {
@@ -260,7 +260,7 @@ export function SaveTheDatePage() {
         <div className="text-center mt-8 animate-fade-in" style={{ animationDelay: '0.6s' }}>
           <div className="bg-wedding-secondary/10 backdrop-blur-sm rounded-lg p-4 border border-wedding-palha/20">
             <p className="text-wedding-palha/90 text-sm">
-              Com carinho, <span className="text-wedding-gold font-semibold">Fabíola e Juninho</span> 💕
+              Com carinho, <span className="text-wedding-gold font-semibold">Bruno e Guilherme</span> 💕
             </p>
           </div>
         </div>

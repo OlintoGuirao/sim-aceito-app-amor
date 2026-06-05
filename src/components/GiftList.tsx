@@ -102,7 +102,7 @@ const GiftList: React.FC = () => {
 
   const pixData = {
     key: '23455397808',
-    name: 'Fabíola e Juninho',
+    name: 'Bruno e Guilherme',
     bank: 'Nubank',
     agency: '1234',
     account: '56789-0'
@@ -121,14 +121,14 @@ const GiftList: React.FC = () => {
         <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-10">
           <TabsTrigger 
             value="gifts" 
-            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md"
           >
             <Gift className="w-4 h-4 mr-2" />
             Presentes
           </TabsTrigger>
           <TabsTrigger 
             value="money" 
-            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md"
+            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md"
           >
             <CreditCard className="w-4 h-4 mr-2" />
             Presente em Dinheiro

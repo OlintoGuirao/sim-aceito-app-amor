@@ -22,7 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest, getGifts, addGift } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar, Download } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar, Download, Images } from "lucide-react";
+import { downloadAllStorageImagesAsZip } from '@/lib/storage';
 import { useNavigate } from 'react-router-dom';
 import type { Gift as GiftType } from '@/lib/firestore';
 import PartyQRCode from './PartyQRCode';
@@ -59,6 +60,8 @@ export function AdminGuestManager() {
     link: ''
   });
   const [openModal, setOpenModal] = useState<null | 'confirmed' | 'pending' | 'declined'>(null);
+  const [downloadingImages, setDownloadingImages] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState<string | null>(null);
 
   // Configurar listener em tempo real para convidados
   useEffect(() => {
@@ -385,7 +388,7 @@ export function AdminGuestManager() {
       message += `Lembrete: o convite é intransferível, e precisamos que confirme a presença individualmente até a data de 16/01/2026.\n\n`;
       message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! \n\n`;
       message += `"Deus mudou o teu caminho até juntares com o meu e guardou a tua vida separando-a para mim. Para onde fores, irei; onde tu repousares, repousarei." - Rute 1:16-18\n\n`;
-      message += `Fabíola e Juninho  👰🏼‍♀️🤵🏻\n`;
+      message += `Bruno e Guilherme  👰🏼‍♀️🤵🏻\n`;
     
 
       // Usa o formato correto do link do WhatsApp
@@ -427,7 +430,7 @@ export function AdminGuestManager() {
           `Aqui está o link para acessar o site do nosso casamento:\n` +
           `${baseUrl}/confirm/${guest.id}\n\n` +
           `Contamos com sua presença! 💕\n` +
-          `Fabíola e Juninho `;
+          `Bruno e Guilherme `;
 
         const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, '_blank');
@@ -473,7 +476,7 @@ export function AdminGuestManager() {
         `Contamos com você para celebrar esse dia inesquecível ao nosso lado!\n\n` +
         `Salve a data em seu calendário:\n` +
         `${saveTheDateUrl}\n\n` +
-        `Com carinho,\nFabíola e Juninho 💕`;
+        `Com carinho,\nBruno e Guilherme 💕`;
 
       const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, '_blank');
@@ -576,6 +579,36 @@ export function AdminGuestManager() {
     }
   };
 
+  const handleDownloadAllImages = async () => {
+    try {
+      setDownloadingImages(true);
+      setDownloadProgress('Buscando imagens no Firebase Storage...');
+
+      const { count } = await downloadAllStorageImagesAsZip((current, total, filePath) => {
+        setDownloadProgress(`Baixando ${current} de ${total}: ${filePath}`);
+      });
+
+      if (count === 0) {
+        toast.info('Nenhuma imagem encontrada no Firebase Storage.');
+      } else {
+        toast.success(`${count} imagem(ns) exportada(s) em ZIP.`);
+      }
+    } catch (error) {
+      console.error('Erro ao baixar imagens do Firebase:', error);
+      const isCorsError =
+        error instanceof TypeError &&
+        (error.message.includes('fetch') || error.message.includes('Failed'));
+      toast.error(
+        isCorsError
+          ? 'Bloqueio de CORS no Storage. Em produção, execute npm run storage:cors (requer Google Cloud SDK).'
+          : 'Erro ao baixar imagens do Firebase.'
+      );
+    } finally {
+      setDownloadingImages(false);
+      setDownloadProgress(null);
+    }
+  };
+
   // Remover presente
   const handleDeleteGift = async (id: string) => {
     try {
@@ -594,6 +627,19 @@ export function AdminGuestManager() {
         <p className="text-white">
           Área administrativa para gerenciar a lista de convidados
         </p>
+        <div className="mt-4 flex flex-col items-center gap-2">
+          <Button
+            onClick={handleDownloadAllImages}
+            disabled={downloadingImages}
+            className="bg-wedding-accent text-wedding-cream hover:bg-wedding-accent/90"
+          >
+            <Images className="w-4 h-4 mr-2" />
+            {downloadingImages ? 'Baixando imagens...' : 'Baixar todas as imagens do Firebase'}
+          </Button>
+          {downloadProgress && (
+            <p className="text-sm text-wedding-cream/90 max-w-xl">{downloadProgress}</p>
+          )}
+        </div>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -958,28 +1004,28 @@ export function AdminGuestManager() {
       </Dialog>
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-60">
-          <TabsTrigger value="add" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-6">
+          <TabsTrigger value="add" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Adicionar Convidado
           </TabsTrigger>
-          <TabsTrigger value="import" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+          <TabsTrigger value="import" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Importar Lista
           </TabsTrigger>
-          <TabsTrigger value="list" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+          <TabsTrigger value="list" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Lista de Convidados
           </TabsTrigger>
-          <TabsTrigger value="qrcode" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+          <TabsTrigger value="qrcode" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Link da Galeria
           </TabsTrigger>
-          <TabsTrigger value="messages" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+          <TabsTrigger value="messages" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             <MessageCircle className="w-4 h-4 mr-2" />
             Recados
           </TabsTrigger>
-          <TabsTrigger value="raffle" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+          <TabsTrigger value="raffle" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             <Ticket className="w-4 h-4 mr-2" />
             Rifa
           </TabsTrigger>
-          <TabsTrigger value="gifts" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-primary data-[state=active]:text-white rounded-md">
+          <TabsTrigger value="gifts" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             <Gift className="w-4 h-4 mr-2" /> Presentes
           </TabsTrigger>
         </TabsList>
@@ -1112,25 +1158,22 @@ export function AdminGuestManager() {
                             )}
                             <div className="flex flex-wrap gap-2 mt-2">
                               <Button
-                                variant="outline"
                                 onClick={() => handleStatusChange(guest.id!, 'confirmed')}
-                                className={`flex-1 sm:flex-none rounded-full border-2 border-green-500 text-green-700 hover:bg-green-50 px-4 py-2 ${guest.status === 'confirmed' ? 'bg-green-100' : ''}`}
+                                className={`flex-1 sm:flex-none rounded-full border-2 border-green-500 bg-white text-green-700 hover:bg-green-50 hover:text-green-800 px-4 py-2 ${guest.status === 'confirmed' ? 'bg-green-100' : ''}`}
                               >
                                 <Check className="h-4 w-4 mr-2" />
                                 <span className="whitespace-nowrap">Confirmado</span>
                               </Button>
                               <Button
-                                variant="outline"
                                 onClick={() => handleStatusChange(guest.id!, 'declined')}
-                                className={`flex-1 sm:flex-none rounded-full border-2 border-red-500 text-red-700 hover:bg-red-50 px-4 py-2 ${guest.status === 'declined' ? 'bg-red-100' : ''}`}
+                                className={`flex-1 sm:flex-none rounded-full border-2 border-red-500 bg-white text-red-700 hover:bg-red-50 hover:text-red-800 px-4 py-2 ${guest.status === 'declined' ? 'bg-red-100' : ''}`}
                               >
                                 <X className="h-4 w-4 mr-2" />
                                 <span className="whitespace-nowrap">Declinado</span>
                               </Button>
                               <Button
-                                variant="outline"
                                 onClick={() => handleDeleteGuest(guest.id!)}
-                                className={`flex-1 sm:flex-none rounded-full border-2 border-gray-300 text-gray-600 hover:bg-gray-100 px-4 py-2`}
+                                className="flex-1 sm:flex-none rounded-full border-2 border-gray-300 bg-white text-gray-700 hover:bg-red-50 hover:text-red-700 hover:border-red-300 px-4 py-2"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 <span className="whitespace-nowrap">Excluir</span>

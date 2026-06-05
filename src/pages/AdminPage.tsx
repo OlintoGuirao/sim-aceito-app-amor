@@ -19,7 +19,7 @@ const AdminPage: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))' }}>
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle className="text-center">Área Administrativa</CardTitle>

@@ -35,11 +35,13 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
         {menuItems.map(item => {
           const isRaffle = item.id === 'raffle';
+          const isActive = activeSection === item.id;
           const linkClass = `p-3 rounded-lg text-center transition-all hover:scale-105 block w-full ${
-            activeSection === item.id
-              ? 'bg-wedding-marsala text-wedding-cream shadow-lg'
-              : 'bg-white/50 hover:bg-wedding-secondary/60'
+            isActive
+              ? 'bg-wedding-accent text-wedding-cream shadow-lg ring-1 ring-wedding-primary/30'
+              : 'bg-white/50 hover:bg-wedding-secondary/80'
           }`;
+          const labelClass = `text-xs font-medium bg-transparent ${isActive ? 'text-wedding-cream' : 'text-black'}`;
           if (isRaffle) {
             return (
               <Link
@@ -49,7 +51,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
                 onClick={isHomePage ? () => onSectionChange('raffle') : undefined}
               >
                 <div className="text-xl mb-1">{item.icon}</div>
-                <div className="text-black text-xs font-medium bg-transparent">{item.label}</div>
+                <div className={labelClass}>{item.label}</div>
               </Link>
             );
           }
@@ -60,7 +62,7 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
               className={linkClass}
             >
               <div className="text-xl mb-1">{item.icon}</div>
-              <div className="text-black text-xs font-medium bg-transparent">{item.label}</div>
+              <div className={labelClass}>{item.label}</div>
             </button>
           );
         })}

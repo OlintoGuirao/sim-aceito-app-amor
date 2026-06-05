@@ -59,7 +59,7 @@ export function ConfirmPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))' }}>
         <Card className="w-full max-w-md">
           <CardContent className="p-6">
             <div className="text-center">Carregando...</div>
@@ -71,7 +71,7 @@ export function ConfirmPage() {
 
   if (error || !guest) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))' }}>
         <Card className="w-full max-w-md">
           <CardContent className="p-6">
             <div className="text-center text-red-500">{error || 'Convidado não encontrado'}</div>
@@ -88,7 +88,7 @@ export function ConfirmPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(95 22 28 / var(--tw-bg-opacity, 1))' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'rgb(196 92 58 / var(--tw-bg-opacity, 1))' }}>
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-center">Confirmação de Presença</CardTitle>
