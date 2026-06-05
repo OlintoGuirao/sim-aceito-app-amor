@@ -3,8 +3,11 @@
     "origin": [
       "http://localhost:8080",
       "http://127.0.0.1:8080",
+      "https://simaceito.com.br",
+      "https://www.simaceito.com.br",
       "https://sim-aceito.com.br",
-      "https://www.sim-aceito.com.br"
+      "https://www.sim-aceito.com.br",
+      "https://simaceito.netlify.app"
     ],
     "method": ["GET", "HEAD"],
     "maxAgeSeconds": 3600,

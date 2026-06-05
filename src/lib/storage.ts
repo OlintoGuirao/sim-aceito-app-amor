@@ -11,17 +11,10 @@ import {
 
 const FIREBASE_STORAGE_ORIGIN = 'https://firebasestorage.googleapis.com';
 
-/** Em dev, usa o proxy do Vite (/storage) para evitar bloqueio de CORS no fetch. */
+/** Usa proxy same-origin (/storage) para evitar CORS no fetch (Vite dev + Netlify prod). */
 function toSameOriginStorageUrl(downloadUrl: string): string {
   if (typeof window === 'undefined') return downloadUrl;
   if (!downloadUrl.startsWith(FIREBASE_STORAGE_ORIGIN)) return downloadUrl;
-
-  const isLocalhost =
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1';
-
-  if (!isLocalhost) return downloadUrl;
-
   return `${window.location.origin}/storage${downloadUrl.slice(FIREBASE_STORAGE_ORIGIN.length)}`;
 }
 

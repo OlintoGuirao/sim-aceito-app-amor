@@ -1,6 +1,12 @@
 [
   {
-    "origin": ["http://localhost:8080", "http://localhost:3000", "https://simaceito.netlify.app"],
+    "origin": [
+      "http://localhost:8080",
+      "http://localhost:3000",
+      "https://simaceito.com.br",
+      "https://www.simaceito.com.br",
+      "https://simaceito.netlify.app"
+    ],
     "method": ["GET", "POST", "PUT", "DELETE"],
     "maxAgeSeconds": 3600,
     "responseHeader": ["Content-Type", "Authorization", "Content-Length", "User-Agent", "x-goog-resumable"]

@@ -1,4 +1,10 @@
 [[redirects]]
+  from = "/storage/*"
+  to = "https://firebasestorage.googleapis.com/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
-  status = 200 
+  status = 200

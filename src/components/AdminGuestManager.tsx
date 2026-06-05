@@ -600,7 +600,7 @@ export function AdminGuestManager() {
         (error.message.includes('fetch') || error.message.includes('Failed'));
       toast.error(
         isCorsError
-          ? 'Bloqueio de CORS no Storage. Em produção, execute npm run storage:cors (requer Google Cloud SDK).'
+          ? 'Bloqueio de CORS no Storage. Faça um novo deploy do site ou execute npm run storage:cors no bucket.'
           : 'Erro ao baixar imagens do Firebase.'
       );
     } finally {
