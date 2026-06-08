@@ -1004,36 +1004,36 @@ export function AdminGuestManager() {
         </DialogContent>
       </Dialog>
 
-      <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-6">
-          <TabsTrigger value="add" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+      <Tabs value={tab} onValueChange={setTab} className="w-full space-y-4">
+        <TabsList className="grid grid-cols-2 sm:flex sm:flex-wrap bg-wedding-primary rounded-lg mb-0">
+          <TabsTrigger value="add" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Adicionar Convidado
           </TabsTrigger>
-          <TabsTrigger value="import" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+          <TabsTrigger value="import" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Importar Lista
           </TabsTrigger>
-          <TabsTrigger value="list" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+          <TabsTrigger value="list" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Lista de Convidados
           </TabsTrigger>
-          <TabsTrigger value="qrcode" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+          <TabsTrigger value="qrcode" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             Link da Galeria
           </TabsTrigger>
-          <TabsTrigger value="messages" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+          <TabsTrigger value="messages" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             <MessageCircle className="w-4 h-4 mr-2" />
             Recados
           </TabsTrigger>
           {RAFFLE_ENABLED && (
-            <TabsTrigger value="raffle" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+            <TabsTrigger value="raffle" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
               <Ticket className="w-4 h-4 mr-2" />
               Rifa
             </TabsTrigger>
           )}
-          <TabsTrigger value="gifts" className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+          <TabsTrigger value="gifts" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             <Gift className="w-4 h-4 mr-2" /> Presentes
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="add">
+        <TabsContent value="add" className="mt-0">
           <Card className="bg-wedding-secondary">
             <CardHeader className="bg-wedding-secondary">
               <CardTitle className="text-black">Adicionar Novo Convidado</CardTitle>
