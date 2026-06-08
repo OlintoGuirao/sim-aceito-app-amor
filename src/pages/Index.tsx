@@ -42,7 +42,7 @@ const Index = () => {
       case 'countdown':
         return (
           <div className="text-center">
-            <h2 className="text-3xl font-elegant font-semibold mb-4 text-foreground">
+            <h2 className="text-2xl sm:text-3xl font-elegant font-semibold mb-4 text-foreground">
               Faltam apenas...
             </h2>
             <CountdownTimer targetDate={weddingDate} />
@@ -68,22 +68,22 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-wedding-primary via-wedding-darkMarsala to-wedding-secondary">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-wedding-primary via-wedding-darkMarsala to-wedding-secondary">
       <MusicPlayer />
       <Toaster position="top-center" richColors />
-      <div className="container mx-auto px-4 pt-4 pb-16">
+      <div className="container mx-auto pt-14 sm:pt-6 pb-16 max-w-full">
         <WeddingHeader />
         <NavigationMenu activeSection={activeSection} onSectionChange={setActiveSection} />
-        <main className="mt-0 pb-6">
+        <main className="mt-0 pb-6 min-w-0">
           {renderSection()}
         </main>
       </div>
       
       {/* Floating decorative elements */}
-      <div className="fixed top-20 left-10 w-4 h-4 bg-wedding-gold/40 rounded-full animate-float" style={{ animationDelay: '0s' }}></div>
-      <div className="fixed top-32 right-16 w-3 h-3 bg-wedding-palha/40 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
-      <div className="fixed bottom-40 left-20 w-5 h-5 bg-wedding-accent/40 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
-      <div className="fixed bottom-60 right-8 w-2 h-2 bg-wedding-marsala/30 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
+      <div className="hidden sm:block fixed top-20 left-10 w-4 h-4 bg-wedding-gold/40 rounded-full animate-float" style={{ animationDelay: '0s' }}></div>
+      <div className="hidden sm:block fixed top-32 right-16 w-3 h-3 bg-wedding-palha/40 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
+      <div className="hidden sm:block fixed bottom-40 left-20 w-5 h-5 bg-wedding-accent/40 rounded-full animate-float" style={{ animationDelay: '2s' }}></div>
+      <div className="hidden sm:block fixed bottom-60 right-8 w-2 h-2 bg-wedding-marsala/30 rounded-full animate-float" style={{ animationDelay: '1.5s' }}></div>
     </div>
   );
 };

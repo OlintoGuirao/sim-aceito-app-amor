@@ -23,7 +23,7 @@ const EventLocation: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 bg-wedding-primary max-w-lg mx-auto">
+      <Card className="p-4 sm:p-6 bg-wedding-primary max-w-lg mx-auto">
         <div className="text-center mb-4">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-wedding-secondary/20 mb-4">
             <span className="text-4xl">{location.icon}</span>
@@ -33,8 +33,8 @@ const EventLocation: React.FC = () => {
 
         <div className="space-y-3 text-center">
           <div>
-            <h4 className="font-medium text-slate-50">{location.name}</h4>
-            <p className="text-sm text-slate-50 whitespace-pre-line">
+            <h4 className="font-medium text-slate-50 text-sm sm:text-base break-words">{location.name}</h4>
+            <p className="text-sm text-slate-50 whitespace-pre-line break-words">
               {location.address}
             </p>
           </div>
@@ -54,7 +54,7 @@ const EventLocation: React.FC = () => {
         </div>
       </Card>
 
-      <Card className="p-6 bg-gradient-to-r from-wedding-accent/20 to-wedding-blush/20 bg-wedding-primary">
+      <Card className="p-4 sm:p-6 bg-gradient-to-r from-wedding-accent/20 to-wedding-blush/20 bg-wedding-primary">
         <h3 className="text-lg font-semibold mb-4 text-center text-slate-50">Informações Importantes</h3>
 
         <div className="grid md:grid-cols-2 gap-6">

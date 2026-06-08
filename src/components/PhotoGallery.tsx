@@ -16,9 +16,9 @@ const PhotoGallery: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 md:p-8 bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
-        <h3 className="text-2xl font-elegant font-semibold mb-6 text-slate-50 text-center">Nossa História</h3>
-        <div className="text-slate-50 text-center leading-relaxed [&_p]:m-0">
+      <Card className="p-4 sm:p-6 md:p-8 bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
+        <h3 className="text-xl sm:text-2xl font-elegant font-semibold mb-4 sm:mb-6 text-slate-50 text-center">Nossa História</h3>
+        <div className="text-slate-50 text-center text-sm sm:text-base leading-relaxed [&_p]:m-0 [&_p+p]:mt-3 sm:[&_p+p]:mt-4">
           <p>
             Nossa história começou em 2013, na faculdade, durante o curso de gastronomia. E, como toda boa receita, precisou de alguns ingredientes especiais para dar certo.
           </p>

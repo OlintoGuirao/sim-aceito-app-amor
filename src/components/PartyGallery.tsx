@@ -475,7 +475,7 @@ const PartyGallery: React.FC = () => {
   }, [previewUrls]);
 
   return <div className="space-y-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
+      <Card className="p-4 sm:p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
         <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Hora da Festa</h3>
         <p className="text-slate-50">
           Compartilhe seus momentos especiais do nosso casamento. Iremos adorar ver sua visão da festa.
@@ -593,7 +593,7 @@ const PartyGallery: React.FC = () => {
           )}
         </div>}
 
-      <Card className="p-6 bg-wedding-secondary/20">
+      <Card className="p-4 sm:p-6 bg-wedding-secondary/20">
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Compartilhe Suas Fotos</h4>
         <div className="space-y-4">
           {selectedFiles.length > 0 ? (

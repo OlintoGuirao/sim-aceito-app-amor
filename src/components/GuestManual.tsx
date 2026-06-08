@@ -25,11 +25,11 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-4 space-y-8">
+    <div className="max-w-5xl mx-auto px-1 sm:px-4 space-y-6 sm:space-y-8">
       {/* Header */}
       <Card className="bg-gradient-to-br from-wedding-marsala/20 via-wedding-gold/15 to-wedding-palha/10 border-0 shadow-2xl overflow-hidden relative">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
-        <CardHeader className="text-center relative z-10 py-12">
+        <CardHeader className="text-center relative z-10 py-8 sm:py-12">
           <div className="flex justify-center mb-4">
             <div className="p-3 bg-wedding-marsala rounded-full shadow-lg">
               <Sparkles className="w-8 h-8 text-white" />
@@ -171,27 +171,21 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
             </CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="bg-gradient-to-br from-wedding-gold/20 to-wedding-marsala/10 p-6 rounded-xl border-l-4 border-wedding-marsala space-y-4">
-            <p className="text-lg font-bold text-wedding-marsala">
-              Confirme sua presença até o dia 16 de janeiro de 2026.
+        <CardContent>
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-md">
+            <p className="text-lg text-yellow-800 font-bold mb-3 flex items-center gap-2">
+              ⚠️ Informação Importante:
             </p>
-
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-6 rounded-lg shadow-md">
-              <p className="text-lg text-yellow-800 font-bold mb-3 flex items-center gap-2">
-                ⚠️ Informação Importante:
-              </p>
-              <p className="text-base text-yellow-800 mb-3 leading-relaxed">
-                Caso não seja realizada a confirmação até a data estipulada, assumiremos que 
-                não poderá comparecer, sendo assim, seu nome não constará na lista de presença 
-                da festa, o que ocasionará um desconforto, pois não terá autorização para entrar.
-              </p>
-              <p className="text-base text-yellow-800 leading-relaxed">
-                Somente confirme sua presença se realmente tiver interesse em ir, e caso 
-                ocorra algum imprevisto posteriormente à confirmação, que lhe impeça de 
-                participar, por gentileza, nos informe.
-              </p>
-            </div>
+            <p className="text-base text-yellow-800 mb-3 leading-relaxed">
+              Caso não seja realizada a confirmação até a data estipulada, assumiremos que
+              não poderá comparecer, sendo assim, seu nome não constará na lista de presença
+              da festa, o que ocasionará um desconforto, pois não terá autorização para entrar.
+            </p>
+            <p className="text-base text-yellow-800 leading-relaxed">
+              Somente confirme sua presença se realmente tiver interesse em ir, e caso
+              ocorra algum imprevisto posteriormente à confirmação, que lhe impeça de
+              participar, por gentileza, nos informe.
+            </p>
           </div>
         </CardContent>
       </Card>

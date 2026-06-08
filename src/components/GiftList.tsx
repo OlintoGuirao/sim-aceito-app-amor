@@ -107,27 +107,27 @@ const GiftList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 text-center bg-wedding-primary border-wedding-primary">
-        <h3 className="text-2xl font-elegant font-semibold mb-2 text-wedding-secondary">Lista de Presentes</h3>
+      <Card className="p-4 sm:p-6 text-center bg-wedding-primary border-wedding-primary">
+        <h3 className="text-xl sm:text-2xl font-elegant font-semibold mb-2 text-wedding-secondary">Lista de Presentes</h3>
         <p className="text-wedding-secondary">
           Sua presença é nosso maior presente, mas se desejar nos presentear, aqui estão algumas sugestões
         </p>
       </Card>
 
       <Tabs defaultValue="gifts" className="w-full">
-        <TabsList className="flex flex-wrap w-full bg-wedding-primary p-1 rounded-lg gap-1 mb-10">
+        <TabsList className="flex flex-col sm:flex-row w-full h-auto bg-wedding-primary p-1 rounded-lg gap-1 mb-6 sm:mb-10">
           <TabsTrigger 
             value="gifts" 
-            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md"
+            className="flex-1 w-full min-w-0 bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md text-sm sm:text-base py-2.5"
           >
-            <Gift className="w-4 h-4 mr-2" />
+            <Gift className="w-4 h-4 mr-2 shrink-0" />
             Presentes
           </TabsTrigger>
           <TabsTrigger 
             value="money" 
-            className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md"
+            className="flex-1 w-full min-w-0 bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md text-sm sm:text-base py-2.5"
           >
-            <QrCode className="w-4 h-4 mr-2" />
+            <QrCode className="w-4 h-4 mr-2 shrink-0" />
             Presente em Dinheiro
           </TabsTrigger>
         </TabsList>
@@ -235,11 +235,11 @@ const GiftList: React.FC = () => {
         <TabsContent value="money">
           <Card className="bg-wedding-primary border-wedding-primary">
             <CardHeader>
-              <CardTitle className="text-wedding-secondary text-2xl font-elegant">Presente em Dinheiro</CardTitle>
+              <CardTitle className="text-wedding-secondary text-xl sm:text-2xl font-elegant">Presente em Dinheiro</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center space-y-6">
-                  <div className="bg-wedding-secondary/10 p-6 rounded-xl w-full max-w-md">
+                  <div className="bg-wedding-secondary/10 p-4 sm:p-6 rounded-xl w-full max-w-md">
                     <h3 className="text-xl font-semibold text-wedding-secondary text-center mb-6 flex items-center justify-center gap-2">
                       <QrCode className="w-5 h-5" />
                       PIX
@@ -258,11 +258,11 @@ const GiftList: React.FC = () => {
                     <div className="text-center space-y-3">
                       <div className="bg-wedding-secondary/20 p-3 rounded-lg">
                         <p className="text-wedding-secondary font-semibold">Chave PIX</p>
-                        <p className="text-wedding-secondary text-lg">{pixData.key}</p>
+                        <p className="text-wedding-secondary text-base sm:text-lg break-words">{pixData.key}</p>
                       </div>
                       <div className="bg-wedding-secondary/20 p-3 rounded-lg">
                         <p className="text-wedding-secondary font-semibold">Titular</p>
-                        <p className="text-wedding-secondary text-lg">{pixData.name}</p>
+                        <p className="text-wedding-secondary text-base sm:text-lg break-words">{pixData.name}</p>
                       </div>
                     </div>
                     <Button

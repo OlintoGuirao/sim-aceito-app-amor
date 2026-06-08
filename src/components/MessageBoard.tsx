@@ -71,14 +71,14 @@ const MessageBoard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-blush/20 bg-wedding-primary">
-        <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Recados dos Convidados</h3>
+      <Card className="p-4 sm:p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-blush/20 bg-wedding-primary">
+        <h3 className="text-xl sm:text-2xl font-elegant font-semibold mb-2 text-slate-50">Recados dos Convidados</h3>
         <p className="text-slate-50">
           Deixe uma mensagem carinhosa para os noivos
         </p>
       </Card>
 
-      <Card className="p-6 bg-wedding-primary">
+      <Card className="p-4 sm:p-6 bg-wedding-primary">
         <h4 className="text-lg font-semibold mb-4 text-slate-50">Deixe seu Recado</h4>
         <div className="space-y-4">
           <Input

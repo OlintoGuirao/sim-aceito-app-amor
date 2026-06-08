@@ -34,13 +34,13 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
     return () => clearInterval(timer);
   }, [targetDate]);
   const cardClass =
-    'bg-wedding-secondary border-2 border-wedding-olive rounded-2xl p-4 text-center animate-fade-in shadow-md';
-  const numberClass = 'text-3xl md:text-4xl font-bold text-wedding-olive mb-1';
-  const labelClass = 'text-sm font-semibold text-wedding-olive uppercase tracking-wide';
+    'bg-wedding-secondary border-2 border-wedding-olive rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center animate-fade-in shadow-md';
+  const numberClass = 'text-2xl sm:text-3xl md:text-4xl font-bold text-wedding-olive mb-1';
+  const labelClass = 'text-xs sm:text-sm font-semibold text-wedding-olive uppercase tracking-wide';
 
   return (
-    <div className="flex flex-col items-center space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-2xl">
+    <div className="flex flex-col items-center space-y-4 px-1">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 w-full max-w-2xl">
         <div className={cardClass}>
           <div className={numberClass}>{timeLeft.days}</div>
           <div className={labelClass}>Dias</div>

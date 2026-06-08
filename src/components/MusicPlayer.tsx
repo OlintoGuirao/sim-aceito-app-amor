@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX, X } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
 
 const VIDEO_ID = '-oqAU5VxFWs';
@@ -102,6 +102,7 @@ const MusicPlayer: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(DEFAULT_VOLUME);
   const [muted, setMuted] = useState(false);
+  const [visible, setVisible] = useState(true);
 
   const syncTrackInfo = useCallback((player: YouTubePlayer) => {
     const data = player.getVideoData();
@@ -241,14 +242,33 @@ const MusicPlayer: React.FC = () => {
     }
   };
 
+  const handleClose = () => {
+    const player = playerRef.current;
+    if (player) {
+      player.pauseVideo();
+      setPlaying(false);
+    }
+    setVisible(false);
+  };
+
   const remaining = Math.max(0, duration - currentTime);
 
   const sliderClass =
     '[&_[role=slider]]:h-2.5 [&_[role=slider]]:w-2.5 [&_[role=slider]]:border-white [&_[role=slider]]:bg-white [&>span:first-child]:h-0.5 [&>span:first-child]:bg-white/50 [&_[data-orientation=horizontal]>.bg-primary]:bg-white/90';
 
   return (
-    <div className="fixed top-3 right-3 z-50 w-[min(calc(100vw-1.5rem),16rem)]">
-      <div className="rounded-xl px-2.5 py-2 bg-white/30 backdrop-blur-md border border-white/50 shadow-md">
+    <div
+      className={`fixed top-2 right-2 sm:top-3 sm:right-3 z-50 w-[min(calc(100vw-1rem),14rem)] sm:w-[min(calc(100vw-1.5rem),16rem)] ${!visible ? 'hidden' : ''}`}
+    >
+      <div className="relative rounded-xl px-2.5 py-2 bg-white/30 backdrop-blur-md border border-white/50 shadow-md">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="sm:hidden absolute -top-2 -right-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-gray-900/80 text-white shadow-md hover:bg-gray-900"
+          aria-label="Fechar player e parar música"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
         <div className="flex items-center gap-2 mb-1.5">
           <img
             src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
