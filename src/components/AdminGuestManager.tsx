@@ -374,9 +374,9 @@ export function AdminGuestManager() {
         message = `Olá ${guest.name}! \n\nNem conseguimos acreditar, mas é real, o grande momento está cada vez mais perto.\n\n`;
       }
 
-      message += `📅 Data: 25 de abril de 2026\n` +
-        `⏰ Horário: 16:30\n` +
-        `📍 Local: Espaço Cascata\n\n`;
+      message += `📅 Data: 22 de agosto de 2026\n` +
+        `⏰ Horário: 18:30\n` +
+        `📍 Local: Espaço Tay Eventos - Estrada SJQ, 70, Zona Rural, São Joaquim da Barra (SP)\n\n`;
 
       if (groupMembers.length > 1) {
         message += `Para confirmar suas presenças, acessem os links abaixo:\n\n`;
@@ -469,11 +469,11 @@ export function AdminGuestManager() {
       const message = ` \n\n` +
         `Queridos amigos e familiares,\n\n` +
         `É oficial: vamos dizer "sim!"\n\n` +
-        `Reserve esta data especial: 25 de abril de 2026\n\n` +
+        `Reserve esta data especial: 22 de agosto de 2026\n\n` +
         `Sim, ainda falta um tempinho... mas já estamos tão animados que não conseguimos guardar segredo!\n\n` +
         `Prepare o look, a dança, o coração e, é claro, o estômago — porque vai ter amor, festa e muita comida boa!\n\n` +
         `O convite oficial vem depois, mas por enquanto, marque na agenda, cole um post-it na geladeira ou tatue na memória:\n\n` +
-        `📅 25/04/2026\n` +
+        `📅 22/08/2026\n` +
         `Contamos com você para celebrar esse dia inesquecível ao nosso lado!\n\n` +
         `Salve a data em seu calendário:\n` +
         `${saveTheDateUrl}\n\n` +

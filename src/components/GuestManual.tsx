@@ -62,7 +62,7 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
         <CardContent className="space-y-4">
           <div className="bg-gradient-to-br from-wedding-gold/20 to-wedding-marsala/10 p-6 rounded-xl border-l-4 border-wedding-marsala">
             <p className="text-2xl font-bold text-wedding-marsala mb-3">
-              Cerimônia: 16:30h
+              Cerimônia: 18:30h
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
               Chegue com tranquilidade e programe-se para estar no local no horário da 
@@ -87,43 +87,13 @@ const GuestManual: React.FC<GuestManualProps> = ({ onSectionChange }) => {
         <CardContent className="space-y-4">
           <div className="bg-gradient-to-br from-wedding-gold/20 to-wedding-marsala/10 p-6 rounded-xl border-l-4 border-wedding-marsala">
             <p className="text-2xl font-bold text-wedding-marsala mb-3">
-              Espaço Cascata – São Joaquim da Barra (SP)
+              Espaço Tay Eventos – Estrada SJQ, 70, Zona Rural, São Joaquim da Barra (SP)
             </p>
             <p className="text-lg text-gray-700 mb-3 leading-relaxed">
               Um lugar lindo, ao ar livre e com clima de conto de fadas.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
               Vista-se com elegância e conforto, pois celebraremos o amor cercados pela natureza.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-            {/* Dress Code */}
-      <Card className="bg-white/90 backdrop-blur-md border-0 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-wedding-marsala rounded-full shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
-              </svg>
-            </div>
-            <CardTitle className="text-xl font-bold text-wedding-marsala">
-              Dress Code
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-gradient-to-br from-wedding-gold/20 to-wedding-marsala/10 p-6 rounded-xl border-l-4 border-wedding-marsala">
-            <p className="text-2xl font-bold text-wedding-marsala mb-3">
-              Traje: Esporte fino / Passeio completo
-            </p>
-            <p className="text-lg text-gray-700 mb-3 leading-relaxed">
-              Prefira tons médios e escuros para um visual elegante.
-            </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
-              Evite roupas brancas ou off-white — essa cor é reservada para a noiva. 💍
             </p>
           </div>
         </CardContent>

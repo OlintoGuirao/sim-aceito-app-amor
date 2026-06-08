@@ -481,7 +481,7 @@ const PartyGallery: React.FC = () => {
           Compartilhe seus momentos especiais do nosso casamento. Iremos adorar ver sua visão da festa.
         </p>
         <p className="text-slate-50">
-          Caso decida compartilhar este momento no instagram, não se esqueça de nos mencionar @fabii.ferreira e @juninhoguirao
+          Caso decida compartilhar este momento no instagram, não se esqueça de nos mencionar @guifaleiross e @eubrunoanjos
         </p>
       </Card>
 

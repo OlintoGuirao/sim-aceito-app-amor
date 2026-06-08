@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Gift, CreditCard, QrCode } from 'lucide-react';
+import { Gift, QrCode } from 'lucide-react';
 import { getGifts, reserveGift, Gift as FirestoreGift } from '@/lib/firestore';
 
 interface GiftItem {
@@ -101,11 +101,8 @@ const GiftList: React.FC = () => {
   };
 
   const pixData = {
-    key: '23455397808',
-    name: 'Bruno e Guilherme',
-    bank: 'Nubank',
-    agency: '1234',
-    account: '56789-0'
+    key: '16 99283-3829',
+    name: 'Guilherme Henrique Faleiros de Souza',
   };
 
   return (
@@ -130,7 +127,7 @@ const GiftList: React.FC = () => {
             value="money" 
             className="flex-1 min-w-[150px] bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md"
           >
-            <CreditCard className="w-4 h-4 mr-2" />
+            <QrCode className="w-4 h-4 mr-2" />
             Presente em Dinheiro
           </TabsTrigger>
         </TabsList>
@@ -158,7 +155,7 @@ const GiftList: React.FC = () => {
                   </div>
                   <Button
                     className="bg-wedding-primary text-white hover:bg-wedding-primary/90 shadow-lg hover:shadow-xl px-6 py-3 text-base"
-                    onClick={() => window.open('https://www.querodecasamento.com.br/lista-de-casamento/olinto-guirao-junior--fabiola-ferreira-do-nascimento', '_blank')}
+                    onClick={() => window.open('https://www.finalfeliz.de/guifaleiross-brunooliveira', '_blank')}
                   >
                     Abrir Lista Oficial
                   </Button>
@@ -221,7 +218,7 @@ const GiftList: React.FC = () => {
                           <Button
                             variant="outline"
                             className="flex-1 bg-wedding-secondary text-black hover:bg-wedding-primary hover:text-white"
-                            onClick={() => window.open('https://www.querodecasamento.com.br/lista-de-casamento/olinto-guirao-junior--fabiola-ferreira-do-nascimento', '_blank')}
+                            onClick={() => window.open('https://www.finalfeliz.de/guifaleiross-brunooliveira', '_blank')}
                           >
                             Presentear na Lista Oficial
                           </Button>
@@ -241,9 +238,7 @@ const GiftList: React.FC = () => {
               <CardTitle className="text-wedding-secondary text-2xl font-elegant">Presente em Dinheiro</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-12">
-                {/* Seção PIX */}
-                <div className="flex flex-col items-center space-y-6">
+              <div className="flex flex-col items-center space-y-6">
                   <div className="bg-wedding-secondary/10 p-6 rounded-xl w-full max-w-md">
                     <h3 className="text-xl font-semibold text-wedding-secondary text-center mb-6 flex items-center justify-center gap-2">
                       <QrCode className="w-5 h-5" />
@@ -252,7 +247,7 @@ const GiftList: React.FC = () => {
                     <div className="flex justify-center mb-6">
                       <div className="bg-white p-4 rounded-lg shadow-lg">
                         <img
-                          src="/Qrcode.jpg"
+                          src="/Qrcode.png"
                           alt="QR Code para pagamento via PIX"
                           width={200}
                           height={200}
@@ -280,46 +275,6 @@ const GiftList: React.FC = () => {
                       Copiar Chave PIX
                     </Button>
                   </div>
-                </div>
-
-                <div className="h-px bg-wedding-secondary/20" />
-
-                {/* Seção Transferência Bancária */}
-                <div className="space-y-6">
-                  <h3 className="text-xl font-semibold text-wedding-secondary text-center flex items-center justify-center gap-2">
-                    <CreditCard className="w-5 h-5" />
-                    Transferência Bancária
-                  </h3>
-                  <div className="bg-wedding-secondary/10 p-6 rounded-xl">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-wedding-secondary/20 p-4 rounded-lg">
-                        <p className="text-wedding-secondary font-semibold mb-2">Banco</p>
-                        <p className="text-wedding-secondary text-lg">{pixData.bank}</p>
-                      </div>
-                      <div className="bg-wedding-secondary/20 p-4 rounded-lg">
-                        <p className="text-wedding-secondary font-semibold mb-2">Agência</p>
-                        <p className="text-wedding-secondary text-lg">{pixData.agency}</p>
-                      </div>
-                      <div className="bg-wedding-secondary/20 p-4 rounded-lg">
-                        <p className="text-wedding-secondary font-semibold mb-2">Conta</p>
-                        <p className="text-wedding-secondary text-lg">{pixData.account}</p>
-                      </div>
-                      <div className="bg-wedding-secondary/20 p-4 rounded-lg">
-                        <p className="text-wedding-secondary font-semibold mb-2">Titular</p>
-                        <p className="text-wedding-secondary text-lg">{pixData.name}</p>
-                      </div>
-                    </div>
-                    <Button
-                      className="w-full mt-6 bg-wedding-secondary text-black hover:bg-wedding-gold transition-colors"
-                      onClick={() => {
-                        navigator.clipboard.writeText(`${pixData.bank}\nAgência: ${pixData.agency}\nConta: ${pixData.account}\nTitular: ${pixData.name}`);
-                        toast.success('Dados bancários copiados!');
-                      }}
-                    >
-                      Copiar Dados Bancários
-                    </Button>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

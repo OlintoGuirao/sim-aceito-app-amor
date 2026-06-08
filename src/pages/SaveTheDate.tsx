@@ -14,12 +14,12 @@ export function SaveTheDatePage() {
   // Informações do casamento
   const weddingInfo = {
     title: "Casamento de Bruno & Guilherme",
-    date: "2026-04-25",
-    time: "16:30",
-    location: "Espaço Cascata",
-    address: "Suspense faz parte!",
-    city: "Em breve...",
-    description: "Queridos amigos e familiares, é oficial: vamos dizer 'sim!' Reserve esta data especial: 25 de abril de 2026. Sim, ainda falta um tempinho... mas já estamos tão animados que não conseguimos guardar segredo! Prepare o look, a dança, o coração e, é claro, o estômago — porque vai ter amor, festa e muita comida boa!",
+    date: "2026-08-22",
+    time: "18:30",
+    location: "Espaço Tay Eventos - Eventos em São Joaquim da Barra",
+    address: "Estrada SJQ, 70 - Zona Rural",
+    city: "São Joaquim da Barra - SP, 14600-000",
+    description: "Queridos amigos e familiares, é oficial: vamos dizer 'sim!' Reserve esta data especial: 22 de agosto de 2026. Sim, ainda falta um tempinho... mas já estamos tão animados que não conseguimos guardar segredo! Prepare o look, a dança, o coração e, é claro, o estômago — porque vai ter amor, festa e muita comida boa!",
     coupleNames: "Bruno & Guilherme"
   };
 

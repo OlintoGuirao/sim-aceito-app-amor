@@ -1,39 +1,9 @@
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import React from 'react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-  type CarouselApi,
-} from "@/components/ui/carousel";
 
 const EventLocation: React.FC = () => {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-
-  React.useEffect(() => {
-    if (!api) {
-      return;
-    }
-
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-    });
-  }, [api]);
-
   const openInMaps = (addressOrUrl: string) => {
-    // Se já for um link completo, abre diretamente. Caso contrário, busca pelo endereço.
     if (addressOrUrl.startsWith('http')) {
       window.open(addressOrUrl, '_blank');
       return;
@@ -42,212 +12,59 @@ const EventLocation: React.FC = () => {
     window.open(`https://www.google.com/maps/search/${encodedAddress}`, '_blank');
   };
 
-  const menuItems = [
-    {
-      category: "Jantar",
-      items: [
-        "Arroz branco",
-        "Feijão gordo",
-        "Parmegiana de frango",
-        "Churrasco de panela",
-        "Maionese",
-        "Salada marroquina",
-        "Farofa",
-        "Tabule",
-        "Salada verde com manga"
-      ]
-    },
-    {
-      category: "Mesa de Frios",
-      items: [
-        "Torrada",
-        "Pão círio",
-        "Mini filão",
-        "Antepasto de berinjela",
-        "Patê de frango",
-        "Tábua de frios (salame, lombinho, presunto, muçarela, queijo prato, provolone, azeitona, ovo de codorna, peito de peru)",
-        "Carne louca",
-        "Maionese na barquinha",
-        "Quibe cru",
-        "Batata frita",
-        "Frango frito",
-        "Torresmo",
-        "Calabresa"
-      ]
-    },
-    {
-      category: "Mesa de Café",
-      items: [
-        "Café",
-        "Petit four (bolachinhas)"
-      ]
-    },
-    {
-      category: "Bebidas",
-      items: [
-        "Refrigerante",
-        "Água sem gás",
-        "Suco",
-        "Chopp",
-        "Cachaça",
-        "Batidas"
-      ]
-    }
-  ];
-
-  const locations = [
-    {
-      id: 'party',
-      icon: '💍',
-      title: 'Cerimônia/Festa',
-      name: 'Espaço Cascata',
-      address: 'R. Santa Catarina, 762-1142\nSão Joaquim da Barra - SP, 14600-000',
-      time: '16:30h',
-      mapAddress: 'https://maps.app.goo.gl/EVRT6FwXfxsrss639'
-    },
-    {
-      id: 'menu',
-      icon: '🍽️',
-      title: 'Cardápio',
-      description: 'Um menu especial preparado com muito carinho para celebrar nossa união',
-      isMenu: true
-    }
-  ];
-
-  const renderLocationCard = (location: (typeof locations)[number]) => (
-    <Card className="p-6 bg-wedding-primary h-full">
-      <div className="text-center mb-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-wedding-secondary/20 mb-4">
-          <span className="text-4xl">{location.icon}</span>
-        </div>
-        <h3 className="text-xl font-semibold text-slate-50">{location.title}</h3>
-      </div>
-
-      <div className="space-y-3 text-center">
-        {!location.isMenu ? (
-          <>
-            <div>
-              <h4 className="font-medium text-slate-50">{location.name}</h4>
-              <p className="text-sm text-slate-50 whitespace-pre-line">
-                {location.address}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-slate-50"><strong>Horário:</strong> {location.time}</p>
-              {'arrival' in location && (location as any).arrival && (
-                <p className="text-sm text-slate-50">Chegada dos convidados: {(location as any).arrival}</p>
-              )}
-              {location.description && (
-                <p className="text-sm text-slate-50">{location.description}</p>
-              )}
-            </div>
-
-            <Button
-              onClick={() => openInMaps(location.mapAddress)}
-              className="w-full bg-wedding-secondary hover:bg-wedding-gold text-zinc-950"
-            >
-              Ver no Mapa
-            </Button>
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-slate-50">
-              {location.description}
-            </p>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="w-full bg-wedding-secondary hover:bg-wedding-gold text-zinc-950 md:text-sm text-base h-12 md:h-10 font-semibold">
-                  <UtensilsCrossed className="w-4 h-4 mr-2" />
-                  Ver Cardápio
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="w-[92vw] sm:max-w-lg md:max-w-2xl text-slate-50 bg-gradient-to-br from-wedding-primary/95 to-wedding-primary/90 sm:rounded-2xl border border-wedding-secondary/20 shadow-xl supports-[backdrop-filter]:backdrop-blur-md max-h-[85vh] overflow-y-auto p-4 sm:p-6">
-                <DialogHeader>
-                  <DialogTitle className="text-xl sm:text-2xl font-elegant text-center text-slate-50">
-                    Nosso Cardápio
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="grid md:grid-cols-2 gap-6 py-4">
-                  {menuItems.map((section, index) => (
-                    <div key={index} className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3 sm:p-4 shadow-sm transition-colors hover:bg-white/10">
-                      <h4 className="text-lg font-semibold text-wedding-secondary">
-                        {section.category}
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {section.items.map((item, itemIndex) => (
-                          <li key={itemIndex} className="text-sm text-slate-50">
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </DialogContent>
-            </Dialog>
-          </>
-        )}
-      </div>
-    </Card>
-  );
+  const location = {
+    icon: '💍',
+    title: 'Cerimônia/Festa',
+    name: 'Espaço Tay Eventos - Eventos em São Joaquim da Barra',
+    address: 'Estrada SJQ, 70 - Zona Rural\nSão Joaquim da Barra - SP, 14600-000',
+    time: '18:30h',
+    mapAddress: 'https://maps.app.goo.gl/AUwCoByEznFwnQ4Y8',
+  };
 
   return (
     <div className="space-y-6">
-      <div className="md:hidden space-y-4">
-        {locations.map((location) => (
-          <div key={location.id}>{renderLocationCard(location)}</div>
-        ))}
-      </div>
-
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-        setApi={setApi}
-        className="w-full hidden md:block"
-      >
-        <CarouselContent>
-          {locations.map((location) => (
-            <CarouselItem key={location.id} className="md:basis-1/2 lg:basis-1/3">
-              {renderLocationCard(location)}
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <div className="flex items-center justify-center mt-4 gap-2">
-          <CarouselPrevious className="bg-wedding-secondary hover:bg-wedding-gold text-zinc-950" />
-          <div className="flex items-center gap-2 mx-4">
-            {locations.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
-                  current === index ? 'bg-wedding-secondary' : 'bg-wedding-secondary/30'
-                }`}
-              />
-            ))}
+      <Card className="p-6 bg-wedding-primary max-w-lg mx-auto">
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-wedding-secondary/20 mb-4">
+            <span className="text-4xl">{location.icon}</span>
           </div>
-          
+          <h3 className="text-xl font-semibold text-slate-50">{location.title}</h3>
         </div>
-      </Carousel>
+
+        <div className="space-y-3 text-center">
+          <div>
+            <h4 className="font-medium text-slate-50">{location.name}</h4>
+            <p className="text-sm text-slate-50 whitespace-pre-line">
+              {location.address}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-sm text-slate-50">
+              <strong>Horário:</strong> {location.time}
+            </p>
+          </div>
+
+          <Button
+            onClick={() => openInMaps(location.mapAddress)}
+            className="w-full bg-wedding-secondary hover:bg-wedding-gold text-zinc-950"
+          >
+            Ver no Mapa
+          </Button>
+        </div>
+      </Card>
 
       <Card className="p-6 bg-gradient-to-r from-wedding-accent/20 to-wedding-blush/20 bg-wedding-primary">
         <h3 className="text-lg font-semibold mb-4 text-center text-slate-50">Informações Importantes</h3>
-        
+
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <h4 className="font-medium mb-2 text-slate-50">🚗 Estacionamento</h4>
-            <p className="text-sm mb-4 text-slate-50">
+            <p className="text-sm text-slate-50">
               Estacionamento gratuito disponível.
             </p>
-            
-            <h4 className="font-medium mb-2 text-slate-50">👔 Dress Code</h4>
-            <p className="text-sm text-slate-50">
-              Traje social. Evitar cores branca, bege e tons muito claros.
-            </p>
           </div>
-          
+
           <div>
             <h4 className="font-medium mb-2 text-slate-50">🏨 Hospedagem</h4>
             <p className="text-sm mb-4 text-slate-50">

@@ -79,9 +79,9 @@ export function GuestList() {
 
   const handleSendInvite = (guest: Guest) => {
     const message = `Olá ${guest.name}! 🎉\n\nVocê está convidado para o nosso casamento!\n\n` +
-      `📅 Data: 25 de abril de 2026\n` +
-      `⏰ Horário: 16:30\n` +
-      `📍 Local: Espaço Cascata\n\n` +
+      `📅 Data: 22 de agosto de 2026\n` +
+      `⏰ Horário: 18:30\n` +
+      `📍 Local: Espaço Tay Eventos - Estrada SJQ, 70, Zona Rural, São Joaquim da Barra (SP)\n\n` +
       `Para confirmar sua presença, acesse:\n` +
       `https://sim-aceito.com.br/confirmar/${guest.id}\n\n` +
       `Contamos com sua presença! 💕\n` +

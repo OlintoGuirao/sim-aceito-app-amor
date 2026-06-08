@@ -16,23 +16,32 @@ const PhotoGallery: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <Card className="p-6 text-center bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
-        <h3 className="text-2xl font-elegant font-semibold mb-2 text-slate-50">Nossa História</h3>
-        <p className="text-slate-50">
-          Essa história começa em 2015, quando o querido casal se conheceu na Etec da cidade natal, São Joaquim da Barra. <br />
-          Mas não iremos abordar isso de uma maneira tão formal, até porque todos aqui devem conhecer ao menos um pouquinho do casal e de suas personalidades. <br />
-          Enfim, eles se conheceram através de um amigo em comum, no intervalo do técnico, da tal Etec citada, mas o contato entre eles era pouco, realizado apenas nos 15 minutos do intervalo — e nada mais. <br /><br />
-          Após algum tempo, o nosso noivo encontra a bela dama com quem vai se casar, em uma rede social, e toma três segundos de coragem para falar com ela. Foram tempos conversando e, no fim, ele se tornou o melhor amigo dela e sabia tudo sobre sua vida.
-          Corta para 2020, pois, nesse meio-tempo, cada um seguiu sua vida, e houveram inúmeros desencontros e empecilhos no caminho dos dois. <br />
-          Mas, por um acaso do destino, o encontro, que não acontecia há anos, finalmente aconteceu. E um comentário bobo, o qual Guilherme não acreditou que o Bruno lembraria (sabemos que ele não se lembra de muitas coisas), acabou causando a retomada de uma bela amizade. <br />
-          O tempo foi passando, ambos estavam cada vez mais próximos e a vida fluindo bem. Porém, em um belo dia, em uma situação um pouco inesperada, Bruno decide se arriscar e pedir permissão para namorar a bela noiva. Detalhe: os pais permitiram, mas ela não sabia do fato. <br />
-          Diante do ocorrido, o namoro se inicia em 24/04/2021. <br />
-          Um ano e meio depois, e com diversos acontecimentos que poderiam ter separado os dois, ou poderiam ter feito ambas as partes pensar em desistir (e olha que foram situações deveras irritantes!), surpreendendo o total de uma pessoa, os pombinhos permaneceram juntos. <br />
-          Em 29/10/2022, o noivado veio, com um pedido bem dinâmico e a cara do noivo. <br />
-          De lá até aqui, foram diversos acontecimentos, porque a vida desses dois nunca está calma... <br />
-          Mas hoje, felizes, sonhando e trabalhando juntos para construir o futuro do seu jeito, estão compartilhando esse momento e contando com a presença de quem quiser fazer parte, para dar início a essa novíssima etapa e serem felizes, em paz.
-        </p>
-    </Card>
+      <Card className="p-6 md:p-8 bg-gradient-to-r from-wedding-accent/20 to-wedding-pearl/20 bg-wedding-primary">
+        <h3 className="text-2xl font-elegant font-semibold mb-6 text-slate-50 text-center">Nossa História</h3>
+        <div className="text-slate-50 text-center leading-relaxed [&_p]:m-0">
+          <p>
+            Nossa história começou em 2013, na faculdade, durante o curso de gastronomia. E, como toda boa receita, precisou de alguns ingredientes especiais para dar certo.
+          </p>
+          <p>
+            Guilherme percebeu Bruno logo de cara e resolveu investir. O problema? Bruno não dava a menor moral! Na cabeça dele, Guilherme era metido demais para qualquer aproximação. Felizmente, nem sempre a primeira impressão está certa…
+          </p>
+          <p>
+            Entre aulas, conversas, risadas e muitos momentos compartilhados, o que começou com certa desconfiança foi se transformando em amizade, cumplicidade e, sem que percebêssemos, em uma linda história de amor.
+          </p>
+          <p>
+            Os anos passaram, vivemos muitas aventuras, enfrentamos desafios, colecionamos memórias e descobrimos que formávamos uma ótima dupla — dentro e fora da cozinha. Afinal, amor também é isso: saber misturar diferenças, temperar a vida com paciência e celebrar cada conquista juntos.
+          </p>
+          <p>
+            E foi em um lugar muito especial para nós, o Deck, cenário de tantas lembranças, que aconteceu o pedido de casamento. Um momento cheio de emoção que marcou oficialmente o início da contagem regressiva para este grande dia.
+          </p>
+          <p>
+            Agora, depois de tantos anos de história, chegou a hora de celebrar tudo o que construímos juntos. No dia 22 de agosto de 2026, vamos dizer &ldquo;sim&rdquo; diante das pessoas que amamos e que fizeram parte dessa caminhada.
+          </p>
+          <p>
+            Obrigado por estarem aqui e por compartilharem conosco este capítulo tão especial. Preparem-se para uma noite de muita alegria, amor e, claro, muita comemoração!
+          </p>
+        </div>
+      </Card>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {photos.map((photo, index) => {

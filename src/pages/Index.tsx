@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import WeddingHeader from '@/components/WeddingHeader';
+import MusicPlayer from '@/components/MusicPlayer';
 import CountdownTimer from '@/components/CountdownTimer';
 import NavigationMenu from '@/components/NavigationMenu';
 import GiftList from '@/components/GiftList';
@@ -68,6 +69,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-wedding-primary via-wedding-darkMarsala to-wedding-secondary">
+      <MusicPlayer />
       <Toaster position="top-center" richColors />
       <div className="container mx-auto px-4 pt-4 pb-16">
         <WeddingHeader />
