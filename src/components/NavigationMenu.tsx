@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/auth';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { MessageCircle, Ticket } from 'lucide-react';
+import { ChevronRight, MessageCircle, Ticket } from 'lucide-react';
 import { RAFFLE_ENABLED } from '@/lib/features';
 
 interface NavigationMenuProps {
@@ -20,6 +20,9 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
   const location = useLocation();
   const isHomePage = location.pathname === '/';
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
   const menuItems = [
     { id: 'countdown', label: 'Contagem Regressiva', icon: '⏰' },
     { id: 'gallery', label: 'Nossa História', icon: '📖' },
@@ -31,42 +34,71 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     { id: 'gifts', label: 'Lista de Presentes', icon: '🎁' }
   ];
 
+  const updateScrollHint = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setShowScrollHint(el.scrollWidth - el.scrollLeft - el.clientWidth > 8);
+  }, []);
+
+  useEffect(() => {
+    updateScrollHint();
+    window.addEventListener('resize', updateScrollHint);
+    return () => window.removeEventListener('resize', updateScrollHint);
+  }, [updateScrollHint, menuItems.length]);
+
+  const renderMenuItem = (item: (typeof menuItems)[number]) => {
+    const isRaffle = item.id === 'raffle';
+    const isActive = activeSection === item.id;
+    const linkClass = `p-2.5 sm:p-3 rounded-lg text-center transition-all hover:scale-105 block shrink-0 grow-0 basis-[calc((100%-1rem)/3)] md:basis-auto md:w-full ${
+      isActive
+        ? 'bg-wedding-accent text-wedding-cream shadow-lg ring-1 ring-wedding-primary/30'
+        : 'bg-white/50 hover:bg-wedding-secondary/80'
+    }`;
+    const labelClass = `text-[10px] sm:text-xs font-medium bg-transparent leading-tight ${isActive ? 'text-wedding-cream' : 'text-black'}`;
+
+    if (isRaffle) {
+      return (
+        <Link
+          key={item.id}
+          to="/?section=raffle"
+          className={linkClass}
+          onClick={isHomePage ? () => onSectionChange('raffle') : undefined}
+        >
+          <div className="text-xl mb-1">{item.icon}</div>
+          <div className={labelClass}>{item.label}</div>
+        </Link>
+      );
+    }
+
+    return (
+      <button
+        key={item.id}
+        onClick={() => onSectionChange(item.id)}
+        className={linkClass}
+      >
+        <div className="text-xl mb-1">{item.icon}</div>
+        <div className={labelClass}>{item.label}</div>
+      </button>
+    );
+  };
+
   return (
     <Card className="p-4 mb-8 glass-effect bg-wedding-palha/20">
-      <div className={`grid grid-cols-2 md:grid-cols-4 gap-2 ${RAFFLE_ENABLED ? 'lg:grid-cols-8' : 'lg:grid-cols-7'}`}>
-        {menuItems.map(item => {
-          const isRaffle = item.id === 'raffle';
-          const isActive = activeSection === item.id;
-          const linkClass = `p-3 rounded-lg text-center transition-all hover:scale-105 block w-full ${
-            isActive
-              ? 'bg-wedding-accent text-wedding-cream shadow-lg ring-1 ring-wedding-primary/30'
-              : 'bg-white/50 hover:bg-wedding-secondary/80'
-          }`;
-          const labelClass = `text-xs font-medium bg-transparent ${isActive ? 'text-wedding-cream' : 'text-black'}`;
-          if (isRaffle) {
-            return (
-              <Link
-                key={item.id}
-                to="/?section=raffle"
-                className={linkClass}
-                onClick={isHomePage ? () => onSectionChange('raffle') : undefined}
-              >
-                <div className="text-xl mb-1">{item.icon}</div>
-                <div className={labelClass}>{item.label}</div>
-              </Link>
-            );
-          }
-          return (
-            <button
-              key={item.id}
-              onClick={() => onSectionChange(item.id)}
-              className={linkClass}
-            >
-              <div className="text-xl mb-1">{item.icon}</div>
-              <div className={labelClass}>{item.label}</div>
-            </button>
-          );
-        })}
+      <div className="relative md:static">
+        {showScrollHint && (
+          <ChevronRight
+            className="pointer-events-none absolute right-0 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-wedding-cream drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)] md:hidden"
+            aria-hidden
+          />
+        )}
+
+        <div
+          ref={scrollRef}
+          onScroll={updateScrollHint}
+          className={`flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-4 md:overflow-visible md:pb-0 ${RAFFLE_ENABLED ? 'lg:grid-cols-8' : 'lg:grid-cols-7'}`}
+        >
+          {menuItems.map(renderMenuItem)}
+        </div>
       </div>
 
       {isAdmin && !isHomePage && (
