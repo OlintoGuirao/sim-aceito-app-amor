@@ -19,10 +19,8 @@ import toast from 'react-hot-toast';
 
 const WEDDING = {
   coupleNames: 'Bruno & Guilherme',
-  day: '22',
-  month: 'Agosto',
-  year: '2026',
-  time: '18h30',
+  dateIso: '2026-08-22',
+  time: '18:30',
   venue: 'Espaço Tay Eventos',
   address: 'Estrada SJQ, 70 - Zona Rural',
   city: 'São Joaquim da Barra - SP, 14600-000',
@@ -35,6 +33,21 @@ const PIX = {
   key: '16 99283-3829',
   name: 'Guilherme Henrique Faleiros de Souza',
 };
+
+function getWeddingDateDisplay(dateIso: string, time: string) {
+  const date = new Date(`${dateIso}T12:00:00`);
+  const [hours, minutes] = time.split(':');
+  const timeLabel =
+    minutes === '00' ? `ÀS ${hours} HORAS` : `ÀS ${hours}H${minutes}`;
+
+  return {
+    weekday: date.toLocaleDateString('pt-BR', { weekday: 'long' }).toUpperCase(),
+    month: date.toLocaleDateString('pt-BR', { month: 'long' }).toUpperCase(),
+    day: String(date.getDate()),
+    year: String(date.getFullYear()),
+    timeLabel,
+  };
+}
 
 function InviteIconButton({
   icon,
@@ -139,6 +152,8 @@ export function ConfirmPage() {
     toast.success('Chave PIX copiada!');
   };
 
+  const weddingDate = getWeddingDateDisplay(WEDDING.dateIso, WEDDING.time);
+
   if (loading) {
     return (
       <InviteShell>
@@ -190,22 +205,35 @@ export function ConfirmPage() {
         </p>
       </div>
 
-      <div className="flex items-center justify-center gap-3 sm:gap-5 px-6 py-4">
-        <div className="flex flex-col items-center border-y border-dotted border-wedding-primary/40 py-2 px-2 sm:px-3 min-w-[72px]">
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest font-elegant text-wedding-primary">
-            {WEDDING.month}
+      <div className="flex items-center justify-center max-w-xs sm:max-w-sm mx-auto px-4 py-5">
+        <div className="flex flex-1 items-center justify-center px-1 sm:px-2 min-w-0">
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.15em] font-elegant text-gray-400 text-center leading-snug">
+            {weddingDate.weekday}
           </span>
         </div>
 
-        <span className="text-6xl sm:text-7xl font-bold text-wedding-primary leading-none tabular-nums">
-          {WEDDING.day}
-        </span>
+        <div className="flex items-stretch shrink-0">
+          <div className="w-px bg-gray-300" aria-hidden />
 
-        <div className="flex flex-col items-center border-y border-dotted border-wedding-primary/40 py-2 px-2 sm:px-3 min-w-[72px] gap-0.5">
-          <span className="text-[10px] sm:text-xs uppercase tracking-widest font-elegant text-wedding-primary">
-            {WEDDING.year}
+          <div className="flex flex-col items-center justify-center px-3 sm:px-4 py-0.5">
+            <span className="text-[10px] uppercase tracking-[0.12em] font-elegant text-gray-400 leading-none mb-1.5">
+              {weddingDate.month}
+            </span>
+            <span className="font-elegant text-[3.25rem] sm:text-[3.5rem] font-light text-wedding-primary leading-[0.75] tabular-nums">
+              {weddingDate.day}
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.12em] font-elegant text-gray-400 leading-none mt-2.5 sm:mt-3">
+              {weddingDate.year}
+            </span>
+          </div>
+
+          <div className="w-px bg-gray-300" aria-hidden />
+        </div>
+
+        <div className="flex flex-1 items-center justify-center px-1 sm:px-2 min-w-0">
+          <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.1em] font-elegant text-gray-400 text-center leading-snug">
+            {weddingDate.timeLabel}
           </span>
-          <span className="text-[10px] sm:text-xs text-wedding-primary/80">{WEDDING.time}</span>
         </div>
       </div>
 
