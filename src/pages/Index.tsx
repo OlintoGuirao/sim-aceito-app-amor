@@ -42,7 +42,7 @@ const Index = () => {
       case 'countdown':
         return (
           <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-elegant font-semibold mb-4 text-foreground">
+            <h2 className="text-2xl sm:text-3xl font-elegant font-semibold mb-4 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.55)] md:text-foreground md:drop-shadow-none">
               Faltam apenas...
             </h2>
             <CountdownTimer targetDate={weddingDate} />
@@ -68,15 +68,41 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-wedding-primary via-wedding-darkMarsala to-wedding-secondary">
+    <div className="relative min-h-screen overflow-x-hidden">
+      <div
+        className={`pointer-events-none absolute inset-0 bg-cover bg-center bg-no-repeat md:hidden ${
+          activeSection === 'countdown' ? '' : 'hidden'
+        }`}
+        style={{ backgroundImage: "url('/FotoFundo.jpeg')" }}
+        aria-hidden
+      />
+      <div
+        className={`pointer-events-none absolute inset-0 bg-black/35 md:hidden ${
+          activeSection === 'countdown' ? '' : 'hidden'
+        }`}
+        aria-hidden
+      />
+      <div
+        className={`pointer-events-none absolute inset-0 bg-gradient-to-b from-wedding-primary via-wedding-darkMarsala to-wedding-secondary ${
+          activeSection === 'countdown' ? 'hidden md:block' : 'block'
+        }`}
+        aria-hidden
+      />
+
+      <div className="relative z-10">
       <MusicPlayer />
       <Toaster position="top-center" richColors />
       <div className="container mx-auto pt-14 sm:pt-6 pb-16 max-w-full">
         <WeddingHeader />
-        <NavigationMenu activeSection={activeSection} onSectionChange={setActiveSection} />
+        <NavigationMenu
+          activeSection={activeSection}
+          onSectionChange={setActiveSection}
+          heroMode={activeSection === 'countdown'}
+        />
         <main className="mt-0 pb-6 min-w-0">
           {renderSection()}
         </main>
+      </div>
       </div>
       
       {/* Floating decorative elements */}

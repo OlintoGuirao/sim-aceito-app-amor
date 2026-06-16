@@ -12,7 +12,7 @@ const PhotoGallery: React.FC = () => {
     { id: 3, src: '/NossaHistoria (3).jpeg', objectPosition: 'center top' },
     { id: 4, src: '/NossaHistoria (4).jpeg' },
     { id: 5, src: '/NossaHistoria (5).jpeg' },
-    { id: 6, src: '/NossaHistoria(6).jpeg' },
+    { id: 6, src: '/NossaHistoria(6).jpeg', objectPosition: 'center top' },
   ];
 
   return (
@@ -94,6 +94,11 @@ const PhotoGallery: React.FC = () => {
                   src={photos[selectedPhoto].src}
                   alt={`Nossa história ${photos[selectedPhoto].id}`}
                   className="w-full h-full object-contain rounded"
+                  style={
+                    'objectPosition' in photos[selectedPhoto]
+                      ? { objectPosition: photos[selectedPhoto].objectPosition }
+                      : undefined
+                  }
                   loading="eager"
                   decoding="async"
                 />

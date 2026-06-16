@@ -9,11 +9,13 @@ import { RAFFLE_ENABLED } from '@/lib/features';
 interface NavigationMenuProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  heroMode?: boolean;
 }
 
 const NavigationMenu: React.FC<NavigationMenuProps> = ({
   activeSection,
-  onSectionChange
+  onSectionChange,
+  heroMode = false,
 }) => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
@@ -52,9 +54,17 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
     const linkClass = `p-2.5 sm:p-3 rounded-lg text-center transition-all hover:scale-105 block shrink-0 grow-0 basis-[calc((100%-1rem)/3)] md:basis-auto md:w-full ${
       isActive
         ? 'bg-wedding-accent text-wedding-cream shadow-lg ring-1 ring-wedding-primary/30'
-        : 'bg-white/50 hover:bg-wedding-secondary/80'
+        : heroMode
+          ? 'bg-white/20 hover:bg-white/30 border border-white/25 md:bg-white/50 md:hover:bg-wedding-secondary/80 md:border-0'
+          : 'bg-white/50 hover:bg-wedding-secondary/80'
     }`;
-    const labelClass = `text-[10px] sm:text-xs font-medium bg-transparent leading-tight ${isActive ? 'text-wedding-cream' : 'text-black'}`;
+    const labelClass = `text-[10px] sm:text-xs font-medium bg-transparent leading-tight ${
+      isActive
+        ? 'text-wedding-cream'
+        : heroMode
+          ? 'text-white md:text-black'
+          : 'text-black'
+    }`;
 
     if (isRaffle) {
       return (
@@ -83,7 +93,13 @@ const NavigationMenu: React.FC<NavigationMenuProps> = ({
   };
 
   return (
-    <Card className="p-4 mb-8 glass-effect bg-wedding-palha/20">
+    <Card
+      className={`p-4 mb-8 glass-effect ${
+        heroMode
+          ? 'bg-black/30 backdrop-blur-sm border border-white/15 md:bg-wedding-palha/20 md:border-transparent'
+          : 'bg-wedding-palha/20'
+      }`}
+    >
       <div className="relative md:static">
         {showScrollHint && (
           <ChevronRight

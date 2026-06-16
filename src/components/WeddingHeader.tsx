@@ -7,17 +7,17 @@ const WeddingHeader: React.FC = () => {
         <img src="/logo1.png" alt="Logo Bruno & Guilherme" className="w-full h-full object-cover" />
       </div>
       
-      <h1 className="font-['Dancing_Script'] text-5xl sm:text-6xl md:text-7xl mb-3 sm:mb-4 animate-fade-in text-black leading-tight">
+      <h1 className="font-['Dancing_Script'] text-5xl sm:text-6xl md:text-7xl mb-3 sm:mb-4 animate-fade-in text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.55)] leading-tight">
         Sim, Aceito!
       </h1>
       
       <div className="space-y-1.5 sm:space-y-2 animate-fade-in" style={{
         animationDelay: '0.2s'
       }}>
-        <h2 className="font-elegant text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.25)] tracking-wide">
+        <h2 className="font-elegant text-2xl sm:text-3xl md:text-4xl font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)] tracking-wide">
           Bruno & Guilherme
         </h2>
-        <p className="text-base sm:text-lg text-white">
+        <p className="text-base sm:text-lg text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.45)]">
           22 de Agosto de 2026 às 18:30
         </p>
         
