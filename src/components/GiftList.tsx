@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Gift, QrCode } from 'lucide-react';
+import { Gift, MapPin, QrCode } from 'lucide-react';
 import { getGifts, reserveGift, Gift as FirestoreGift } from '@/lib/firestore';
 
 interface GiftItem {
@@ -105,6 +105,20 @@ const GiftList: React.FC = () => {
     name: 'Guilherme Henrique Faleiros de Souza',
   };
 
+  const physicalStore = {
+    name: 'Aquarela Casa',
+    address: 'R. Bahia, 1520 - Centro',
+    city: 'São Joaquim da Barra - SP, 14600-000',
+  };
+
+  const openInMaps = (address: string) => {
+    const fullAddress = `${physicalStore.address}, ${physicalStore.city}`;
+    window.open(
+      `https://www.google.com/maps/search/${encodeURIComponent(address || fullAddress)}`,
+      '_blank'
+    );
+  };
+
   return (
     <div className="space-y-6">
       <Card className="p-4 sm:p-6 text-center bg-wedding-primary border-wedding-primary">
@@ -161,7 +175,38 @@ const GiftList: React.FC = () => {
                   </Button>
                 </div>
               </CardContent>
-            </Card>            
+            </Card>
+
+            <Card className="bg-gradient-to-r from-wedding-gold/20 via-wedding-secondary/20 to-wedding-gold/20 border-wedding-gold/40 shadow-2xl ring-1 ring-wedding-gold/30">
+              <CardHeader>
+                <CardTitle className="text-wedding-primary text-2xl font-elegant">
+                  Lista Física
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="max-w-2xl">
+                    <p className="text-wedding-primary font-medium">
+                      Também temos lista física na loja {physicalStore.name}.
+                    </p>
+                    <p className="text-wedding-primary/80 text-sm mt-2 flex items-start gap-2">
+                      <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                      <span>
+                        {physicalStore.address}
+                        <br />
+                        {physicalStore.city}
+                      </span>
+                    </p>
+                  </div>
+                  <Button
+                    className="bg-wedding-primary text-white hover:bg-wedding-primary/90 shadow-lg hover:shadow-xl px-6 py-3 text-base"
+                    onClick={() => openInMaps(`${physicalStore.address}, ${physicalStore.city}`)}
+                  >
+                    Ver no Mapa
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
             {showSuggestions && (
             <div className="flex flex-wrap gap-2">
               {categories.map(category => (
