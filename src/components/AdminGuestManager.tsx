@@ -386,10 +386,7 @@ export function AdminGuestManager() {
       } else {
         message += `Para confirmar sua presença, acesse:\n${baseUrl}/confirm/${guest.id}\n\n`;
       }
-      message += `Lembrete: o convite é intransferível, e precisamos que confirme a presença individualmente até a data de 16/01/2026.\n\n`;
-      message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! \n\n`;
-      message += `"Deus mudou o teu caminho até juntares com o meu e guardou a tua vida separando-a para mim. Para onde fores, irei; onde tu repousares, repousarei." - Rute 1:16-18\n\n`;
-      message += `Bruno e Guilherme  👰🏼‍♀️🤵🏻\n`;
+      message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! \n`;
     
 
       // Usa o formato correto do link do WhatsApp
