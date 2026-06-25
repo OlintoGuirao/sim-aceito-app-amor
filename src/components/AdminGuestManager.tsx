@@ -386,6 +386,7 @@ export function AdminGuestManager() {
       } else {
         message += `Para confirmar sua presença, acesse:\n${baseUrl}/confirm/${guest.id}\n\n`;
       }
+      message += `Lembrete: o convite é intransferível, e precisamos que confirme a presença individualmente até a data de 31/07/2026.\n\n`;
       message += `Contamos com ${groupMembers.length > 1 ? 'suas presenças' : 'sua presença'}! \n`;
     
 
