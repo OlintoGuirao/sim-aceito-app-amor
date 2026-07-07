@@ -10,7 +10,7 @@ import {
 import { Guest, getGuests, updateGuestStatus } from '@/lib/firestore';
 import {
   MapPin,
-  Wine,
+  Store,
   Gift,
   QrCode,
   Loader2,
@@ -32,6 +32,12 @@ const WEDDING = {
 const PIX = {
   key: '16 99283-3829',
   name: 'Guilherme Henrique Faleiros de Souza',
+};
+
+const PHYSICAL_STORE = {
+  name: 'Aquarela Casa',
+  address: 'R. Bahia, 1520 - Centro',
+  city: 'São Joaquim da Barra - SP, 14600-000',
 };
 
 function getWeddingDateDisplay(dateIso: string, time: string) {
@@ -92,6 +98,7 @@ export function ConfirmPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pixOpen, setPixOpen] = useState(false);
+  const [physicalListOpen, setPhysicalListOpen] = useState(false);
 
   useEffect(() => {
     const loadGuest = async () => {
@@ -150,6 +157,14 @@ export function ConfirmPage() {
   const copyPix = () => {
     navigator.clipboard.writeText(PIX.key);
     toast.success('Chave PIX copiada!');
+  };
+
+  const openPhysicalStoreInMaps = () => {
+    const fullAddress = `${PHYSICAL_STORE.address}, ${PHYSICAL_STORE.city}`;
+    window.open(
+      `https://www.google.com/maps/search/${encodeURIComponent(fullAddress)}`,
+      '_blank'
+    );
   };
 
   const weddingDate = getWeddingDateDisplay(WEDDING.dateIso, WEDDING.time);
@@ -291,9 +306,9 @@ export function ConfirmPage() {
             onClick={() => window.open(WEDDING.mapsUrl, '_blank')}
           />
           <InviteIconButton
-            icon={<Wine className="w-5 h-5" />}
-            label="Recepção"
-            onClick={() => window.open(WEDDING.siteUrl, '_blank')}
+            icon={<Store className="w-5 h-5" />}
+            label="Lista Física"
+            onClick={() => setPhysicalListOpen(true)}
           />
           <InviteIconButton
             icon={<Gift className="w-5 h-5" />}
@@ -322,6 +337,35 @@ export function ConfirmPage() {
           </Button>
         </div>
       )}
+
+      <Dialog open={physicalListOpen} onOpenChange={setPhysicalListOpen}>
+        <DialogContent className="bg-wedding-cream border-wedding-gold/40 max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-elegant text-wedding-primary text-center text-2xl">
+              Lista Física
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-wedding-primary font-medium text-center">
+              Também temos lista física na loja {PHYSICAL_STORE.name}.
+            </p>
+            <p className="text-wedding-primary/80 text-sm flex items-start justify-center gap-2">
+              <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+              <span className="text-center">
+                {PHYSICAL_STORE.address}
+                <br />
+                {PHYSICAL_STORE.city}
+              </span>
+            </p>
+            <Button
+              className="w-full bg-wedding-primary text-white hover:bg-wedding-primary/90 shadow-lg"
+              onClick={openPhysicalStoreInMaps}
+            >
+              Ver no Mapa
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={pixOpen} onOpenChange={setPixOpen}>
         <DialogContent className="bg-wedding-cream border-wedding-primary/20 max-w-sm">
