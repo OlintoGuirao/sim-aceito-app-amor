@@ -868,19 +868,33 @@ export function AdminGuestManager() {
                         toast.error('Este grupo não possui número de telefone');
                         return;
                       }
-                      
-                      const message = encodeURIComponent(
-                        'Olá! Passando para lembrar que falta apenas 10 dias para encerrar a confirmação. Estamos aguardando sua confirmação!\n\n*Lembrando: precisamos que confirmem a presença, caso tenham interesse em ir, pois sem ela não conseguimos liberar a entrada na festa*'
-                      );
-                      
-                      // Remove caracteres não numéricos do telefone
-                      const cleanPhone = phone.replace(/\D/g, '');
-                      
-                      // Abre WhatsApp Web com a mensagem
-                      const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+
+                      const baseUrl = window.location.origin;
+                      let message =
+                        'Olá! Passando para lembrar que falta apenas 7 dias para encerrar a confirmação. Estamos aguardando sua confirmação!\n\n';
+
+                      if (guests.length > 1) {
+                        guests.forEach((member) => {
+                          message += `${member.name}:\n${baseUrl}/confirm/${member.id}\n\n`;
+                        });
+                        message += `Contamos com suas presenças!\n`;
+                      } else {
+                        message += `${guests[0].name}:\n${baseUrl}/confirm/${guests[0].id}\n\n`;
+                        message += `Contamos com sua presença!\n`;
+                      }
+
+                      message +=
+                        `\n*Ps: Caso não possam comparecer, pedimos a gentileza de acessar o link e marcar a opção de que não irão. Isso nos ajuda muito na organização.*`;
+
+                      const formattedPhone = phone
+                        .replace(/\D/g, '')
+                        .replace(/^0/, '')
+                        .replace(/^(\d{2})/, '55$1');
+
+                      const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
                       window.open(whatsappUrl, '_blank');
-                      
-                      toast.success('Abrindo WhatsApp para enviar mensagem');
+
+                      toast.success('Abrindo WhatsApp para enviar lembrete');
                     };
                     
                     return (
