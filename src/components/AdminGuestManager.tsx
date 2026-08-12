@@ -11,7 +11,8 @@ import {
   onSnapshot,
   Timestamp,
   where,
-  writeBatch
+  writeBatch,
+  deleteField
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Guest, addGuest, getGuests, updateGuestStatus, deleteGuest, getGifts, addGift } from '@/lib/firestore';
 import { GuestImport } from './GuestImport';
 import { toast } from "sonner";
-import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar, Download, Images } from "lucide-react";
+import { Mail, QrCode, Share2, Check, Trash2, MessageCircle, Ticket, Send, X, Users, Clock, Gift, Calendar, Download, Images, LayoutGrid } from "lucide-react";
 import { downloadAllStorageImagesAsZip } from '@/lib/storage';
 import { RAFFLE_ENABLED } from '@/lib/features';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +64,10 @@ export function AdminGuestManager() {
   const [openModal, setOpenModal] = useState<null | 'confirmed' | 'pending' | 'declined'>(null);
   const [downloadingImages, setDownloadingImages] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState<string | null>(null);
+  const [tableDrafts, setTableDrafts] = useState<Record<string, string>>({});
+  const [assigningTableKey, setAssigningTableKey] = useState<string | null>(null);
+  const [tablesSubTab, setTablesSubTab] = useState('linked');
+  const [tableSearchTerm, setTableSearchTerm] = useState('');
 
   // Configurar listener em tempo real para convidados
   useEffect(() => {
@@ -73,7 +78,6 @@ export function AdminGuestManager() {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const guestsList = snapshot.docs.map(doc => {
         const data = doc.data();
-        console.log('Dados do convidado:', data); // Debug
         return {
           id: doc.id,
           ...data,
@@ -522,6 +526,186 @@ export function AdminGuestManager() {
   const pendingGuests = guests.filter(g => g.status === 'pending');
   const declinedGuests = guests.filter(g => g.status === 'declined');
 
+  const getTableGroupKey = (groupMembers: Guest[]) => {
+    const withGroupId = groupMembers.find((g) => g.groupId)?.groupId;
+    if (withGroupId) return `group:${withGroupId}`;
+    const phone = groupMembers.find((g) => g.phone)?.phone;
+    if (phone) return `phone:${phone}`;
+    return `guest:${groupMembers[0]?.id || 'unknown'}`;
+  };
+
+  const confirmedTableGroups = (() => {
+    const groupedByPhone = confirmedGuests.reduce((acc, guest) => {
+      const phone = guest.phone || `sem-telefone-${guest.id}`;
+      if (!acc[phone]) acc[phone] = [];
+      acc[phone].push(guest);
+      return acc;
+    }, {} as Record<string, Guest[]>);
+
+    return Object.entries(groupedByPhone)
+      .map(([phone, members]) => ({
+        key: getTableGroupKey(members),
+        phone: phone.startsWith('sem-telefone-') ? '' : phone,
+        members: members.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+        tableNumber: members.find((m) => m.tableNumber)?.tableNumber || '',
+      }))
+      .sort((a, b) => a.members[0].name.localeCompare(b.members[0].name, 'pt-BR'));
+  })();
+
+  const tablesGroupedByNumber = (() => {
+    const unassigned = confirmedTableGroups.filter((group) => !group.tableNumber);
+    const assigned = confirmedTableGroups.filter((group) => group.tableNumber);
+
+    const byTable = assigned.reduce((acc, group) => {
+      const num = group.tableNumber;
+      if (!acc[num]) acc[num] = [];
+      acc[num].push(group);
+      return acc;
+    }, {} as Record<string, typeof confirmedTableGroups>);
+
+    const sortedTableNumbers = Object.keys(byTable).sort((a, b) => {
+      const na = Number.parseInt(a, 10);
+      const nb = Number.parseInt(b, 10);
+      if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+      return a.localeCompare(b, 'pt-BR');
+    });
+
+    return { sortedTableNumbers, byTable, unassigned };
+  })();
+
+  const filteredTablesGroupedByNumber = (() => {
+    const term = tableSearchTerm.trim().toLowerCase();
+    if (!term) return tablesGroupedByNumber;
+
+    const matchesGroup = (group: (typeof confirmedTableGroups)[number]) =>
+      group.members.some((member) => member.name.toLowerCase().includes(term)) ||
+      (group.phone || '').toLowerCase().includes(term) ||
+      group.tableNumber.toLowerCase().includes(term);
+
+    const unassigned = tablesGroupedByNumber.unassigned.filter(matchesGroup);
+    const byTable = Object.entries(tablesGroupedByNumber.byTable).reduce(
+      (acc, [tableNum, groups]) => {
+        const filteredGroups = groups.filter(matchesGroup);
+        if (filteredGroups.length > 0) acc[tableNum] = filteredGroups;
+        return acc;
+      },
+      {} as typeof tablesGroupedByNumber.byTable
+    );
+
+    const sortedTableNumbers = Object.keys(byTable).sort((a, b) => {
+      const na = Number.parseInt(a, 10);
+      const nb = Number.parseInt(b, 10);
+      if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
+      return a.localeCompare(b, 'pt-BR');
+    });
+
+    return { sortedTableNumbers, byTable, unassigned };
+  })();
+
+  const handleAssignTable = async (groupKey: string, members: Guest[], tableNumber: string) => {
+    const trimmed = tableNumber.trim();
+    if (!trimmed) {
+      toast.error('Informe o número da mesa');
+      return;
+    }
+
+    setAssigningTableKey(groupKey);
+    try {
+      const batch = writeBatch(db);
+      members.forEach((member) => {
+        if (!member.id) return;
+        batch.update(doc(db, 'guests', member.id), {
+          tableNumber: trimmed,
+          updatedAt: Timestamp.now(),
+        });
+      });
+      await batch.commit();
+      setTableDrafts((prev) => {
+        const next = { ...prev };
+        delete next[groupKey];
+        return next;
+      });
+      toast.success(`Mesa ${trimmed} atribuída`);
+      setTableSearchTerm('');
+      setTablesSubTab('linked');
+    } catch (error) {
+      console.error('Erro ao atribuir mesa:', error);
+      toast.error('Erro ao atribuir mesa');
+    } finally {
+      setAssigningTableKey(null);
+    }
+  };
+
+  const handleCancelTableDraft = (groupKey: string) => {
+    setTableDrafts((prev) => {
+      const next = { ...prev };
+      delete next[groupKey];
+      return next;
+    });
+  };
+
+  const handleUnlinkTable = async (groupKey: string, members: Guest[]) => {
+    setAssigningTableKey(groupKey);
+    try {
+      const batch = writeBatch(db);
+      members.forEach((member) => {
+        if (!member.id) return;
+        batch.update(doc(db, 'guests', member.id), {
+          tableNumber: deleteField(),
+          updatedAt: Timestamp.now(),
+        });
+      });
+      await batch.commit();
+      setTableDrafts((prev) => {
+        const next = { ...prev };
+        delete next[groupKey];
+        return next;
+      });
+      toast.success('Mesa desvinculada');
+      setTableSearchTerm('');
+      setTablesSubTab('unassigned');
+    } catch (error) {
+      console.error('Erro ao desvincular mesa:', error);
+      toast.error('Erro ao desvincular mesa');
+    } finally {
+      setAssigningTableKey(null);
+    }
+  };
+
+  const handleSendTableNumber = (members: Guest[], phone: string, tableNumber: string) => {
+    if (!phone) {
+      toast.error('Este grupo não possui telefone cadastrado');
+      return;
+    }
+    if (!tableNumber) {
+      toast.error('Atribua o número da mesa antes de enviar');
+      return;
+    }
+
+    const names = members.map((m) => m.name).join(', ');
+    const pronoun = members.length > 1 ? 'vocês' : 'você';
+    const message =
+      `Olá, tudo bem?\n\n` +
+      `Somos da equipe\n` +
+      '*Aguih Moreira Cerimonial*\n\n' +
+      `O grande dia de Guilherme & Bruno está chegando! 💍\n` +
+      `E estamos muito felizes em celebrar esse momento com ${pronoun}. ❤️\n\n` +
+      `*Informamos a ${pronoun}, ${names}, que o número da sua mesa é a ${tableNumber}.*\n\n` +
+      `🎁 Caso queiram nos presentear, \n`+
+      `preparamos algumas opções para facilitar. Basta entrar no site https://simaceito.com.br e ir na aba de *Lista de presentes*.\n\n` +
+      `Com amor,\n` +
+      `*Equipe Aguih Moreira, Guilherme e Bruno ❤️*`;
+
+    const formattedPhone = phone
+      .replace(/\D/g, '')
+      .replace(/^0/, '')
+      .replace(/^(\d{2})/, '55$1');
+
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    toast.success('Abrindo WhatsApp para enviar número da mesa');
+  };
+
   const handleApproveMessage = async (messageId: string) => {
     try {
       const messageRef = doc(db, 'party_messages', messageId);
@@ -617,6 +801,118 @@ export function AdminGuestManager() {
     } catch (e) {
       toast.error('Erro ao remover presente');
     }
+  };
+
+  const renderTableGroupCard = ({
+    key,
+    phone,
+    members,
+    tableNumber,
+  }: {
+    key: string;
+    phone: string;
+    members: Guest[];
+    tableNumber: string;
+  }) => {
+    const draftValue = tableDrafts[key] ?? '';
+    const isEditing = Object.prototype.hasOwnProperty.call(tableDrafts, key);
+    const hasAssigned = Boolean(tableNumber);
+    const isAssigning = assigningTableKey === key;
+    const canShowActions = isEditing && draftValue.trim().length > 0;
+
+    return (
+      <div
+        key={key}
+        className="bg-white rounded-xl border border-wedding-primary/20 p-4 space-y-3 shadow-sm"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          <div>
+            <h4 className="font-semibold text-black">
+              {members.map((m) => m.name).join(', ')}
+            </h4>
+            <p className="text-sm text-black/60">
+              {phone || 'Sem telefone'} · {members.length}{' '}
+              {members.length === 1 ? 'pessoa' : 'pessoas'}
+            </p>
+            {hasAssigned && !isEditing && (
+              <Badge className="mt-2 bg-wedding-accent text-wedding-cream border-0">
+                Mesa {tableNumber}
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {hasAssigned && !isEditing ? (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              onClick={() =>
+                setTableDrafts((prev) => ({
+                  ...prev,
+                  [key]: tableNumber,
+                }))
+              }
+              variant="outline"
+              className="border-wedding-primary/40 bg-white text-black hover:bg-wedding-primary hover:text-white hover:border-wedding-primary"
+            >
+              Alterar mesa
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => handleSendTableNumber(members, phone, tableNumber)}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Enviar Número da mesa
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleUnlinkTable(key, members)}
+              disabled={assigningTableKey === key}
+              className="border-red-300 bg-white text-red-700 hover:bg-red-600 hover:text-white hover:border-red-600"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Desvincular mesa
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <Input
+              placeholder="Número da mesa"
+              value={draftValue}
+              onChange={(e) =>
+                setTableDrafts((prev) => ({
+                  ...prev,
+                  [key]: e.target.value,
+                }))
+              }
+              className="bg-wedding-primary/10 text-black max-w-xs"
+            />
+            {canShowActions && (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCancelTableDraft(key)}
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleAssignTable(key, members, draftValue)}
+                  disabled={isAssigning}
+                  className="bg-wedding-primary text-white hover:bg-wedding-darkMarsala"
+                >
+                  {isAssigning ? 'Salvando...' : 'Atribuir'}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -1043,6 +1339,9 @@ export function AdminGuestManager() {
           <TabsTrigger value="gifts" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
             <Gift className="w-4 h-4 mr-2" /> Presentes
           </TabsTrigger>
+          <TabsTrigger value="tables" className="flex-1 min-w-0 w-full sm:min-w-[150px] h-auto py-2.5 text-xs sm:text-sm whitespace-normal sm:whitespace-nowrap bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md">
+            <LayoutGrid className="w-4 h-4 mr-2" /> Mesas
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="add" className="mt-0">
@@ -1465,6 +1764,97 @@ export function AdminGuestManager() {
               </div>
             )}
           </div>
+        </TabsContent>
+
+        <TabsContent value="tables">
+          <Card className="bg-wedding-secondary">
+            <CardHeader className="bg-wedding-secondary">
+              <CardTitle className="text-black">Mesas dos Confirmados</CardTitle>
+              <p className="text-sm text-black/70">
+                Atribua o número da mesa para cada grupo confirmado e envie pelo WhatsApp.
+              </p>
+            </CardHeader>
+            <CardContent className="bg-wedding-secondary">
+              {confirmedTableGroups.length === 0 ? (
+                <p className="text-black/70 text-center py-8">Nenhum convidado confirmado ainda.</p>
+              ) : (
+                <Tabs value={tablesSubTab} onValueChange={setTablesSubTab} className="w-full space-y-4">
+                  <TabsList className="grid grid-cols-2 w-full bg-wedding-primary rounded-lg h-auto p-1 gap-1">
+                    <TabsTrigger
+                      value="linked"
+                      className="h-auto py-2.5 text-xs sm:text-sm bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md"
+                    >
+                      Mesas vinculadas
+                      <Badge className="ml-2 bg-white/20 text-inherit border-0">
+                        {filteredTablesGroupedByNumber.sortedTableNumbers.length}
+                      </Badge>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="unassigned"
+                      className="h-auto py-2.5 text-xs sm:text-sm bg-wedding-secondary text-black data-[state=active]:bg-wedding-accent data-[state=active]:text-wedding-cream rounded-md"
+                    >
+                      Sem mesa
+                      <Badge className="ml-2 bg-white/20 text-inherit border-0">
+                        {filteredTablesGroupedByNumber.unassigned.length}
+                      </Badge>
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <Input
+                    placeholder="Filtrar por nome..."
+                    value={tableSearchTerm}
+                    onChange={(e) => setTableSearchTerm(e.target.value)}
+                    className="bg-white text-black border-wedding-primary/20"
+                  />
+
+                  <TabsContent value="linked" className="mt-0 space-y-6">
+                    {filteredTablesGroupedByNumber.sortedTableNumbers.length === 0 ? (
+                      <p className="text-black/70 text-center py-8">
+                        {tableSearchTerm.trim()
+                          ? 'Nenhuma mesa vinculada encontrada com esse nome.'
+                          : 'Nenhuma mesa vinculada ainda.'}
+                      </p>
+                    ) : (
+                      filteredTablesGroupedByNumber.sortedTableNumbers.map((tableNum) => {
+                        const groups = filteredTablesGroupedByNumber.byTable[tableNum];
+                        const peopleCount = groups.reduce((sum, g) => sum + g.members.length, 0);
+                        return (
+                          <div key={`mesa-${tableNum}`} className="space-y-3">
+                            <div className="flex items-center justify-between gap-2 border-b border-wedding-primary/20 pb-2">
+                              <h3 className="text-lg font-elegant font-semibold text-black">
+                                Mesa {tableNum}
+                              </h3>
+                              <Badge className="bg-wedding-primary text-white border-0">
+                                {groups.length} {groups.length === 1 ? 'grupo' : 'grupos'} · {peopleCount}{' '}
+                                {peopleCount === 1 ? 'pessoa' : 'pessoas'}
+                              </Badge>
+                            </div>
+                            <div className="space-y-3">
+                              {groups.map((group) => renderTableGroupCard(group))}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="unassigned" className="mt-0 space-y-3">
+                    {filteredTablesGroupedByNumber.unassigned.length === 0 ? (
+                      <p className="text-black/70 text-center py-8">
+                        {tableSearchTerm.trim()
+                          ? 'Nenhum convidado sem mesa encontrado com esse nome.'
+                          : 'Todos os confirmados já têm mesa.'}
+                      </p>
+                    ) : (
+                      filteredTablesGroupedByNumber.unassigned.map((group) =>
+                        renderTableGroupCard(group)
+                      )
+                    )}
+                  </TabsContent>
+                </Tabs>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

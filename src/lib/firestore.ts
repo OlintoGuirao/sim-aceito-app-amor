@@ -26,6 +26,7 @@ export interface Guest {
   createdAt: Timestamp;
   updatedAt: Timestamp;
   groupId?: string;
+  tableNumber?: string;
 }
 
 // Interface para o tipo Presente (Gift)
