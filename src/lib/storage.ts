@@ -111,6 +111,28 @@ export async function uploadPartyPhoto(
   return { url, previewUrl };
 }
 
+/**
+ * Upload de vídeo da festa (mp4/mov/webm).
+ * Mantém o arquivo original (sem reencode no cliente).
+ */
+export async function uploadPartyVideo(
+  file: File,
+  index: number
+): Promise<{ url: string; previewUrl: string }> {
+  const t = Date.now();
+  const rawExt = file.name.split('.').pop()?.toLowerCase() || 'mp4';
+  const ext = ['mp4', 'mov', 'webm', 'm4v'].includes(rawExt) ? rawExt : 'mp4';
+  const contentType = file.type || (ext === 'mov' ? 'video/quicktime' : `video/${ext}`);
+  const path = `party_photos/${t}_${index}_video.${ext}`;
+  const storageRef = ref(storage, path);
+  const snapshot = await uploadBytes(storageRef, file, {
+    contentType,
+    cacheControl: CACHE_CONTROL,
+  });
+  const url = await getDownloadURL(snapshot.ref);
+  return { url, previewUrl: url };
+}
+
 // Função para deletar arquivo
 export const deleteFile = async (path: string): Promise<void> => {
   try {

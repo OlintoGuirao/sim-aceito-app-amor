@@ -1,18 +1,31 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Camera, Upload, Heart, MessageCircle, ChevronLeft, ChevronRight, QrCode, X, Check, Trash2 } from 'lucide-react';
+import { Camera, Upload, Heart, MessageCircle, ChevronLeft, ChevronRight, QrCode, X, Check, Trash2, Video } from 'lucide-react';
 import { collection, addDoc, query, orderBy, limit, startAfter, getDocs, updateDoc, doc, increment, arrayUnion, deleteDoc } from 'firebase/firestore';
 import type { DocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { uploadPartyPhoto } from '@/lib/storage';
+import { uploadPartyPhoto, uploadPartyVideo } from '@/lib/storage';
 import {
   resizePartyVariants,
 } from '@/lib/imageUtils';
 import useEmblaCarousel from 'embla-carousel-react';
-import { useCallback } from 'react';
+
+const MAX_VIDEO_BYTES = 40 * 1024 * 1024; // 40MB
+
+const isVideoFile = (file: File) => {
+  const type = (file.type || '').toLowerCase();
+  const name = file.name.toLowerCase();
+  return (
+    type.startsWith('video/') ||
+    name.endsWith('.mp4') ||
+    name.endsWith('.mov') ||
+    name.endsWith('.webm') ||
+    name.endsWith('.m4v')
+  );
+};
 
 interface PartyPhoto {
   id: string;
@@ -24,6 +37,7 @@ interface PartyPhoto {
   uploadedAt: Date;
   likes: number;
   comments: Comment[];
+  mediaType?: 'image' | 'video';
 }
 
 interface Comment {
@@ -53,10 +67,6 @@ const PartyGallery: React.FC = () => {
   const [emblaRef, emblaApi] = useEmblaCarousel({
     loop: true
   });
-  const [showCamera, setShowCamera] = useState(false);
-  const [cameraMode, setCameraMode] = useState<'front' | 'back'>('back');
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
   const scrollPrev = useCallback(() => emblaApi && emblaApi.scrollPrev(), [emblaApi]);
   const scrollNext = useCallback(() => emblaApi && emblaApi.scrollNext(), [emblaApi]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -213,18 +223,32 @@ const PartyGallery: React.FC = () => {
 
       if (heicFiles.length > 0) {
         toast.error(
-          'Algumas fotos estão em HEIC (iPhone). No compartilhamento, escolha JPEG ou use "Tirar Foto".'
+          'Algumas fotos estão em HEIC (iPhone). No compartilhamento, escolha JPEG.'
         );
       }
 
-      const usable = fileArray.filter((file) => !heicFiles.includes(file));
+      const oversizedVideos = fileArray.filter(
+        (file) => isVideoFile(file) && file.size > MAX_VIDEO_BYTES
+      );
+      if (oversizedVideos.length > 0) {
+        toast.error('Vídeo muito grande. Envie vídeos de até 40MB.');
+      }
+
+      const usable = fileArray.filter(
+        (file) => !heicFiles.includes(file) && !oversizedVideos.includes(file)
+      );
       if (usable.length === 0) {
         event.target.value = '';
         return;
       }
 
-      if (usable.length > 5) {
+      const videoCount = usable.filter(isVideoFile).length;
+      const photoCount = usable.length - videoCount;
+      if (photoCount > 5) {
         toast.message('Dica: no celular, envie até 5 fotos por vez para evitar falha.');
+      }
+      if (videoCount > 1) {
+        toast.message('Dica: no celular, envie 1 vídeo por vez.');
       }
 
       setSelectedFiles(usable);
@@ -236,11 +260,11 @@ const PartyGallery: React.FC = () => {
 
   const handleUpload = async () => {
     if (selectedFiles.length === 0) {
-      toast.error('Selecione pelo menos uma foto primeiro');
+      toast.error('Selecione pelo menos uma foto ou vídeo primeiro');
       return;
     }
     if (!newCaption) {
-      toast.error('Adicione uma legenda para as fotos');
+      toast.error('Adicione uma legenda');
       return;
     }
     if (!uploaderName) {
@@ -251,35 +275,51 @@ const PartyGallery: React.FC = () => {
     try {
       setUploading(true);
 
-      // Sequencial no celular: Promise.all com várias fotos grandes costuma falhar por memória/rede
       for (let index = 0; index < selectedFiles.length; index++) {
         const file = selectedFiles[index];
-        toast.message(`Preparando foto ${index + 1} de ${selectedFiles.length}...`);
+        const isVideo = isVideoFile(file);
+        toast.message(
+          `Preparando ${isVideo ? 'vídeo' : 'foto'} ${index + 1} de ${selectedFiles.length}...`
+        );
 
-        const { previewBlob, fullBlob } = await resizePartyVariants(file);
-        const { url, previewUrl } = await uploadPartyPhoto(previewBlob, fullBlob, index);
-
-        await addDoc(collection(db, 'party_photos'), {
-          url,
-          previewUrl,
-          caption: newCaption,
-          uploadedBy: uploaderName,
-          uploadedAt: new Date(),
-          likes: 0,
-          comments: []
-        });
+        if (isVideo) {
+          const { url, previewUrl } = await uploadPartyVideo(file, index);
+          await addDoc(collection(db, 'party_photos'), {
+            url,
+            previewUrl,
+            caption: newCaption,
+            uploadedBy: uploaderName,
+            uploadedAt: new Date(),
+            likes: 0,
+            comments: [],
+            mediaType: 'video',
+          });
+        } else {
+          const { previewBlob, fullBlob } = await resizePartyVariants(file);
+          const { url, previewUrl } = await uploadPartyPhoto(previewBlob, fullBlob, index);
+          await addDoc(collection(db, 'party_photos'), {
+            url,
+            previewUrl,
+            caption: newCaption,
+            uploadedBy: uploaderName,
+            uploadedAt: new Date(),
+            likes: 0,
+            comments: [],
+            mediaType: 'image',
+          });
+        }
       }
 
-      toast.success(`${selectedFiles.length} foto(s) enviada(s) com sucesso!`);
+      toast.success(`${selectedFiles.length} arquivo(s) enviado(s) com sucesso!`);
       setNewCaption('');
       setSelectedFiles([]);
       previewUrls.forEach((url) => URL.revokeObjectURL(url));
       setPreviewUrls([]);
       loadFirstPage();
     } catch (error) {
-      console.error('Erro ao enviar fotos:', error);
+      console.error('Erro ao enviar arquivos:', error);
       const message =
-        error instanceof Error ? error.message : 'Erro ao enviar fotos';
+        error instanceof Error ? error.message : 'Erro ao enviar arquivos';
       const code =
         typeof error === 'object' && error && 'code' in error
           ? String((error as { code?: string }).code)
@@ -290,9 +330,9 @@ const PartyGallery: React.FC = () => {
       } else if (message.toLowerCase().includes('heic') || message.toLowerCase().includes('ler a imagem')) {
         toast.error(message);
       } else if (message.toLowerCase().includes('network') || code.includes('retry-limit')) {
-        toast.error('Falha de rede no envio. Tente com Wi-Fi e uma foto por vez.');
+        toast.error('Falha de rede no envio. Tente com Wi-Fi e um arquivo por vez.');
       } else {
-        toast.error(`Erro ao enviar fotos: ${message}`);
+        toast.error(`Erro ao enviar: ${message}`);
       }
     } finally {
       setUploading(false);
@@ -366,81 +406,6 @@ const PartyGallery: React.FC = () => {
     setShowUploaderNameModal(false);
     handleUpload();
   };
-
-  const startCamera = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: cameraMode === 'front' ? 'user' : 'environment',
-          width: {
-            ideal: 1920
-          },
-          height: {
-            ideal: 1080
-          }
-        }
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        await videoRef.current.play();
-      }
-      setShowCamera(true);
-    } catch (error) {
-      console.error('Erro ao acessar câmera:', error);
-      toast.error('Não foi possível acessar a câmera. Verifique se você deu permissão de acesso.');
-    }
-  };
-
-  const toggleCamera = async () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-    }
-    setCameraMode(prev => prev === 'front' ? 'back' : 'front');
-    await startCamera();
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-    setShowCamera(false);
-  };
-
-  const takePhoto = () => {
-    if (!videoRef.current) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(videoRef.current, 0, 0);
-      canvas.toBlob(blob => {
-        if (blob) {
-          const file = new File([blob], `foto-${Date.now()}.jpg`, {
-            type: 'image/jpeg'
-          });
-          // Adicionar à lista de arquivos ao invés de substituir
-          setSelectedFiles(prev => [...prev, file]);
-          const imageUrl = URL.createObjectURL(file);
-          setPreviewUrls(prev => [...prev, imageUrl]);
-          stopCamera();
-        }
-      }, 'image/jpeg', 0.95);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [stream]);
 
   const fetchMessages = async () => {
     try {
@@ -551,30 +516,46 @@ const PartyGallery: React.FC = () => {
                 <div key={photo.id} className="flex-[0_0_100%] min-w-0 relative">
                   <Card className="mx-4 overflow-hidden bg-wedding-secondary">
                     <div className="relative group overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl">
-                      {!isLoaded && (
+                      {!isLoaded && photo.mediaType !== 'video' && (
                         <div className="w-full h-[400px] bg-gradient-to-br from-wedding-primary/20 to-wedding-secondary/20 animate-pulse flex items-center justify-center">
                           <div className="text-slate-50/50">Carregando...</div>
                         </div>
                       )}
-                      <img
-                        src={thumbOrUrl}
-                        alt={photo.caption}
-                        className={`w-full h-[400px] object-cover transition-all duration-500 group-hover:scale-105 ${
-                          isLoaded ? 'opacity-100' : 'opacity-0 absolute'
-                        }`}
-                        loading={index === 0 ? 'eager' : 'lazy'}
-                        decoding="async"
-                        onLoad={() => {
-                          setLoadedImages(prev => new Set(prev).add(photo.id));
-                        }}
-                        onError={() => {
-                          setFailedImages((prev) => new Set(prev).add(photo.id));
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4">
+                      {photo.mediaType === 'video' ? (
+                        <video
+                          src={photo.url}
+                          className="w-full h-[400px] object-cover bg-black"
+                          controls
+                          playsInline
+                          preload="metadata"
+                          onLoadedData={() => {
+                            setLoadedImages((prev) => new Set(prev).add(photo.id));
+                          }}
+                          onError={() => {
+                            setFailedImages((prev) => new Set(prev).add(photo.id));
+                          }}
+                        />
+                      ) : (
+                        <img
+                          src={thumbOrUrl}
+                          alt={photo.caption}
+                          className={`w-full h-[400px] object-cover transition-all duration-500 group-hover:scale-105 ${
+                            isLoaded ? 'opacity-100' : 'opacity-0 absolute'
+                          }`}
+                          loading={index === 0 ? 'eager' : 'lazy'}
+                          decoding="async"
+                          onLoad={() => {
+                            setLoadedImages((prev) => new Set(prev).add(photo.id));
+                          }}
+                          onError={() => {
+                            setFailedImages((prev) => new Set(prev).add(photo.id));
+                          }}
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-4 pointer-events-none">
                         <p className="text-white font-medium text-lg mb-1">{photo.caption}</p>
                         <p className="text-white/90 text-sm mb-3">Por: {photo.uploadedBy}</p>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 pointer-events-auto">
                           <button
                             onClick={() => handleLike(photo.id)}
                             className="flex items-center gap-2 text-white/90 hover:text-red-500 transition-colors duration-200 bg-black/30 hover:bg-black/40 px-3 py-1.5 rounded-full"
@@ -625,18 +606,28 @@ const PartyGallery: React.FC = () => {
         </div>}
 
       <Card className="p-4 sm:p-6 bg-wedding-secondary/20">
-        <h4 className="text-lg font-semibold mb-4 text-slate-50">Compartilhe Suas Fotos</h4>
+        <h4 className="text-lg font-semibold mb-4 text-slate-50">Compartilhe Fotos e Vídeos</h4>
         <div className="space-y-4">
           {selectedFiles.length > 0 ? (
             <div className="space-y-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {selectedFiles.map((file, index) => (
                   <div key={index} className="relative w-full aspect-square rounded-lg overflow-hidden bg-black/20 group">
-                    <img
-                      src={previewUrls[index] || ''}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    {isVideoFile(file) ? (
+                      <video
+                        src={previewUrls[index] || ''}
+                        className="w-full h-full object-cover"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        src={previewUrls[index] || ''}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                     <button
                       onClick={() => {
                         const newFiles = selectedFiles.filter((_, i) => i !== index);
@@ -650,13 +641,13 @@ const PartyGallery: React.FC = () => {
                       <X className="w-4 h-4" />
                     </button>
                     <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 text-center">
-                      Foto {index + 1}
+                      {isVideoFile(file) ? `Vídeo ${index + 1}` : `Foto ${index + 1}`}
                     </div>
                   </div>
                 ))}
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-50/70">
-                <span>{selectedFiles.length} foto(s) selecionada(s)</span>
+                <span>{selectedFiles.length} arquivo(s) selecionado(s)</span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -672,7 +663,7 @@ const PartyGallery: React.FC = () => {
                 </Button>
               </div>
               <Input 
-                placeholder="Adicione uma legenda para suas fotos" 
+                placeholder="Adicione uma legenda" 
                 value={newCaption} 
                 onChange={e => setNewCaption(e.target.value)} 
                 className="bg-wedding-primary/20 text-slate-50 placeholder:text-slate-300 border-wedding-primary/30 focus:border-wedding-primary" 
@@ -684,7 +675,9 @@ const PartyGallery: React.FC = () => {
                 disabled={selectedFiles.length === 0 || !newCaption || uploading}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {uploading ? `Enviando ${selectedFiles.length} foto(s)...` : `Enviar ${selectedFiles.length} Foto(s)`}
+                {uploading
+                  ? `Enviando ${selectedFiles.length} arquivo(s)...`
+                  : `Enviar ${selectedFiles.length} arquivo(s)`}
               </Button>
             </div>
           ) : (
@@ -701,14 +694,14 @@ const PartyGallery: React.FC = () => {
               <Button 
                 variant="outline" 
                 className="bg-wedding-primary text-white hover:bg-wedding-primary/90 flex-1 min-w-[200px]" 
-                onClick={() => document.getElementById('camera-capture')?.click()} 
+                onClick={() => document.getElementById('video-upload')?.click()} 
                 disabled={uploading}
               >
-                <Camera className="w-4 h-4 mr-2" />
-                {uploading ? 'Enviando...' : 'Tirar Foto'}
+                <Video className="w-4 h-4 mr-2" />
+                {uploading ? 'Enviando...' : 'Subir Vídeo'}
               </Button>
               <input id="photo-upload" type="file" accept="image/*,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple className="hidden" onChange={handleFileSelect} disabled={uploading} />
-              <input id="camera-capture" type="file" accept="image/*,image/jpeg,image/png,image/webp" capture="environment" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+              <input id="video-upload" type="file" accept="video/*,video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm,.m4v" className="hidden" onChange={handleFileSelect} disabled={uploading} />
             </div>
           )}
         </div>
@@ -773,6 +766,17 @@ const PartyGallery: React.FC = () => {
                       Remover da galeria
                     </Button>
                   </div>
+                ) : photos[selectedPhoto].mediaType === 'video' ? (
+                  <video
+                    src={photos[selectedPhoto].url}
+                    className="w-full h-full object-contain bg-black"
+                    controls
+                    playsInline
+                    preload="metadata"
+                    onError={() =>
+                      setFailedImages((prev) => new Set(prev).add(photos[selectedPhoto].id))
+                    }
+                  />
                 ) : (
                   <img
                     src={photos[selectedPhoto].url}
