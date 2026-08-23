@@ -3,14 +3,28 @@
     "origin": [
       "http://localhost:8080",
       "http://127.0.0.1:8080",
+      "http://localhost:3000",
       "https://simaceito.com.br",
       "https://www.simaceito.com.br",
       "https://sim-aceito.com.br",
       "https://www.sim-aceito.com.br",
       "https://simaceito.netlify.app"
     ],
-    "method": ["GET", "HEAD"],
+    "method": ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"],
     "maxAgeSeconds": 3600,
-    "responseHeader": ["Content-Type", "Content-Length", "Content-Disposition"]
+    "responseHeader": [
+      "Content-Type",
+      "Authorization",
+      "Content-Length",
+      "Content-Disposition",
+      "User-Agent",
+      "x-goog-resumable",
+      "x-goog-upload-protocol",
+      "x-goog-upload-command",
+      "x-goog-upload-header-content-length",
+      "x-goog-upload-header-content-type",
+      "x-goog-upload-status",
+      "x-goog-upload-url"
+    ]
   }
 ]

@@ -42,6 +42,14 @@ service cloud.firestore {
       allow delete: if false; // Não permite deletar músicas
     }
 
+    // Regras para fotos da festa (convidados enviam sem login)
+    match /party_photos/{photoId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if false;
+    }
+
     // Regras para usuários
     match /users/{userId} {
       allow read: if isAuthenticated();

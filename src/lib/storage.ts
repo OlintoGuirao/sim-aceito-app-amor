@@ -85,17 +85,24 @@ export async function uploadPartyPhoto(
   index: number
 ): Promise<{ url: string; previewUrl: string }> {
   const t = Date.now();
+  const previewType = previewBlob.type || 'image/jpeg';
+  const fullType = fullBlob.type || 'image/jpeg';
+  const previewExt = previewType.includes('webp') ? 'webp' : 'jpg';
+  const fullExt = fullType.includes('webp') ? 'webp' : 'jpg';
   const base = `party_photos/${t}_${index}`;
-  const meta = {
-    contentType: 'image/webp',
+  const previewMeta = {
+    contentType: previewType,
     cacheControl: CACHE_CONTROL,
-    ...CORS_METADATA
   };
-  const previewRef = ref(storage, `${base}_preview.webp`);
-  const fullRef = ref(storage, `${base}.webp`);
+  const fullMeta = {
+    contentType: fullType,
+    cacheControl: CACHE_CONTROL,
+  };
+  const previewRef = ref(storage, `${base}_preview.${previewExt}`);
+  const fullRef = ref(storage, `${base}.${fullExt}`);
   const [previewSnap, fullSnap] = await Promise.all([
-    uploadBytes(previewRef, previewBlob, meta),
-    uploadBytes(fullRef, fullBlob, meta)
+    uploadBytes(previewRef, previewBlob, previewMeta),
+    uploadBytes(fullRef, fullBlob, fullMeta)
   ]);
   const [previewUrl, url] = await Promise.all([
     getDownloadURL(previewSnap.ref),

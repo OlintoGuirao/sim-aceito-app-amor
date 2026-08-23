@@ -9,11 +9,7 @@ import type { DocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { uploadPartyPhoto } from '@/lib/storage';
 import {
-  resizeToWebP,
-  PREVIEW_MAX_WIDTH,
-  PREVIEW_QUALITY,
-  FULL_MAX_WIDTH,
-  FULL_QUALITY
+  resizePartyVariants,
 } from '@/lib/imageUtils';
 import useEmblaCarousel from 'embla-carousel-react';
 import { useCallback } from 'react';
@@ -209,12 +205,32 @@ const PartyGallery: React.FC = () => {
     const files = event.target.files;
     if (files && files.length > 0) {
       const fileArray = Array.from(files);
-      setSelectedFiles(fileArray);
-      // Criar URLs para preview de todas as imagens
-      const urls = fileArray.map(file => URL.createObjectURL(file));
+      const heicFiles = fileArray.filter((file) => {
+        const name = file.name.toLowerCase();
+        const type = (file.type || '').toLowerCase();
+        return type.includes('heic') || type.includes('heif') || name.endsWith('.heic') || name.endsWith('.heif');
+      });
+
+      if (heicFiles.length > 0) {
+        toast.error(
+          'Algumas fotos estão em HEIC (iPhone). No compartilhamento, escolha JPEG ou use "Tirar Foto".'
+        );
+      }
+
+      const usable = fileArray.filter((file) => !heicFiles.includes(file));
+      if (usable.length === 0) {
+        event.target.value = '';
+        return;
+      }
+
+      if (usable.length > 5) {
+        toast.message('Dica: no celular, envie até 5 fotos por vez para evitar falha.');
+      }
+
+      setSelectedFiles(usable);
+      const urls = usable.map((file) => URL.createObjectURL(file));
       setPreviewUrls(urls);
     }
-    // Limpar o input para permitir selecionar os mesmos arquivos novamente
     event.target.value = '';
   };
 
@@ -235,13 +251,15 @@ const PartyGallery: React.FC = () => {
     try {
       setUploading(true);
 
-      const uploadPromises = selectedFiles.map(async (file, index) => {
-        const [previewBlob, fullBlob] = await Promise.all([
-          resizeToWebP(file, PREVIEW_MAX_WIDTH, PREVIEW_QUALITY),
-          resizeToWebP(file, FULL_MAX_WIDTH, FULL_QUALITY)
-        ]);
+      // Sequencial no celular: Promise.all com várias fotos grandes costuma falhar por memória/rede
+      for (let index = 0; index < selectedFiles.length; index++) {
+        const file = selectedFiles[index];
+        toast.message(`Preparando foto ${index + 1} de ${selectedFiles.length}...`);
+
+        const { previewBlob, fullBlob } = await resizePartyVariants(file);
         const { url, previewUrl } = await uploadPartyPhoto(previewBlob, fullBlob, index);
-        const photoData = {
+
+        await addDoc(collection(db, 'party_photos'), {
           url,
           previewUrl,
           caption: newCaption,
@@ -249,11 +267,9 @@ const PartyGallery: React.FC = () => {
           uploadedAt: new Date(),
           likes: 0,
           comments: []
-        };
-        return addDoc(collection(db, 'party_photos'), photoData);
-      });
+        });
+      }
 
-      await Promise.all(uploadPromises);
       toast.success(`${selectedFiles.length} foto(s) enviada(s) com sucesso!`);
       setNewCaption('');
       setSelectedFiles([]);
@@ -262,7 +278,22 @@ const PartyGallery: React.FC = () => {
       loadFirstPage();
     } catch (error) {
       console.error('Erro ao enviar fotos:', error);
-      toast.error('Erro ao enviar fotos');
+      const message =
+        error instanceof Error ? error.message : 'Erro ao enviar fotos';
+      const code =
+        typeof error === 'object' && error && 'code' in error
+          ? String((error as { code?: string }).code)
+          : '';
+
+      if (code.includes('unauthorized') || code.includes('permission')) {
+        toast.error('Sem permissão para enviar. Verifique as regras do Firebase Storage.');
+      } else if (message.toLowerCase().includes('heic') || message.toLowerCase().includes('ler a imagem')) {
+        toast.error(message);
+      } else if (message.toLowerCase().includes('network') || code.includes('retry-limit')) {
+        toast.error('Falha de rede no envio. Tente com Wi-Fi e uma foto por vez.');
+      } else {
+        toast.error(`Erro ao enviar fotos: ${message}`);
+      }
     } finally {
       setUploading(false);
     }
@@ -676,8 +707,8 @@ const PartyGallery: React.FC = () => {
                 <Camera className="w-4 h-4 mr-2" />
                 {uploading ? 'Enviando...' : 'Tirar Foto'}
               </Button>
-              <input id="photo-upload" type="file" accept="image/*" multiple className="hidden" onChange={handleFileSelect} disabled={uploading} />
-              <input id="camera-capture" type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileSelect} disabled={uploading} />
+              <input id="photo-upload" type="file" accept="image/*,image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple className="hidden" onChange={handleFileSelect} disabled={uploading} />
+              <input id="camera-capture" type="file" accept="image/*,image/jpeg,image/png,image/webp" capture="environment" className="hidden" onChange={handleFileSelect} disabled={uploading} />
             </div>
           )}
         </div>

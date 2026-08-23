@@ -1,110 +1,155 @@
 /**
- * Converte imagem para WebP no cliente (reduz tamanho e melhora carregamento).
- * Fallback para JPEG se o navegador não suportar WebP.
+ * Utilitários de imagem para galeria da festa.
+ * Otimizado para celular (fotos grandes / iPhone).
  */
-export async function convertToWebP(
-  file: File | Blob,
-  quality = 0.85
-): Promise<Blob> {
+
+export const PREVIEW_MAX_WIDTH = 1200;
+export const PREVIEW_QUALITY = 0.78;
+export const FULL_MAX_WIDTH = 1920;
+export const FULL_QUALITY = 0.85;
+
+const THUMB_MAX_WIDTH = 400;
+const THUMB_QUALITY = 0.8;
+
+type SourceImage = {
+  width: number;
+  height: number;
+  draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void;
+  close?: () => void;
+};
+
+async function loadSourceImage(file: File | Blob): Promise<SourceImage> {
+  // createImageBitmap é mais leve em memória no mobile
+  if (typeof createImageBitmap === 'function') {
+    try {
+      const bitmap = await createImageBitmap(file);
+      return {
+        width: bitmap.width,
+        height: bitmap.height,
+        draw: (ctx, w, h) => ctx.drawImage(bitmap, 0, 0, w, h),
+        close: () => bitmap.close(),
+      };
+    } catch {
+      // segue para fallback com Image
+    }
+  }
+
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas 2d não disponível'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0);
-      canvas.toBlob(
-        (blob) => {
-          if (blob) return resolve(blob);
-          canvas.toBlob(
-            (jpegBlob) => (jpegBlob ? resolve(jpegBlob) : reject(new Error('Falha ao gerar blob'))),
-            'image/jpeg',
-            quality
-          );
-        },
-        'image/webp',
-        quality
-      );
+      resolve({
+        width: img.naturalWidth || img.width,
+        height: img.naturalHeight || img.height,
+        draw: (ctx, w, h) => ctx.drawImage(img, 0, 0, w, h),
+      });
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('Falha ao carregar imagem'));
+      reject(
+        new Error(
+          'Não foi possível ler a imagem. No iPhone, tente "Mais recentes" ou converter HEIC para JPEG.'
+        )
+      );
     };
     img.src = url;
   });
 }
 
-const THUMB_MAX_WIDTH = 400;
-const THUMB_QUALITY = 0.8;
+function scaledSize(width: number, height: number, maxWidth: number) {
+  if (width <= maxWidth) return { width, height };
+  return {
+    width: maxWidth,
+    height: Math.round((height * maxWidth) / width),
+  };
+}
+
+async function canvasToBlob(
+  canvas: HTMLCanvasElement,
+  quality: number
+): Promise<Blob> {
+  const tryType = async (type: string) =>
+    new Promise<Blob | null>((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), type, quality);
+    });
+
+  const webp = await tryType('image/webp');
+  if (webp) return webp;
+
+  const jpeg = await tryType('image/jpeg');
+  if (jpeg) return jpeg;
+
+  throw new Error('Falha ao gerar a imagem comprimida');
+}
+
+async function encodeFromSource(
+  source: SourceImage,
+  maxWidth: number,
+  quality: number
+): Promise<Blob> {
+  const { width, height } = scaledSize(source.width, source.height, maxWidth);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2d não disponível');
+  source.draw(ctx, width, height);
+  return canvasToBlob(canvas, quality);
+}
 
 /**
- * Redimensiona imagem para largura máxima e exporta em WebP (compressão automática).
- * Usado para preview (1200px) e versão “full” limitada (1920px) para reduzir custo de Storage.
+ * Converte imagem para WebP no cliente (fallback JPEG).
+ */
+export async function convertToWebP(
+  file: File | Blob,
+  quality = 0.85
+): Promise<Blob> {
+  const source = await loadSourceImage(file);
+  try {
+    return await encodeFromSource(source, source.width, quality);
+  } finally {
+    source.close?.();
+  }
+}
+
+/**
+ * Redimensiona imagem para largura máxima e exporta em WebP/JPEG.
  */
 export async function resizeToWebP(
   file: File | Blob,
   maxWidth: number,
   quality: number
 ): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) {
-        reject(new Error('Canvas 2d não disponível'));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => {
-          if (blob) return resolve(blob);
-          canvas.toBlob(
-            (jpegBlob) =>
-              jpegBlob ? resolve(jpegBlob) : reject(new Error('Falha ao gerar blob')),
-            'image/jpeg',
-            quality
-          );
-        },
-        'image/webp',
-        quality
-      );
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error('Falha ao carregar imagem'));
-    };
-    img.src = url;
-  });
+  const source = await loadSourceImage(file);
+  try {
+    return await encodeFromSource(source, maxWidth, quality);
+  } finally {
+    source.close?.();
+  }
 }
 
-/** Preview para carrossel: 1200px, qualidade 0.78 (menos tráfego pago). */
-export const PREVIEW_MAX_WIDTH = 1200;
-export const PREVIEW_QUALITY = 0.78;
-
-/** Versão “original” limitada: 1920px, 0.85 (só baixada ao abrir no lightbox). */
-export const FULL_MAX_WIDTH = 1920;
-export const FULL_QUALITY = 0.85;
-
 /**
- * Gera thumbnail em WebP (largura máxima 400px) para uso no carrossel.
+ * Gera preview + full a partir do mesmo decode (mais estável no celular).
  */
+export async function resizePartyVariants(
+  file: File | Blob
+): Promise<{ previewBlob: Blob; fullBlob: Blob }> {
+  const source = await loadSourceImage(file);
+  try {
+    // Sequencial: evita estourar memória no mobile com 2 canvases grandes
+    const previewBlob = await encodeFromSource(
+      source,
+      PREVIEW_MAX_WIDTH,
+      PREVIEW_QUALITY
+    );
+    const fullBlob = await encodeFromSource(source, FULL_MAX_WIDTH, FULL_QUALITY);
+    return { previewBlob, fullBlob };
+  } finally {
+    source.close?.();
+  }
+}
+
 export async function createThumbnail(file: File | Blob): Promise<Blob> {
   return resizeToWebP(file, THUMB_MAX_WIDTH, THUMB_QUALITY);
 }
